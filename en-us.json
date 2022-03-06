@@ -2794,13 +2794,13 @@
     "3c39d9a196dbe95f8c3d5329bc73ae07": "Very low",
     "edc1fdb3572dceb3fa172f31d17739de": "Name",
     "9d5ded831c3c2a4640789fd9d8371713": [
-        "\nToughness: ",
-        "\nSpeed: ",
-        "\nWeakness: "
+        "\n\nTOUGHNESS: ",
+        "\nSPEED: ",
+        "\nWEAKNESS: "
     ],
     "1053e54496b6f2d5e97bf1bddef8ce51": [
-        "Sun cost: ",
-        "\nCooldown: ",
+        "SUN COST: ",
+        "\nCOOLDOWN: ",
         "s\n\n"
     ],
     "471a9a069f8db35a5ab6a5c3d0eeec73": [
