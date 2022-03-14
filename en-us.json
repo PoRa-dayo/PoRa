@@ -361,23 +361,23 @@
     "e39ba63078aecf2a41ff05b3acfc46ee": "Dr. Zomboss riding a very destructive owl in the Aurora Icefield. Immune to all negative effects.\n\nSkill 1: Summons zombies from the ground\nSkill 2: Shoots missiles, destroying both plants and zombies\nSkill 3: Summons freezing wind, destroying plants and creating ice blocks\nSkill 4: Has a rare chance to make zombies invisible",
     "8887ca7ef02ee588fdadc07a344f0f50": "Static",
     "13a28bb5bdb15ce26671180fe095b7dc": "Explosive plants",
-    "f2560395397fd24cc2093bc1253f3e6b": "雪鸮一号是僵尸博士爱的结晶，他从凌晨一直工作到黑夜，他对末日的抗寒机制的每一个细节都很着迷，他亲手制作了雪鸮那几乎无法穿透的皮肤。他用手把他的喙削尖。他煞费苦心地在机器身体的两旁安装了这个致命的可以扇起冰风的翅膀。当他的杰作完成时，博士不止流下了喜悦的眼泪。不管你怎么评价这个邪恶的天才，他对自己的项目都很有激情。",
+    "f2560395397fd24cc2093bc1253f3e6b": "In order for the Zombot Polar Avifauna to work, Dr. Zomboss had to implement a cold-resistant mechanism, freezing-wind-summoning wings of some sort, as well as a heater inside. But the most painstaking part turned out to be the naming. Heck, he even had to host a whole event for plants and zombies to suggest some good names. Honorable mentions include 'Zombot Ice Bird', 'Zombot Bird Ice' and 'Orly'.",
     "2954884312057e870bb288a9a965d65a": [
-        "在这个程序设定注定要出现精英怪的一天，出于",
-        "的意志，雪鸮一号以其似乎要扫清一切的姿态在冰原凭空出现，腾空而起。"
+        "On the pre-programmed day destined for the emergence of a new boss, out of ",
+        "'s will，the Zombot Polar Avifauna appeared in the midst of the snowstorm and soared into the sky. "
     ],
-    "f987c88dba86cc4566d5dffa516ca0be": "他在创造这台机器时，",
-    "86c29dca559c0af588f54e587ebcac07": "增加了每一个零件的公差，让它",
-    "fe2f088d168cb352c05591754b5c88ce": "受到了6天前他从网上得知这件事的前因后果的影响：他看到的，网络上人们自诩的所谓正义的大旗铸就了它似乎是正面的形象；他看到的，网民们不负责任的言论铸就了它尖锐锋利的喙；他看到的，人们在风暴中的集体无意识与狂热铸就了它煽风点火的翼。但就像网络上树起的虚假的正义一样，他",
-    "e9f56bb433ebcee8f96746652ba5377e": "几乎一触即碎。",
-    "ecb10811232552a2dd9ca24610246571": "人们间",
+    "f987c88dba86cc4566d5dffa516ca0be": "When he made this machine, ",
+    "86c29dca559c0af588f54e587ebcac07": "decreased its sturdiness, so that it ",
+    "fe2f088d168cb352c05591754b5c88ce": "he was influenced by what he learned from the Internet 6 days prior: the so-called justice that people boasted created a positive image; netizens' irresponsible speech forged its sharp beak; the collective unconsciousness and fanaticism of people in the storm forged its mighty wings. But like the net's false justice, he ",
+    "e9f56bb433ebcee8f96746652ba5377e": "gradually breaks at every hit. ",
+    "ecb10811232552a2dd9ca24610246571": ", among all the people, ",
     "dee617691dab3c8825c2530faddf0745": [
-        "仿佛这个雪鸮生来就是为了",
-        "屠杀与被屠杀之娱乐，全然不顾有一个生命仍被牢牢地束缚在这个机器的驾驶座上。"
+        "It was as if this machine was born purely to be",
+        " continuously slaughtered for entertainment, regardless of a life still firmly bound to the machine's front seat."
     ],
-    "74746ded4cc6f25c9229ca8ab02c77dd": "把一切心中的愤懑、不满与癫狂都注入进这台疯狂机械的每一个细节之中。但与此同时却又刻意的",
-    "0c48a2809e55d77fe7fff1e44ccbd73e": "难以经受爆炸所形成的冲击波。",
-    "25c61ffde7552ce7d5500042426a82cb": "但对于这个隐于冰风中的巨型机械，我们还有很多东西尚未搞清楚。",
+    "74746ded4cc6f25c9229ca8ab02c77dd": "he injected all the indignation, discontent and madness in his heart into every detail of this crazy machine. But at the same time, he ",
+    "0c48a2809e55d77fe7fff1e44ccbd73e": "is vulnerable to explosions. ",
+    "25c61ffde7552ce7d5500042426a82cb": "But there's a lot we've yet to figure out about this giant icy machine.",
     "bfbcf152cf20f14c674a58f2a18b6553": "Winter Boss",
     "4898eb6adbe716f3846baf049536aedd": "Sculptor Zombie",
     "a2b3fbfa1c5418cbf11e007dfd40ebdf": "Sculptor Zombie pushes statues across the lawn.",
