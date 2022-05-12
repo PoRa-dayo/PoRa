@@ -484,7 +484,7 @@
     "3608b0f9213c84152c6e1eafc09a067c": "Back",
     "2e5c1cf7f17e85148b82fa0e2b45ca6e": "Please select the plants/zombies that may appear in the vase!",
     "2bc886d3d3d547c220e04cc7d4f0ffc8": "Contents",
-    "947e0109c225b38ed77764115348e44e": "Link",
+    "947e0109c225b38ed77764115348e44e": "Links",
     "38c5f7ca3afaf0e2ce4429783a7098ff": "Type",
     "ec300b17d4b50bbdcb434f959a36ac46": [
         "行",
@@ -496,8 +496,8 @@
         "列"
     ],
     "49391bdff3dd65938b4e99d76db9955f": "Indirect links: \n",
-    "a0be87cb077248027aa5cd4f33174e1b": "Link a new vase",
-    "25df9ae7878bbe109c9afaf62afa221b": "Choose your stuff",
+    "a0be87cb077248027aa5cd4f33174e1b": "Click here to link a new vase",
+    "25df9ae7878bbe109c9afaf62afa221b": "<font size="5px">Choose your stuff</font>",
     "7239b74e569fa05ace24c36e68d76be6": "The data entered is in the wrong format!",
     "ec4f9aa283e08d6b9d2e641709e09dea": "Please close the current menu first!",
     "6051e17f43847da4605347bcaf78207a": [
@@ -511,7 +511,7 @@
     "4550cb55f47e587d61e665171580c0cd": "Add wave: ",
     "18e91ec366e869767eb06de0c1f9839a": "OK",
     "e55fba08360365b14308850927256ea1": "Choose wave: ",
-    "41aa4c3307fb77abd054c89960bef422": "<option>Select wave no.</option>",
+    "41aa4c3307fb77abd054c89960bef422": "<option>Select wave</option>",
     "b459c09b4fef489035a3ec1d30ed7370": "Escalation™: ",
     "022fcc0fe54bf515bcbcf3c030223e50": "Total wave no.: ",
     "15f222294c6553ba5cf5e4c53712624d": "Spawn points: ",
