@@ -545,7 +545,7 @@
     "ced6e9ee300ae983062fbc96c5993474": "No. of fog/haze columns: ",
     "805df1aa0db1ffe19c8e8e4e55e7f8d6": "<option value='Fog'>Fog</option><option value='strongFog'>Haze</option>",
     "c63d0d502cc4a0727024021ceb9a2714": "Level name: ",
-    "6d04122292d8a327de4227d6f96d4a00": "Enter A-Z/a-z/0-9/Chinese chars/\"_\"",
+    "6d04122292d8a327de4227d6f96d4a00": "A-Z/a-z/0-9/CN chars/\"_\"",
     "76a2f80429fa94f96defb2fd0ec18adc": "Level name is too long. Try a shorter one!",
     "faf652e703071a8cc4dc9dc86c818372": "Level name cannot be empty!",
     "363697444bb4a8639b9b1d3ff5574187": "Illegal level name!",
