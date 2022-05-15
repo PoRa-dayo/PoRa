@@ -14,7 +14,7 @@
     "00c476bb8b66c7a67826e7f6bd7ddff6": "Are you sure you want to bring Imitater only? It is not going to work at all.",
     "3704695fb154c4e95e674e48ce44fc7e": "Are you sure you don't want to bring any sun producers?",
     "96922b1b075633116839cab7596bdabc": [
-        "<br>Cooldown time: ",
+        "<br>Cooldown: ",
         "s<br>"
     ],
     "135e553e11b9091c1734eedae69ea2d8": "Cannot be retrieved",
@@ -3062,7 +3062,7 @@
     "13deda1661f2fc5d51257e860d242305": "<input type=\"radio\" value=\"0\" name=\"LevelT\"/>Locked",
     "55f6487a3b495feb23f1b6ba08e0f981": "<input type=\"radio\" value=\"2\" name=\"LevelT\"/>Conveyor",
     "215cfc839406f7684baf76673b88e9c2": [
-        "<br>Cooldown time: ",
+        "<br>Cooldown: ",
         "s<br>"
     ],
     "c23acc07c3bad94c2a4b284090e9585c": "<br/><span style=\"color:red\">Selected</span>",
