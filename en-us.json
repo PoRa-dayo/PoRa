@@ -488,13 +488,13 @@
     "947e0109c225b38ed77764115348e44e": "Links",
     "38c5f7ca3afaf0e2ce4429783a7098ff": "Type",
     "ec300b17d4b50bbdcb434f959a36ac46": [
-        "行",
-        "列"
+        "Lane",
+        "Col"
     ],
     "e2b15a18c7cf93595f7eb4a31d289084": "Delete",
     "19dcaaac2dfe0ac06bc8c892e2e5e3b8": [
-        "行",
-        "列"
+        "Lane",
+        "Col"
     ],
     "49391bdff3dd65938b4e99d76db9955f": "Indirect links: \n",
     "a0be87cb077248027aa5cd4f33174e1b": "Click here to link a new vase",
@@ -523,7 +523,7 @@
     "b459c09b4fef489035a3ec1d30ed7370": "Escalation™: ",
     "022fcc0fe54bf515bcbcf3c030223e50": "Total wave no.: ",
     "15f222294c6553ba5cf5e4c53712624d": "Spawn points: ",
-    "218e3bc8f88efdc3479754a5fbd53db7": "Zombies",
+    "218e3bc8f88efdc3479754a5fbd53db7": "Zombie Type",
     "e29b16fa4017eb0cde5e47b43fba1461": "Display No./Weight",
     "fac15be7a8622f1746fb76e37d117ddf": "1st Wave No.",
     "4cf4f040da7a31ff105c1c74e83dd6be": "Lawn Settings: ",
@@ -592,7 +592,7 @@
         "”?"
     ],
     "35739477d5aebf48100791b5aa44110b": "Level deleted successfully!",
-    "f7935bba4b1e5291882f9f258045a454": "Unknown",
+    "f7935bba4b1e5291882f9f258045a454": "-",
     "3544f36bff8be42117c43aec2f520eea": "Easy",
     "3b94266c4e7039e6f38a1c38ac070f22": "Normal",
     "a06ae6e090d7f6ad7560da708f5157e8": "Medium",
