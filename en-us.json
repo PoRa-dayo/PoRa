@@ -555,7 +555,7 @@
     "6d04122292d8a327de4227d6f96d4a00": "A-Z/a-z/0-9/CN chars/\"_\"",
     "76a2f80429fa94f96defb2fd0ec18adc": "Level name is too long. Try a shorter one!",
     "faf652e703071a8cc4dc9dc86c818372": "Level name cannot be empty!",
-    "363697444bb4a8639b9b1d3ff5574187": "Illegal level name!",
+    "363697444bb4a8639b9b1d3ff5574187": "Level name is in the wrong format!",
     "9c0351b6844f01d2bb5ca7669aa5ac0c": "Save",
     "05cd033cbcb9223397f804a5d998549d": "Level successfully saved to archive!",
     "a38bb596bac2062cfd86967d0fc74d3c": "Plants",
