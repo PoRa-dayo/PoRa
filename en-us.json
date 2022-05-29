@@ -488,12 +488,12 @@
     "947e0109c225b38ed77764115348e44e": "Links",
     "38c5f7ca3afaf0e2ce4429783a7098ff": "Type",
     "ec300b17d4b50bbdcb434f959a36ac46": [
-        "Lane",
+        "Lane ",
         "Col"
     ],
     "e2b15a18c7cf93595f7eb4a31d289084": "Delete",
     "19dcaaac2dfe0ac06bc8c892e2e5e3b8": [
-        "Lane",
+        "Lane ",
         "Col"
     ],
     "49391bdff3dd65938b4e99d76db9955f": "Indirect links: \n",
@@ -559,7 +559,7 @@
     "9c0351b6844f01d2bb5ca7669aa5ac0c": "Save",
     "05cd033cbcb9223397f804a5d998549d": "Level successfully saved to archive!",
     "a38bb596bac2062cfd86967d0fc74d3c": "Plants",
-    "cdcd57c9f0db9a4f0d50bddaa8fb4e1d": "Terrains",
+    "cdcd57c9f0db9a4f0d50bddaa8fb4e1d": "Grid Items",
     "8e20d0249af11fa429e8df7591db578c": "Zombie types",
     "c55b3e499b975eda4658f66215cba2c0": "Possible lanes",
     "28a3bafdd59eda7dbe88cf1e16bdfbd0": "Possible columns",
