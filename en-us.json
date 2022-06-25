@@ -3077,6 +3077,7 @@
         "）</span><div class='prop_image'><img src=",
         "</span><center class=\"prop_description prop_price\">Price: ",
         " coins</center><button id=\"buy1\" class='button_buy' data-jng-num='1'>Buy 1</button><button id=\"buy2\" class='button_buy' data-jng-num='10'>Buy 10</button></div>"
+    ],
     "8996abd08d98c7fc680fd26d7a5fca81": "You don't have enough coins!",
     "ad3d57e49be0e72e0e9cfad6b1fcd602": "Create room",
     "e73a457c0f405311a348b967c2ce6f99": "Join room",
