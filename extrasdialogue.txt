@@ -28,3 +28,40 @@ Dave: Well, neighbor, we beat him once, we'll beat him again!
 ---Winter Extra - Night 5---
 Zomboss: Hello again, fools. What do you think of my new big bird?...
 Zomboss: ...When it freezes you to death? Mwhahahaha!
+
+---Seasonal Extras Ending 1--- [Already in the game, player receives it every time they finish "Remnants of a Wooden Bridge"]
+
+---Seasonal Extras Ending 2--- [After Winter Extra Night 5, the player receives this ending if they have completed every level of Seasonal Extras and have not once finished "Remnants of a Wooden Bridge"]
+(Scene turns white, plays "Floating World" from The Stanley Parable)
+Arbiter: Hello, whoever is behind that screen. This is The Arbiter speaking.
+Arbiter: Yes, as a divine being, I am aware of this world being a 'video game'.
+Arbiter: Let's just say I might have misjudged you as a companion of Dave.
+Arbiter: That Dave... To me, he is nothing but an irresponsible pot-wearing moron.
+Arbiter: I am not sure how you even managed to befriend him... But you,
+Arbiter: You are special.
+Arbiter: I have seen your efforts to defeat the zombies and restore balance to this world.
+Arbiter: Although the cause of all the seasonal chaos still lies somewhere in this icefield.
+Arbiter: So you failed to restore the seasons to their original forms.
+Arbiter: But you made an effort, and it is all that counts.
+Arbiter: Therefore, I will present you a gift in return.
+Arbiter: Something that will benefit you in this 'video game'.
+Arbiter: Aha, the Eleventh Seed Slot, without a single cent. How does that sound?
+(Clicking the dialogue box here does not do anything. Two buttons, <Yes> and <No>, appear below the dialogue box. The player must click one of the buttons to continue)
+
+(If the player click <Yes>)
+Arbiter: Hm, good choice.
+Arbiter: Oh, I almost forgot. You see, I am not in control of this whole... 'game'.
+Arbiter: Leobai is the one with such role. Although he will not be happy with this idea.
+Arbiter: He keeps complaining about the 'game UI'... You might have to get permission from him first.
+
+(If the player click <No>)
+Arbiter: Oh. Such a shame.
+Arbiter: I thought you would love to fill the corners of your screen with seed packets,
+Arbiter: Like that one fangame where food fights against mice. (Note: referencing 原美食大战老鼠)
+Arbiter: But that would mess with the 'game UI', and Leobai does not particularly like that...
+
+(Both choices lead to this)
+Arbiter: Well, it was nice to have you here today.
+Arbiter: I wish you all the best in restoring the seasons once and for all.
+
+---Seasonal Extras Ending 3--- [After Winter Extra Night 5, the player receives this ending if they have completed every level of Seasonal Extras and have finished "Remnants of a Wooden Bridge" at least once]
