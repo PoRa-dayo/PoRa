@@ -72,9 +72,9 @@ Arbiter: Let's just say I might have misjudged you as a companion of Dave.
 Arbiter: That Dave... To me, he is nothing but an irresponsible pot-wearing moron.
 Arbiter: I am not sure how you even managed to befriend him... But you,
 Arbiter: You are the chosen one.
-Arbiter: Not only did you defeat all these trouble-making zombies,
-Arbiter: But you also managed to bring the seasons back to what they once were.
-Arbiter: I am genuinely impressed. Therefore, I present to you...
+Arbiter: Not only did you manage to bring the seasons back to what they once were,
+Arbiter: But you also came back to me in the end.
+Arbiter: Oh you must be delighted to see me again. Let me prepare a gift for you in return...
 Arbiter: A total of 18 seed slots! And a special VIP pass! Hm? Sounds enticing?
 (A bunch of seed packets show up like this image here: https://prnt.sc/iJyx8cUMMu_Y. Clicking the dialogue box here does not do anything. Two buttons, <Yes> and <No>, appear below the dialogue box. The player must click one of the buttons to continue)
 
