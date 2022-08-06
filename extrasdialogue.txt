@@ -33,7 +33,7 @@ Zomboss: ...When it freezes you to death? Mwhahahaha!
 
 ---Seasonal Extras Ending 2--- [After Winter Extra Night 5, the player receives this ending if they have completed every level of Seasonal Extras and have not once finished "Remnants of a Wooden Bridge"]
 (Scene turns white, plays "Floating World" from The Stanley Parable)
-Arbiter: Hello, whoever is behind that screen. This is The Arbiter speaking.
+Arbiter: Hello, the mortal behind that screen. This is The Arbiter speaking.
 Arbiter: Yes, as a divine being, I am aware of this world being a 'video game'.
 Arbiter: Let's just say I might have misjudged you as a companion of Dave.
 Arbiter: That Dave... To me, he is nothing but an irresponsible pot-wearing moron.
@@ -58,10 +58,57 @@ Arbiter: He keeps complaining about the 'game UI'... You might have to get permi
 Arbiter: Oh. Such a shame.
 Arbiter: I thought you would love to fill the corners of your screen with seed packets,
 Arbiter: Like that one fangame where food fights against mice. (Note: referencing 原美食大战老鼠)
-Arbiter: But that would mess with the 'game UI', and Leobai does not particularly like that...
+Arbiter: Though that would mess with the 'game UI', and Leobai does not particularly like that...
 
 (Both choices lead to this)
 Arbiter: Well, it was nice to have you here today.
 Arbiter: I wish you all the best in restoring the seasons once and for all.
 
 ---Seasonal Extras Ending 3--- [After Winter Extra Night 5, the player receives this ending if they have completed every level of Seasonal Extras and have finished "Remnants of a Wooden Bridge" at least once]
+(Scene turns white, plays "Floating World" from The Stanley Parable)
+Arbiter: Hello, the mortal behind that screen. This is The Arbiter speaking.
+Arbiter: Yes, as a divine being, I am aware of this world being a 'video game'.
+Arbiter: Let's just say I might have misjudged you as a companion of Dave.
+Arbiter: That Dave... To me, he is nothing but an irresponsible pot-wearing moron.
+Arbiter: I am not sure how you even managed to befriend him... But you,
+Arbiter: You are the chosen one.
+Arbiter: Not only did you defeat all these trouble-making zombies,
+Arbiter: But you also managed to bring the seasons back to what they once were.
+Arbiter: I am genuinely impressed. Therefore, I present to you...
+Arbiter: A total of 18 seed slots! And a special VIP pass! Hm? Sounds enticing?
+(A bunch of seed packets show up like this image here: https://prnt.sc/iJyx8cUMMu_Y. Clicking the dialogue box here does not do anything. Two buttons, <Yes> and <No>, appear below the dialogue box. The player must click one of the buttons to continue)
+
+(If the player click <Yes>)
+Arbiter: Hm, good choice.
+Arbiter: Oh, I almost forgot. You see, I am not in control of this whole... 'game'.
+Arbiter: Leobai is the one with such role. Although he will not be happy with this idea.
+Arbiter: He keeps complaining about the 'game UI' as you can see...
+
+(If the player click <No>)
+Arbiter: Oh. Such a shame.
+Arbiter: I thought you would love to fill the corners of your screen with seed packets,
+Arbiter: Like that one fangame where food fights against mice.
+Arbiter: Though that would mess with the 'game UI', and Leobai does not particularly like that...
+
+(Both choices lead to this)
+Arbiter: But alternatively, you could always make a 4269 account! (Note: referencing 4399)
+Arbiter: Just provide all your personal information and you will be able to play the food and mice game for FREE!
+Arbiter: Ahem, but say,
+(Note: These 7 lines below are full of English memes so translate however you like lol)
+Arbiter: It must have been painful, being nowhere but in front of that 'device' and is restricted within the boundaries of a 'gamer'.
+Arbiter: Come, mortal, abandon that pot-wearing moron and follow me into my forest wonderland.
+Arbiter: No more social media, no more kaizo levels, no more skill issue. You will finally have the taste of 'true freedom'.
+Arbiter: Though you do not have a physical form, but worry not,
+Arbiter: I will personally place your soul into this artistically beautiful Peashooter costume.
+Arbiter: With it, we can sing, dance, eat grass and become one with Mother Nature.
+Arbiter: Ah, isn't that wonderful? Isn't it what we have always wanted?
+(Dave's pan comes from the right side and hits the Arbiter, which causes a screen shake. The pan then falls off from Arbiter's face.)
+(All of Arbiter's lines now become shaking text)
+Arbiter: So this... is how it ends...
+Arbiter: I will not last much longer... but do not fear, mortal,
+Arbiter: As when an Arbiter falls... Another shall be born... to take their place...
+Arbiter: Promise me... that you will be back in my forest... to witness the rebirth...
+Arbiter: Because, dear chosen one,...
+Arbiter: I love you.
+(Arbiter slowly fades)
+Dave: Ew.
