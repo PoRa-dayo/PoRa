@@ -51,14 +51,14 @@ Arbiter: Aha, the Eleventh Seed Slot, without a single cent. How does that sound
 (If the player click <Yes>)
 Arbiter: Hm, good choice.
 Arbiter: Oh, I almost forgot. You see, I am not in control of this whole... 'game'.
-Arbiter: The Holy Aipoi is the one with such role. Although he will not be happy with this idea.
+Arbiter: The Holy Apple is the one with such role. Although he will not be happy with this idea.
 Arbiter: He keeps complaining about the 'game UI'... You might have to get permission from him first.
 
 (If the player click <No>)
 Arbiter: Oh. Such a shame.
 Arbiter: I thought you would love to fill the corners of your screen with seed packets,
 Arbiter: Like that one fangame where food fights against mice. (Note: referencing 原美食大战老鼠)
-Arbiter: Though that would mess with the 'game UI', and The Holy Aipoi does not particularly like that...
+Arbiter: Though that would mess with the 'game UI', and The Holy Apple does not particularly like that...
 
 (Both choices lead to this)
 Arbiter: Well, it was nice to have you here today.
@@ -81,14 +81,14 @@ Arbiter: A total of 18 seed slots! And a special VIP pass! Hm? Sounds enticing?
 (If the player click <Yes>)
 Arbiter: Hm, good choice.
 Arbiter: Oh, I almost forgot. You see, I am not in control of this whole... 'game'.
-Arbiter: The Holy Aipoi is the one with such role. Although he will not be happy with this idea.
+Arbiter: The Holy Apple is the one with such role. Although he will not be happy with this idea.
 Arbiter: He keeps complaining about the 'game UI' as you can see...
 
 (If the player click <No>)
 Arbiter: Oh. Such a shame.
 Arbiter: I thought you would love to fill the corners of your screen with seed packets,
 Arbiter: Like that one fangame where food fights against mice.
-Arbiter: Though that would mess with the 'game UI', and The Holy Aipoi does not particularly like that...
+Arbiter: Though that would mess with the 'game UI', and The Holy Apple does not particularly like that...
 
 (Both choices lead to this)
 Arbiter: But alternatively, you could always make a 4269 account! (Note: referencing 4399)
