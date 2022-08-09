@@ -91,7 +91,7 @@ Arbiter: Like that one fangame where food fights against mice.
 Arbiter: Though that would mess with the 'game UI', and The Holy Apple does not particularly like that...
 
 (Both choices lead to this)
-Arbiter: But alternatively, you could always make a 4269 account! (Note: referencing 4399)
+Arbiter: But alternatively, you could always make a 4269 account. (Note: referencing 4399)
 Arbiter: Just provide all your personal information and you will be able to play the food and mice game for FREE!
 Arbiter: Ahem, but say,
 (Note: These 7 lines below are full of English memes so translate however you like lol)
@@ -102,8 +102,8 @@ Arbiter: Though you do not have a physical form, but worry not,
 Arbiter: I will personally place your soul into this artistically beautiful Peashooter costume.
 Arbiter: With it, we can sing, dance, eat grass and become one with Mother Nature.
 Arbiter: Ah, isn't that wonderful? Isn't it what we have always wanted?
-(Dave's pan comes from the right side and hits the Arbiter, which causes a screen shake. The pan then falls off from Arbiter's face.)
-(All of Arbiter's lines now become shaking text)
+(Music stops. Dave's pan comes from the right side and hits the Arbiter, which plays the metal hit sound effect and causes a screen shake. The pan then falls off from Arbiter's face.)
+(Play "Good Night" from Undertale. All of Arbiter's lines now become shaking text)
 Arbiter: So this... is how it ends...
 Arbiter: I will not last much longer... but do not fear, mortal,
 Arbiter: As when an Arbiter falls... Another shall be born... to take their place...
@@ -111,4 +111,4 @@ Arbiter: Promise me... that you will be back in my forest... to witness the rebi
 Arbiter: Because, dear chosen one,...
 Arbiter: I love you.
 (Arbiter slowly fades)
-Dave: Ew.
+Dave: (Music immediately stops) Ew.
