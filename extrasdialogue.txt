@@ -43,7 +43,7 @@ Arbiter: I have seen your efforts to defeat the zombies and restore balance to t
 Arbiter: Although the cause of all the seasonal chaos still lies somewhere in this icefield,
 Arbiter: So you failed to restore the seasons to their original forms.
 Arbiter: But you made an effort, and it is all that counts.
-Arbiter: Therefore, I will present you a gift in return.
+Arbiter: Therefore, I will present to you a gift in return.
 Arbiter: Something that will benefit you in this 'video game'.
 Arbiter: Aha, the Eleventh Seed Slot, without a single cent. How does that sound?
 (Clicking the dialogue box here does not do anything. Two buttons, <Yes> and <No>, appear below the dialogue box. The player must click one of the buttons to continue)
