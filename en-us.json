@@ -4156,7 +4156,7 @@
     "8ebddf876d1eb61e6d57aefeadafcfb3": "Hard",
     "3ad0a45756919aad2ffd4c7fe9d3a2b9": "Ultra",
     "3cdaef30b4d299859f15cd67ef13c582": "OK",
-    "b7dfb4faf170e82620ea696c39336e34": "Failed to verify the level.\n(Must beat level mowerless, average amount of explosives used each wave must be no more than 1)",
+    "b7dfb4faf170e82620ea696c39336e34": "Failed to verify the level.\n(Must beat level mowerless, average amount of explosives used each wave must be no more than 1, explosives obtained from vases don't count)",
     "dda541229862f8f5f180819fa99abb74": "Upload level",
     "b4b33e05414d85ce4a7f3dd270e7d2c4": "Criticizing your kaizo level...\n\n(Uploading..)",
     "daa7d9379764bf90225413cd4f6edd8d": "Level uploaded successfully!",
