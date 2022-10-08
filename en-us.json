@@ -580,7 +580,7 @@
     "08b46961af9a5c7352971df2d71a7b6e": "Add group",
     "2f6695806adfeb5440f9ab0212343561": "New vase group",
     "e3ba5ac10a0bf22f9a593ae6bc7ad486": "Setup",
-    "46ca2c3109d678799c3012925d752831": "Note: Vases in a vase group randomly select their contents and positions from possible ones. The number of possible positions and contents affect the randomization of vases. Vasebreaker mode (right menu) will apply a special wave progression designed for Vasebreaker.\n\n- Replace Row and Column below with a number or *.\nPossible positions (Format is [Row,Column],[Row,Column] ...):",
+    "46ca2c3109d678799c3012925d752831": "Note: Vases in a vase group randomly select their contents and positions from possible ones. The number of possible positions and contents affect the number of vases. Vasebreaker mode (right menu) will apply a special wave progression designed for Vasebreaker.\n\n- Replace Row and Column below with a number or *.\nPossible positions (Format is [Row,Column],[Row,Column] ...):",
     "64afd1862649937fa9824cbdd19193a5": ", the data is in the wrong format. Please follow the format [Row,Column]",
     "64a27d2d7a0ba8ae4b4fe462fe70f57a": "Data entry error",
     "acda5fbad1904a699b97a2661fbd266f": [
