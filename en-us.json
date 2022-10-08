@@ -587,7 +587,7 @@
         " at possible position number ",
         "."
     ],
-    "4cf7d9f911e2e46533f57078d327c9fb": "- A vase's content can be a plant or zombie. The Number is the max total quantity for each content.\n- Please type the full Name of the content. (e.g. Laboratory - Impale Cress)\nPossible contents (Format is [\"Name\",Number],[\"Name\",Number] ...):",
+    "4cf7d9f911e2e46533f57078d327c9fb": "- A vase's content can be a plant or zombie. Number is the max number of vases that have the content.\n- Please type the full Name of the content. (e.g. Laboratory - Impale Cress)\nPossible contents (Format is [\"Name\",Number],[\"Name\",Number] ...):",
     "198365822d63f52abb6861bed7be7e82": [
         ", possible content number ",
         " is in the wrong format."
