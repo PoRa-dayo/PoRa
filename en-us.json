@@ -4062,7 +4062,7 @@
     "7b4edb8fad6a01cc18f4ed3a45143502": [
         "Sun cost: ",
         "<br>Cooldown: ",
-        "s<br>",
+        "s<br><br>",
         "<br><p></p>"
     ],
     "e8faa37a62c998872a9b8e81964ddee9": "None",
@@ -4072,7 +4072,7 @@
     "209980e25b0250f0453f731846257a35": "Low",
     "c92589ad8e799cf6b14e4931e524085d": "Very low",
     "f4b0609192b707c80fe0f4ec3241aacc": [
-        "<br>Toughness: ",
+        "<br><br>Toughness: ",
         "<br>Speed: ",
         "<br>Weakness: ",
         "<p></p>"
