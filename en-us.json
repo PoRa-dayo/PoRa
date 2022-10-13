@@ -514,7 +514,7 @@
         "<br>Cooldown: ",
         "s<br>"
     ],
-    "6133f8249bcc32fdacb6be267baf8fc9": "<br/>(Right-click to lock a plant)<br/><span style=\"color:red\">Selected</span>",
+    "6133f8249bcc32fdacb6be267baf8fc9": "<br/>(Right-click/Long press to lock a plant)<br/><span style=\"color:red\">Selected</span>",
     "2a81e9f260bb55bda836e57f1cf1a47e": "<br/><span style=\"color:red\">Locked</span>",
     "b860cfb49e8e12426b078ac9096a7c21": "Toughness: ",
     "7bd3da6a81b9b4115c1f60ada174e196": "<br />Default Weight: ",
