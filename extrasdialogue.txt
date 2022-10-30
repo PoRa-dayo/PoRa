@@ -11,7 +11,8 @@ Dave: Find a way to prevent yourself from freezing, neighbor! I'll go get someth
 Dave: Brrrr... This is starting to feel colder than being in a freezer!
 Dave: And look at all those ice blocks and ice holes!
 Dave: Good thing Befrozenia is here to help us.
-Dave: And maybe you should try to put more plants on the right to bait the wind.
+Dave: Also, maybe you should try to put more plants on the right to bait the wind.
+Dave: And if things ever go wrong, just blow everything up!!!
 Dave: Hope that hot tip's gonna keep you warm for the night!
 ---Winter Extra - Night 3---
 Arbiter: Aha! I've finally found you, Dave.
@@ -29,8 +30,9 @@ Arbiter: Haha, they are merely invisible. This must be the work of your mortal e
 Dave: Mr. Boss Guy!
 Dave: Well, neighbor, we beat him once, we'll beat him again!
 ---Winter Extra - Night 5---
-Zomboss: Hello again, fools. What do you think of my new big bird?...
+Zomboss: Be honest, Dave. What do you think of my new big bird?...
 Zomboss: ...When it freezes you to death? Mwhahahaha!
+Dave: I'm not gonna be stopped by some illusion from a bitter guy! CHARGEEE!!!
 
 ---Seasonal Extras Ending 1--- [Already in the game, player receives it every time they finish "Remnants of a Wooden Bridge"]
 
@@ -113,7 +115,7 @@ Dave: I STUDIED THE PAN!
 (All of Arbiter's lines now become shaking text)
 Arbiter: ...
 Arbiter: So this... is how it ends...
-Arbiter: But if you thought... this is over... you are dead wrong...
+Arbiter: But if you thought... this is over... you are wrong...
 Arbiter: As I... have already called forth... the ancient mighty Kraken...
 Arbiter: You will soon... witness its wrath... and destruction...
 Dave: The Kraken? But there's barely even any water on the beach!
