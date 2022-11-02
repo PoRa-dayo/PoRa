@@ -1063,6 +1063,196 @@ Underivable Bullet Fluxion
 [SPELLCARD9]
 Artifact - Candle Erosion
 
+[ACHEDIF0]
+EASY ACHIEVEMENT
+
+[ACHEDIF1]
+MEDIUM ACHIEVEMENT
+
+[ACHEDIF2]
+HARD ACHIEVEMENT
+
+[ACHEDIF3]
+VERY HARD ACHIEVEMENT
+
+[ACHEDIF4]
+LEGEND ACHIEVEMENT
+
+[ACHEDIF5]
+STORY ACHIEVEMENT
+
+[ACHE0]
+暂未获得的成就
+
+[ACHE1]
+诈骗分子
+
+[ACHEN1]
+在容易被骗的日子进入游戏
+
+"Never Gonna Give you up
+
+[ACHET1]
+寻找互相欺骗的那天
+
+[ACHE2]
+起始与终结的序章
+
+[ACHEN2]
+完成第一个关卡
+
+"千里之行，始于足下
+
+[ACHET2]
+开启一段故事
+
+[ACHE3]
+植物体细胞杂交
+
+[ACHEN3]
+培育出一株花生
+
+"每一个生物科学问题的答案都必
+ 须在细胞中寻找
+
+[ACHET3]
+得知“pea”与“nut”的真谛
+
+[ACHE4]
+种太阳
+
+[ACHEN4]
+让场上同时存在14个双子化向日葵
+
+"啦啦啦种太阳
+
+[ACHET4]
+探求五连消消乐的最密堆积
+
+[ACHE5]
+七龙珠
+
+[ACHEN5]
+寻找飘散的珠子以召唤神龙
+
+"说出你的愿望吧
+
+[ACHET5]
+时间，耐心与运气
+
+[ACHE6]
+山竹已枯
+
+[ACHEN6]
+在路线A击败台风草
+
+"灾难终将过去
+
+[ACHET6]
+战胜飓风
+
+[ACHE7]
+别有洞天
+
+[ACHEN7]
+找到并解开洞穴的谜
+
+"冷气分青嶂，余流润翠微。
+ 潺蔽名瀑布，真似挂帘帷。
+
+[ACHET7]
+注意稀薄的水流
+
+[ACHE8]
+障碍物清空
+
+[ACHEN8]
+清理掉寸土寸金的所有沼泽格。
+
+"所有道具都被清空啦！
+
+[ACHET8]
+做解决难题的清洁工
+
+[ACHE9]
+Only My Railgun
+
+[ACHEN9]
+使用光菱角一次打出300(+)的伤害
+
+"我现在很生气
+
+[ACHET9]
+使激光登峰造极
+
+[ACHE10]
+The Grateful Dead
+
+[ACHEN10]
+在最后一波因最后一个残血僵尸壮
+烈成仁
+
+"我会一直在这里见证的，贝西。
+
+[ACHET10]
+在某一个关卡遗憾而终
+
+[ACHE11]
+镇魂曲
+
+[ACHEN11]
+制造出互换灵魂的镇魂曲
+
+"Stand up,join us,modern crusaders alive.
+ We have the power who'll face the future.
+
+[ACHET11]
+用箭再度激活“替身”
+
+[ACHE12]
+服务器
+
+[ACHEN12]
+让两个距离为1的土豆地雷相连
+
+"这游戏什么破服务器怎么又卡了
+
+[ACHET12]
+制造最烂的信号连接
+
+[ACHE13]
+朱雀
+
+[ACHEN13]
+利用音符使一个坚果由濒死恢复5次
+
+"朱雀之火，永不熄灭！
+
+[ACHET13]
+让坚果无数次浴火重生
+
+[ACHE14]
+世界线变动
+
+[ACHEN14]
+在同一个存档经历Majorist的两种结局
+
+"EL PSY KONGROO
+
+[ACHET14]
+欺骗世界，用好你的Time Leap，改变世界线
+
+[ACHE15]
+修改的力量
+
+[ACHEN15]
+击败SP Majorist
+
+"Power,unlimited power!
+
+[ACHET15]
+沼泽余晖，迷雾萦绕，音符交织，奇迹即现
+
 [MUSIC-1]
 The Emperor’s New Groove
 
@@ -1222,7 +1412,7 @@ From the author：This is a MOD of PvZ1, and the original author is PopCap Games
 　　　　　	The copyright of the game belongs to the original author.
 　　　　　	Special attention is required. Strictly speaking, this mod is a pirated copy.
 　　　　　	Special statement: This is a FREE mod!
-Current version：0.16a
+Current version：0.16a Experiment-1
 GhTr wiki (Chinese)：pvzghtrpv.fandom.com/zh/wiki/
 Mod Recommendation：----------------GHTR series----------------
 　　　　　　　　　　　Ghtr ~ Phantom Flame Flower
@@ -1396,25 +1586,20 @@ Update Log
 
 [MANUAL5_TXT]
 Change log:
-1.A complete English adaptation has been added.
-2.Plant types and zombie types now support digital ID
-3.Change the effect of Dragon Ball
-4.After the defeat of SP Majorist, You can trigger the dialogue with 
-  Hurriclover
-
-BUG FIX:
-GHTR-0000002D:Lightning reed attack sometimes causes crash
-GHTR-0000002E:Lightning reed damage value display is not affected by 
-              adding points.
-GHTR-0000002F:Command system:int type data recognition incorrectly.
-GHTR-00000030:Sometimes crashes when switching languages.
+1.Remove the language "Chinese-Classical".
+2.Remake the achievement UI.
+3.Rename some achivements(Chinese,English translation is absent).
 
 Postscript:
-  This is the beginning update of 0.16,there's not much content,
-because this is just the beginning.
-  However, since the author is in the third year of senior high 
-school, and there are a lot of new contents that needs to be 
-made, it will not be updated for a long time.Please understand.
+  For reduce update frequency(update less time but more one time),we decide to
+use a new update way.
+  Later,we will update in a fixed day(the first day of every month,GMK+8:00) and
+every update has its plentys of content(if in time).
+  So,if you wanna play the lastest version,you just have a look on the first evening
+of every month~owo~
+  Have fun~
+
+
   This paragragh was written by myself(Ghastasaucey),my English
 is not good,there may be many etiquette or grammar problems,please
 forgive me.
