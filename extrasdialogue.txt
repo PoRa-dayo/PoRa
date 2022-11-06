@@ -38,7 +38,7 @@ Zomboss: Withstand its freezing strikes, and witness the true beauty of my creat
 Dave: Wait, that's a bird? I thought that was some... igloo monstrosity.
 Dave: But we've got no time for imagination. CHARGE!!!
 
-[If the player completes Winter Extra Night 5 but have not completed the previous levels of Seasonal Extras]
+[After the player completes Winter Extra Night 5 but have not completed the previous levels of Seasonal Extras]
 Dave: Haha! We beat him again, neighbor!
 Dave: But is it just me or something's amiss?...
 Dave: Eh, guess I'll just go look for tacos. There's gotta be some around here somewhere.
