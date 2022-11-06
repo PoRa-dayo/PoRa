@@ -12,6 +12,7 @@ Dave: Brrrr... This is starting to feel colder than being in a freezer!
 Dave: And look at all those ice blocks and ice holes!
 Dave: Good thing Befrozenia is here to help us.
 Dave: Maybe you should try putting more plants to the right side to bait the wind.
+Dave: Use plants like Spore-shroom for that and you'll be A-O-FANTASTIC.
 Dave: And if things ever go wrong, just blow everything up!!!
 Dave: Hope that hot tip's gonna keep you warm for the night!
 ---Winter Extra - Night 3---
@@ -27,12 +28,20 @@ Arbiter: So it has come to this.
 Arbiter: I shall once again call forth the dark side of your memory.
 Dave: Wha-? The zombies disappeared?!
 Arbiter: Haha, they are merely invisible. This must've been the work of your mortal enemy.
-Dave: Mr. Boss Guy!
+Dave: Mr. Boss Guy and his buffooneries!
 Dave: Well, neighbor, we beat him once, we'll beat him again!
 ---Winter Extra - Night 5---
-Zomboss: Be honest, Dave. What do you think of my new big bird?...
-Zomboss: ...When it freezes you to death? Mwhahahaha!
-Dave: I'm not gonna be stopped by some illusion from a bitter guy! CHARGEEE!!!
+(Zomboss appears like in pvz2)
+Zomboss: David, I seem to have discovered that your tastes are getting disappointingly, and infuriatingly... bad.
+Zomboss: Be honest, David. What is your opinion on my new big bot bird?
+Zomboss: Withstand its freezing strikes, and witness the true beauty of my creation! Mwhahahaha!
+Dave: Wait, that's a bird? I thought that was some... igloo monstrosity.
+Dave: But we've got no time for imagination. CHARGE!!!
+
+[If the player completes Winter Extra Night 5 but have not completed the previous levels of Seasonal Extras]
+Dave: Haha! We beat him again, neighbor!
+Dave: But is it just me or something's amiss?...
+Dave: Eh, guess I'll just go look for tacos. There's gotta be some around here somewhere.
 
 ---Seasonal Extras Ending 1--- [Already in the game, player receives it every time they finish "Remnants of a Wooden Bridge"]
 
