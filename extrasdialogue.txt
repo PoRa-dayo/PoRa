@@ -96,6 +96,7 @@ Arbiter: Hello, the mortal behind that screen. This is The Arbiter speaking.
 Arbiter: So you finally managed to restore the seasons, and came back to me.
 Arbiter: You truly are the chosen one after all.
 
+(Both Ifs lead to this)
 Arbiter: Oh, you must be delighted to see me again. Let me prepare a gift for you in return...
 Arbiter: A total of 18 seed slots! And a special VIP pass! Hm? Sounds enticing?
 (A bunch of seed packets show up like this image here: https://prnt.sc/iJyx8cUMMu_Y. Clicking the dialogue box here does not do anything. Two buttons, <Yes> and <No>, appear below the dialogue box. The player must click one of the buttons to continue)
