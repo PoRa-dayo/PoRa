@@ -35,6 +35,7 @@ Dave: Dang it, I should've brought a map.
 ????: he WHAT
 ???: I left it somewhere around a bridge, but then the locations become all scrambled up.
 ?????: You do realize that the machine is currently our only method of interacting with the game code, right?
+?????: The Holy Apple will not like this- Hold on, where did The Holy Apple go?
 ??????: That's it, folks. Game's on hiatus forever. We're also stuck in this game forever. Yay.
 ????: wait isnt he supposed to be responsible
 ???: Me? Are you serious?
