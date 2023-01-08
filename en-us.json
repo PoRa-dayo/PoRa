@@ -537,7 +537,7 @@
     "b860cfb49e8e12426b078ac9096a7c21": "Toughness: ",
     "7bd3da6a81b9b4115c1f60ada174e196": "<br />Default Weight: ",
     "84322a14ab85fccc3ff0fd454c7f5436": "Current wave:",
-    "4550cb55f47e587d61e665171580c0cd": "Change the wave you want to spawn your preset stuff in! Decimal waves are also allowed. Use the left menu to spawn preset plants, grid items and zombies. Each wave lasts for 18s.\n\nAdd wave: ",
+    "4550cb55f47e587d61e665171580c0cd": "Change the wave you want to spawn your preset stuff in! Decimal waves are also allowed. Use the left menu to spawn preset plants, grid items and zombies. Each wave lasts for 18s max.\n\nAdd wave: ",
     "18e91ec366e869767eb06de0c1f9839a": "OK",
     "e55fba08360365b14308850927256ea1": "Choose wave: ",
     "1fe4768439ff3bd989f0bc8bd37e696c": "<option value='null'>Select wave</option>",
