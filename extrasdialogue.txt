@@ -17,41 +17,20 @@ Dave: Why protect them? Because THEY'RE AS CRAAAAAZZYYYY as me for staying there
 Dave: Come to think of it, where the heck are we?
 Dave: Didn't we just walk a few miles away from home? This doesn't look like Neighborville at all!
 Dave: Dang it, I should've brought a map.
-
-(After completing Spring Extra - Day 3)
-(Following dialogues are written in text box) (Note: This is how the characters talk in-game)
-??????: Ya guys know why we're gathered here right?
-??????: Man I love it when bug errors are everywhere.
-????: what do you mean theres bug? the game isnt updated in ages
-?????: According to these witnesses, it seems that some force has caused this game we govern to screw itself up.
-?????: And as a result, the in-game locations are no longer where they should be.
-????: what
-???: Oh, not only that, I think the seasons are all in disorder as well.
-????: i thought that was intentional, arent you supposed to be fixing it
-???: Well you see, there's a teeny tiny bit of a problem.
 ---Spring Extra - Day 4---
-(After completing Spring Extra - Day 4)
-??????: You lost track of the machine?!!!
-????: he WHAT
-???: I left it somewhere around a bridge, but then the locations become all scrambled up.
-?????: You do realize that the machine is currently our only method of interacting with the game code, right?
-?????: The Holy Apple will not like this- Hold on, where did The Holy Apple go?
-??????: That's it, folks. Game's on hiatus forever. We're also stuck in this game forever. Yay.
-????: wait isnt he supposed to be responsible
-???: Me? Are you serious?
-??????: You just left the machine in some weird place and keep building your so-called forest world.
-????: dude this isnt minekraf
-??????: Remember, we're here to make sure that Dave stays on the right path, so the story could go like how it SHOULD be.
-???: So what? It was still the game that caused this.
-??????: oH iT wAs AlL tHe GaMe How 'bout you find that darn machine first and then we'll talk?
-????: good idea, now scram
+Arbiter: Stupid Holy Apple, forcing me to find the machine like this...
+Arbiter: It's said that the machine caused a bug, and as a result this Dave guy just doesn't follow the original story plan for some reason.
+Arbiter: And for some reason the bug also made all the seasons in here go chaos? How did that even happen?...
+Arbiter: Ugh, it's not even my fault that the machine's gone. Gotta find it somehow, I think I last saw it near a bridge...
 ---Spring Extra - Day 5---
-Arbiter: FiNd ThE dArN mAcHiNe bla bla bla
-Arbiter: Who the hell do they think they are? It's not my fault that the machine's gone.
+Arbiter: Tch. 'Go get the machine. If Dave manages to lay his hands on it, it could mean the end of the world'?
+Arbiter: Hah, over my dead body. How could some mortal like him defeat a divine being?
 Arbiter: Wait, isn't that the Dave guy I'm supposed to 'escort'? Weird orange beard with a pot on his head?
-Arbiter: ...I guess I'd better stay away from him.
-Dave:
-
+Arbiter: ...What a weird NPC, I guess I'd better stay away from him.
+Arbiter: Can't let him touch a machine that could let him make anything he wants.
+Dave: Whoa, 'a machine that could let me make anything I want'?
+Dave: Neighbor, this is it! The Tacoland! THE TACOLAND IS REAL!!!
+Dave: I didn't even know who said that, but we're gonna be the first one to get to that machine. ONWARD!!!
 
 ---Winter Extra - Night 1---
 Dave: Whoo... Seems like we managed to escape that A-bitter guy.
@@ -195,3 +174,21 @@ Arbiter: Hah... Kraken... deez nuts...
 Arbiter: ...Gottem...
 (Arbiter slowly fades)
 Dave: (Music immediately stops) Ew.
+Dave: Oh neighbor, what's this? 'It's About Travel' machine?
+Dave: [Character_Dave has been granted administrator privileges]
+Dave: Whoaaa, all this power! Could this be... I'M NOW GOD???
+Dave: We did it, neighbor! This is what we've been waiting for!
+Dave: TACOLAND! HERE WE GO!!!!!
+(Screen flashes white, then shows Forest normal lawn, then vibrates and flashes white again, then shows Swamp normal lawn, then vibrates and flashes white again, then shows Icefield Night normal lawn, then vibrates and flashes white again, then shows the house menu, then vibrates and flashes white again, then shows the PvZ Travel main menu, then vibrates and flashes white again)
+(Game then switches to a credits scene where text automatically floats from bottom to top like normal, with a heavenly background and Dave and a bunch of tacos floating around along with Claire de Lune playing as the BGM https://www.youtube.com/watch?v=CvFH_6DNRCY)
+(After the credits sequence ends, a suspiciously giant button with a note floats across him)
+[Text box] Dave: Oooh, what's this? A giant button? With a note?
+[Text box] Highly suspicious note: Congratulations, you low-life NPC moron that used the machine to destroy this game. Here's a prize for your hard work. - Signed, Holy Apple
+[Text box] Dave: I can't read any of this... But y'know what they say, neighbor.
+[Text box] Dave: If there's a button, you gotta PRESS IT!
+(No need to animate Dave pressing the button. After that a bunch of tacos appear on-screen)
+[Text box] Dave: Neighbor! It's more tacooosss!!!
+(Red text shows on-screen, continuously flashing) [WARNING: TEXTURE_OVERLOAD]
+(Game vibrates and explodes then the screen is white again)
+(Black text shows on-screen) [PvZTR game data successfully restored. Rebooting game...]
+(The game instantly restarts itself)
