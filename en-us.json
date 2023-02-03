@@ -653,7 +653,7 @@
         ", possible content number ",
         " is in the wrong format."
     ],
-    "6b6b2ddb686d055309b8058f2f2f90dd": "Vase type:",
+    "6b6b2ddb686d055309b8058f2f2f90dd": "Vase type (The last option will spawn the content without the vase, does not work in Vasebreaker mode):",
     "356b5d28fd259feedad108fc9aa3d0c3": "\n(Not available for offline users)",
     "0e220262a2645919da501a8267a5d3f5": "\n(Long press your level to delete it)",
     "6c40fc9695242050a5c7533f1fbe5f23": "\n(Right-click your level to delete it)",
