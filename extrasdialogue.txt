@@ -19,9 +19,11 @@ Dave: Didn't we just walk a few miles away from home? This doesn't look like Nei
 Dave: Dang it, I should've brought a map.
 ---Spring Extra - Day 4---
 Arbiter: Stupid Holy Apple, forcing me to find the machine like this...
-Arbiter: If I get this right, that the machine caused a bug, and as a result this Dave guy just doesn't want to follow the original story plan.
+Arbiter: If I get this right, that the machine caused a bug, and as a result,
+Arbiter: This Dave guy just doesn't want to follow the original story plan.
 Arbiter: And for some reason the bug also made a mess of all the seasons here? How did that even happen?...
-Arbiter: Ugh, it's not even my fault that the machine's gone. Gotta find it somehow, I think I last saw it near a bridge...
+Arbiter: Ugh, it's not even my fault that the machine's gone.
+Arbiter: Gotta find it somehow, I think I last saw it near a bridge...
 ---Spring Extra - Day 5---
 Arbiter: Tch. 'Go get the machine. If Dave manages to lay his hands on it, it could mean the end of the world'?
 Arbiter: Hah, over my dead body. How could some mortal like him defeat a divine being?
@@ -32,47 +34,7 @@ Dave: Whoa, 'a machine that could let me create anything I want'?
 Dave: Neighbor, this is it! The Tacoland! THE TACOLAND IS REAL!!!
 Dave: I didn't even know who said that, but we're gonna be the first one to get to that machine. ONWARD!!!
 
----Winter Extra - Night 1---
-Dave: Whoo... Seems like we managed to escape that A-bitter guy.
-Dave: Now where the heck are we? My lips are starting to feel like frozen chips!
-Dave: And the cold sure doesn't stop the zombies either! In fact, I think there's even more of 'em!
-Dave: It's also nighttime so we won't get any more sun from the sky. Now that's just dandy. ("that's just dandy" is often said as a joke when really something is not good)
-Dave: But luckily I've stockpiled a bunch of new plants- Wait, where did the lamp gadget go?
-Dave: Must've dropped it. Oh, but we've got Solartropa! Sun won't be a problem with this plant around!
-Dave: Find a way to deal with the freezing cold, neighbor! I'll go get something warm.
----Winter Extra - Night 2---
-Dave: Brrrr... Even after lighting a fire this place still feels colder than being in a freezer!
-Dave: And look at all those ice blocks and ice holes!
-Dave: Good thing Befrozenia is here to help us.
-Dave: Maybe you should try putting more plants to the right side to bait the wind.
-Dave: Use plants like Spore-shroom for that and you'll be A-O-FANTASTIC.
-Dave: And if things ever go wrong, just blow everything up!!!
-Dave: Hope that hot tip's gonna keep you warm for the night!
----Winter Extra - Night 3---
-Arbiter: Aha! I've finally found you, Dave.
-Dave: Oh no! The A-bitter guy!
-Arbiter: You had the guts to disturb my forest yet you fail to remember my name. Dispicable.
-Dave: But... What did I do wrong?
-Dave: I was just trying to find foo- I mean fend off the zombies in the forest!
-Arbiter: You dare fool me, mortal? There were not this many zombies until you showed up.
-Dave: Here's the conveyor belt, neighbor! Make good use of those explosives while I RUN AWAY FROM THIS GUY!
----Winter Extra - Night 4---
-Arbiter: So it has come to this.
-Arbiter: I shall once again call forth the dark side of your memory.
-Dave: Wha-? The zombies disappeared?!
-Arbiter: Haha, they are merely invisible. This must've been the work of your mortal enemy.
-Dave: Mr. Boss Guy and his buffooneries!
-Dave: Well, neighbor, we beat him once, we'll beat him again!
 ---Winter Extra - Night 5---
-(Zomboss appears like in pvz2)
-Zomboss: David, I seem to have discovered that your tastes in my machines are getting disappointingly, and infuriatingly... bad.
-Zomboss: Be honest, David. What is your opinion on my new big bot bird?
-Zomboss: Withstand its freezing strikes, and witness the true power of nature-based machinery! Mwhahahaha!
-Dave: Wait, that's a bird?
-Zomboss: Yes, David, it is based on the Bubo scandiacus also known as the snowy owl which is obviously a type of bird- Wait, what did you think this is?
-Dave: I dunno, some sort of igloo? My neighbor and I could've used a bigger igloo.
-Dave: Since this one doesn't fit two people...
-Dave: But we've got no time for imagination. CHARGE!!!
 
 [After the player completes Winter Extra Night 5 but have not completed the previous levels of Seasonal Extras]
 Dave: Haha! We beat him again, neighbor!
@@ -88,6 +50,7 @@ Arbiter: Yes, as a divine being, I am aware of this world being a 'video game'.
 Arbiter: You can think of us divine beings as this game's developers, or you can say, 'true administrators'.
 Arbiter: Let's just say I might have misjudged you as a companion of Dave.
 Arbiter: That Dave... To me, he is nothing but an irresponsible pot-wearing moron.
+Arbiter: He ignored the game's main story, and just tried to find every loophole possible to create his own stupid world.
 Arbiter: I am not sure how you even managed to befriend him... But you,
 Arbiter: You are special.
 Arbiter: I have seen your efforts to defeat the zombies and restore balance to this world.
