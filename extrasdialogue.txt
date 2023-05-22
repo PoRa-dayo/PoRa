@@ -142,21 +142,30 @@ Arbiter: Hah... Kraken... deez nuts...
 Arbiter: ...Gottem...
 (Arbiter slowly fades)
 Dave: (Music immediately stops) Ew.
+(Text box disappears, play machine noises)
 Dave: Oh neighbor, what's this? 'It's About Travel' machine?
 Dave: [Character_Dave has been granted administrator privileges]
-Dave: Whoaaa, all this power! Could this be... I'M NOW GOD???
+Dave: Whoaaa, all this power! Could this be... I'M NOW GOD??? That means...
 Dave: We did it, neighbor! This is what we've been waiting for!
+Dave: I can feel it! I can now alter every fabric of existence in the universe!
+Dave: And I also have this weird surging feeling of hunger. Y'know, for tacos!
+Dave: But at last, we won't have to search all over the world for tacos anymore.
+Dave: I will make my OWN TACO PARADISE! And you'll be its first visitor, neighbor!
+Dave: To where we can consume tacos endlessly, and nothing can trouble us.
+Dave: Not that A-bitter guy, and definitely not those zombies!
 Dave: TACOLAND! HERE WE GO!!!!!
 (Screen flashes white, then shows Forest normal lawn, then vibrates and flashes white again, then shows Swamp normal lawn, then vibrates and flashes white again, then shows Icefield Night normal lawn, then vibrates and flashes white again, then shows the house menu, then vibrates and flashes white again, then shows the PvZ Travel main menu, then vibrates and flashes white again)
 (Game then switches to a credits scene where text automatically floats from bottom to top like normal, with a heavenly background and Dave and a bunch of tacos floating around along with Claire de Lune playing as the BGM https://www.youtube.com/watch?v=CvFH_6DNRCY)
 (After the credits sequence ends, a suspiciously giant button with a note floats across him)
 [Text box] Dave: Oooh, what's this? A giant button? With a note?
-[Text box] Highly suspicious note: Congratulations, you low-life NPC moron that used the machine to destroy this game. Here's a prize for your hard work. - Signed, Holy Apple
+[Text box] Highly suspicious note: Congratulations, whoever low-life NPC moron that used the machine to destroy this game. I can't believe we planned for this stupid scenario. Anyway, here's a prize for your hard work. - Signed, Holy Apple
 [Text box] Dave: I can't read any of this... But y'know what they say, neighbor.
 [Text box] Dave: If there's a button, you gotta PRESS IT!
 (No need to animate Dave pressing the button. After that a bunch of tacos appear on-screen)
 [Text box] Dave: Neighbor! It's more tacooosss!!!
-(Red text shows on-screen, continuously flashing) [WARNING: TEXTURE_OVERLOAD]
-(Game vibrates and explodes then the screen is white again)
+(Red text shows on-screen, continuously flashing. The screen vibrates.) [WARNING: TEXTURE_OVERLOAD]
+[Text box] Dave: I am in heaven!!!
+[Text box, text scrolls at an incredibly fast speed] Dave: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA (Immediately hides text box and switches to next action after the text finishes scrolling)
+(Explode sound effect plays and then the screen is white again)
 (Black text shows on-screen) [PvZTR game data successfully restored. Rebooting game...]
-(The game instantly restarts itself)
+(After around 5 seconds the game instantly restarts itself)
