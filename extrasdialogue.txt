@@ -24,12 +24,13 @@ Arbiter: This Dave guy just doesn't want to follow the original story plan.
 Arbiter: And for some reason the bug also made a mess of all the seasons here? How did that even happen?...
 Arbiter: Ugh, it's not even my fault that the machine's gone.
 Arbiter: Gotta find it somehow, I think I last saw it near a bridge...
----Spring Extra - Day 5---
+---Spring Extra - Day 5 (Intro)---
 Arbiter: Tch. 'Go get the machine. If Dave manages to lay his hands on it, it could mean the end of the world'?
 Arbiter: Hah, over my dead body. How could some mortal like him defeat a divine being?
 Arbiter: Wait, isn't that the Dave guy I'm supposed to 'escort'? Weird orange beard with a pot on his head?
 Arbiter: ...What a weird NPC, I guess I'd better stay away from him.
 Arbiter: Can't let him touch a machine that could let him create anything he wants.
+---Spring Extra - Day 5 (Outro)---
 Dave: Whoa, 'a machine that could let me create anything I want'?
 Dave: Neighbor, this is it! The Tacoland! THE TACOLAND IS REAL!!!
 Dave: I didn't even know who said that, but we're gonna be the first one to get to that machine. ONWARD!!!
@@ -37,7 +38,7 @@ Dave: I didn't even know who said that, but we're gonna be the first one to get 
 ---Winter Extra - Night 5---
 
 [After the player completes Winter Extra Night 5 but have not completed the previous levels of Seasonal Extras]
-Dave: Haha! We beat him again, neighbor!
+Dave: Haha! We really did beat him again, neighbor!
 Dave: But is it just me or something's amiss?...
 Dave: Eh, guess I'll just go look for tacos. There's gotta be some around here somewhere.
 
