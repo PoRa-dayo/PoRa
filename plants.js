@@ -3821,7 +3821,7 @@ oEichhornia = InheritO(CPlants, {
     beAttackedPointL: 56,
     beAttackedPointR: 101,
     WaterShadowGif:7,
-    AudioArr: ["CabbageAttack1", "CabbageAttack2", "eichhornia_spawn", "eichhornia_multiply"],
+    AudioArr: ["CabbageAttack1", "CabbageAttack2"],
     PicArr: (function() {
         var a = "images/Plants/Eichhornia/";
         return ["images/Card/Eichhornia.webp", a + "appear.webp", a + "idle.webp", a + "attack1.webp", a + "attack2.webp", a + "multiply.webp", a + "0.webp", WaterShadowImg]
@@ -3859,9 +3859,6 @@ oEichhornia = InheritO(CPlants, {
     PrivateBirth(self) {
         const id = self.id;
         self.isAttacking = false;
-        if(oP.FlagZombies>0){
-            oAudioManager.playAudio("eichhornia_spawn");
-        }
         // 如果不是水生的话，重写攻击方法
         if (self.LivingArea !== 2) {
             self.ProduceTime = 26;
@@ -3924,7 +3921,6 @@ oEichhornia = InheritO(CPlants, {
             multiply(posArr);
         } else {
             self.isAttacking = true;
-            oAudioManager.playAudio("eichhornia_multiply");
             self.EleBody.src = self.PicArr[self.MultiGif];
             oSym.addTask(50, () => {
                 if (!$P[id]) return;
@@ -4604,7 +4600,6 @@ oSummonZombieObs = InheritO(CPlants, {
     Tools:true,
     Die: ()=>{},
     getShadow: ()=>'display:none',
-    AudioArr: ["zombieobs"],
     PicArr: ["images/Props/MarshOrgan/SummonZombieObstacle.webp?useDynamicPic=false"],
     BirthStyle(c, e, b, a) {
         let d = b.childNodes[1];
@@ -4634,7 +4629,6 @@ oSummonZombieObs = InheritO(CPlants, {
         }
 	},
     MyEffect: function(o) {
-        oAudioManager.playAudio("zombieobs");
         oEffects.Animate($(o.id + "_Light"), {
             opacity: 1,
         }, 0.3 / oSym.NowSpeed);
@@ -5412,14 +5406,15 @@ oVase = InheritO(oObstacle,{
                 if(pro.height>=200||pro.beAttackedPointR-pro.beAttackedPointL>=150){
                     z.Altitude = 3;
                     (function f(){
-                        z.EleBody.style.transform="scale(0)";
+                        let oriT = z.EleBody.style.transform,oriTOri = z.EleBody.style.transformOrigin;
+                        z.EleBody.style.transform="scale(0) " + oriT;
                         z.EleBody.style.transformOrigin = "center bottom";
                         oEffects.Animate(z.EleBody,{
-                            transform:"scale(1)",
+                            transform:"scale(1) "+oriT,
                         },0.3/oSym.NowSpeed,false,function(){
                             z.Altitude = 1;
-                            z.EleBody.style.transform = "";
-                            z.EleBody.style.transformOrigin = "";
+                            z.EleBody.style.transform = oriT;
+                            z.EleBody.style.transformOrigin = oriTOri;
                         });
                     })();
                 }
@@ -5731,64 +5726,47 @@ oFruitBasket = InheritO(oObstacle3, {
     width:90
 }),
 oHeatFloor = InheritO(oSpikeweed, {
-    EName: "oHeatFloor",
-    HP: Infinity,
-    isPlant: 0,
-    zIndex: 0,
-    PicArr: ["", "", "", BlankPNG],
-    Attack: 20,
-    PKind: 0,
-    Tools: true,
-    getShadow: function(a) {
-        return "display:none"
-    },
-    PrivateBirth: function(o) {
-        let bcheck = 1;
-        (function HeatBurn() {
-            if (bcheck == 1) {
-                for (let plant of $P) plant.C == o.C && plant.R == o.R && plant.getHurt && !plant.Tools && plant.getHurt(null, 0, 45);
-                oSym.addTask(700, HeatBurn);
-            }
-        })();
-        o.ArZ = {};
-        let z = oZ.getArZ(o.AttackedLX, o.AttackedRX, o.R, (Z) => {
-            return Z.AKind === 2;
-        });
-        oSym.addTask(3600, _ => {
-            o.Die();
-            bcheck = 0;
-        });
-    },
-    NormalAttack: function(zid) {
-        oAudioManager.playAudio("ignite");
-        let zombie = $Z[zid],
-            o = this,
-            pid = o.id;
-        !o.isAttacking && ($(pid).childNodes[1].src = o.PicArr[3], o.isAttacking = 1, oSym.addTask(50, function fun() {
-            if ($P[pid]) {
-                o.ArZ.length < 1 ? ($(pid).childNodes[1].src = o.PicArr[2], o.isAttacking = 0) : oSym.addTask(50, fun);
-            }
-        }));
-        zombie.getFirePea(zombie, o.Attack, 0);
-    },
-}),
-oIBrains = InheritO(oBrains, {
-    EName: "oIBrains",
-    CName: "脑子",
-    width: 32,
-    height: 40,
-    beAttackedPointL: 0,
-    beAttackedPointR: 32,
-    NormalGif: 0,
-    PicArr: (function() {
-        return ["images/Plants/Brain.webp"]
-    })(),
-    getShadow: self => `left:-15px;top:23px;`,
-    HP: 1,
-    InitTrigger: _=>{},
-    GetDX: _=>-40,
-    PrivateDie: _=>{},
-}),
+        EName: "oHeatFloor",
+        HP: Infinity,
+        isPlant: 0,
+        zIndex: 0,
+        PicArr: ["", "", "", BlankPNG],
+        Attack: 20,
+        PKind: 0,
+        Tools: true,
+        getShadow: function(a) {
+            return "display:none"
+        },
+        PrivateBirth: function(o) {
+            let bcheck = 1;
+            (function HeatBurn() {
+                if (bcheck == 1) {
+                    for (let plant of $P) plant.C == o.C && plant.R == o.R && plant.getHurt && !plant.Tools && plant.getHurt(null, 0, 45);
+                    oSym.addTask(700, HeatBurn);
+                }
+            })();
+            o.ArZ = {};
+            let z = oZ.getArZ(o.AttackedLX, o.AttackedRX, o.R, (Z) => {
+                return Z.AKind === 2;
+            });
+            oSym.addTask(3600, _ => {
+                o.Die();
+                bcheck = 0;
+            });
+        },
+        NormalAttack: function(zid) {
+            oAudioManager.playAudio("ignite");
+            let zombie = $Z[zid],
+                o = this,
+                pid = o.id;
+            !o.isAttacking && ($(pid).childNodes[1].src = o.PicArr[3], o.isAttacking = 1, oSym.addTask(50, function fun() {
+                if ($P[pid]) {
+                    o.ArZ.length < 1 ? ($(pid).childNodes[1].src = o.PicArr[2], o.isAttacking = 0) : oSym.addTask(50, fun);
+                }
+            }));
+            zombie.getFirePea(zombie, o.Attack, 0);
+        },
+    }),
 //活动用特殊植物
 oPeashooter2 = InheritO(oPeashooter, {
     EName:"oPeashooter2",
@@ -5814,43 +5792,6 @@ oRepeater2=InheritO(oXshooter,{
             oSym.addTask(23, _=>$P[pid] && self.AttackCheck1(zid, direction));       
         }
     }, 
-}),
-oISunFlower=InheritO(oSunFlower, {
-    EName:'oISunFlower',
-    PrivateBirth: function(self) {
-    },
-    Die: function(ticket = "NONE_TICKET") {
-        let list = ['JNG_TICKET_MakeRifterZombie','JNG_TICKET_ThiefZombie'];
-        var self = this,
-        c = self.id;
-        let X = GetX(this.C) + 75;
-        let Y = GetY(this.R);
-        for (let tem=2; tem<=self.HP/50; tem++){
-            if (!list.includes(ticket)||ticket=='JNG_TICKET_MembraneZombie') AppearSun(X-30, Y-50, 50, 0,50-Math.random()*10);
-        }
-        self.oTrigger && oT.delP(self);
-        self.HP = 0;
-        delete $P[c];
-        delete oGd.$[self.R + "_" + self.C + "_" + self.PKind];
-        ClearChild($(c));
-        IsHttpEnvi && self.RemoveDynamicPic(self);
-    },
-    getHurt(zombie, AKind, Attack) {
-        const o = this, id = o.id, ele = $(id).childNodes[1];
-        o.SetBrightness(o, ele, 1);
-            oSym.addTask(0, function fun(X, Y) {
-                if (Attack>100 && o.HP > 100) {
-                    for (let i=1; i<=4; i++) AppearSun(X-30, Y-50, 50, 0,50-Math.random()*10);}
-                else if (Attack<100) {
-                    AppearSun(X-30, Y-50, 50, 0,50-Math.random()*10);
-                }
-                else {
-                    for (let i=1; i<=2; i++) AppearSun(X-30, Y-50, 50, 0,50-Math.random()*10);
-                }
-            }, [GetX(o.C) + 75, GetY(o.R)]);
-        oSym.addTask(10, _=>$P[id] && o.SetBrightness(o, ele, 0));
-        !(AKind % 3) ? (o.HP -= Attack) < 1 && o.Die() : o.Die();  //针对不同的僵尸承受不同的攻击
-    },
 });
 //预保留替换植物的函数
 function __TEST_REWRITE_BALANCED_PLANTS__(){
