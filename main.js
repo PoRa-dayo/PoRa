@@ -26,7 +26,8 @@ let $User = {
     Achievement: localStorage.JNG_TR_Achievement?JSON.parse(localStorage.JNG_TR_Achievement):{},  //记录用户获得成就
     DrawBlood: localStorage.JNG_TR_DrawBlood ? JSON.parse(localStorage.JNG_TR_DrawBlood) : false,//是否画血
     TaskForceTimeSync: localStorage.JNG_TR_TaskForceTimeSync ? JSON.parse(localStorage.JNG_TR_TaskForceTimeSync) : false,//是否时间同步
-    OpenDynamicDifficulty:navigator.languages.join().includes("zh")??false,//是否开启动态难度
+    OpenDynamicDifficulty:navigator.language?.includes("zh")??false,//是否开启动态难度
+    IS_PLOT_OPEN:localStorage.JNG_TR_IS_PLOT_OPEN ? JSON.parse(localStorage.JNG_TR_IS_PLOT_OPEN) : true,//是否开启剧情
     _tmpARCARD: {},
 },
 oSym = {
@@ -1098,7 +1099,6 @@ oP = {
                 ctx.clearRect(0,0,Math.floor(900*ratio),Math.floor(600*ratio));
                 let greenDrawing = [];
                 let blueDrawing = [];
-                let purpleDrawing = [];
                 ctx.fillStyle="#555555";
                 let tmpOHP;
                 for(let zombie of $Z){
@@ -1110,14 +1110,6 @@ oP = {
                         };
                         drawPosition.x -= box.width*drawPosition.HPRatio/2;
                         let blueTriggered = false;
-                        if(zombie.ShieldHP>0&&zombie.ShieldHP<(tmpOHP=zombie.OShieldHP)){
-                            let obj = Object.assign({
-                                ratio:zombie.ShieldHP/tmpOHP,
-                            },drawPosition);
-                            obj.HPRatio = Math.max(1,(tmpOHP/500)**1/3);
-                            purpleDrawing.push(obj);
-                            fillRectRatio(obj.x-2,obj.y-2,box.width*obj.HPRatio+4,box.height+4);
-                        }
                         if(zombie.OrnHP>0&&zombie.OrnHP<(tmpOHP=zombie.constructor.prototype.OrnHP)){
                             let obj = Object.assign({
                                 ratio:zombie.OrnHP/tmpOHP,
@@ -1167,10 +1159,6 @@ oP = {
                 ctx.fillStyle="#55FF55";
                 for(let i = greenDrawing.length-1;i>=0;i--){
                     fillRectRatio(greenDrawing[i].x,greenDrawing[i].y,box.width*greenDrawing[i].ratio*greenDrawing[i].HPRatio,box.height);
-                }
-                ctx.fillStyle="#D210EE";
-                for(let i = purpleDrawing.length-1;i>=0;i--){
-                    fillRectRatio(purpleDrawing[i].x,purpleDrawing[i].y,box.width*purpleDrawing[i].ratio*purpleDrawing[i].HPRatio,box.height);
                 }
                 ctx.fillStyle="#00CCFF";
                 for(let i = blueDrawing.length-1;i>=0;i--){
