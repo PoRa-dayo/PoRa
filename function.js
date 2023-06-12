@@ -4138,6 +4138,51 @@ oMiniGames = {
             ).observe(EDPZ, {childList: true});            
         });
     },
+    IZombie() {
+        /* 初始化进度条 */
+        const scoreMax=5;
+        oS.ControlFlagmeter = false;
+        oFlagContent.init({
+            MeterType: 'LeftBar GreenBar',
+            HeadType: 'NoneHead',
+            canMoveHead: false,
+            fullValue: scoreMax,
+        }).show();
+        SetBlock($('dGameScore'));
+        /* 监听oS.GameScore */
+        let $score = 0;
+        let Text_ScoreNum = $('scoreNum');
+        $('scoreMax').innerText = scoreMax;
+        Object.defineProperty(oS, 'GameScore', {
+            get: _ => $score,
+            set : x => {
+                x = Math.max( Math.min(x, scoreMax), 0 );  //屏蔽负分和超分
+                Text_ScoreNum.innerText = $score = x;
+                oFlagContent.update({ curValue: x });
+                if($score === scoreMax) {
+                    delete oS.GameScore;
+                    toWin();
+                }
+            },
+            configurable: true,
+        });
+    	let Brains=hasPlants(false, plant=>{return plant.EName == "oIBrains"});
+    	let BrainsNum=Brains.length;
+        let CBrainsNum=BrainsNum;
+        let Sculps=[];
+    	for(let i=0;i<Brains.length;i++){Brains[i].PrivateDie=_=>oSym.Timer && BrainsNum--}
+        loop();
+        function loop(){
+            oSym.addTask(300, _=>{
+                oSym.addTask(200,function chkWin(){   
+                    if(BrainsNum<5-oS.GameScore){
+                        oS.GameScore+=1;
+                    }
+                    oSym.addTask(200,chkWin);
+                 });
+            });
+        }
+    },
     oStg:{
         canvas:null,
         tmpCanvas:null,
@@ -5125,9 +5170,6 @@ const SkipLoading = () => {
 const willPlayDialogue=(type=-1)=>{
     if(false&&localStorage.JNG_DEV==="true"){
         return 0;
-    }
-    if(!$User.IS_PLOT_OPEN){
-        return -1;
     }
                                                 //这里加上通关前后的标志可以表明看的是通关对话或者通过前对话
     if(!sessionStorage["___PLAY_DIALOGUE___"+oS.Lvl+"_"+(type>=0?type:oS.isStartGame)]){
