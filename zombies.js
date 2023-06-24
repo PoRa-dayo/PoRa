@@ -1397,7 +1397,7 @@ var CZombies = NewO({
                 let s = 80 * distance;
                 let zx = self.ZX - (self.beAttackedPointR - self.beAttackedPointL) / 2 * (self.WalkDirection * 2 - 1);
                 let isInWater = self.LivingArea === 2 && self.isSinkAnimFinished === true 
-                        || self.LivingArea === 1 && self.isSinkAnimFinishe === false;
+                        || self.LivingArea === 1 && self.isSinkAnimFinished === false;
                 if (self.FangXiang === "GoUp" || self.FangXiang === "GoDown") {
                     s = 0;
                 } else if (isInWater) {
@@ -2074,7 +2074,7 @@ oStrollZombie = InheritO(OrnNoneZombies, {
         zombie && !zombie.isGoingDie && zombie.isNotStaticed() && (plant && plant.EName !== "oLSP1" && plant.Die(), zombie.JudgeAttack());
     }),
     BirthCallBack(self) {
-        oAudioManager.playAudio("StrollZombie_Coming" + Math.floor(1 + Math.random() * 3));
+        oAudioManager.playAudio("StrollZombie_Coming" + Math.floor(1 + Math.random() * 3)).volume = 0.4;
         OrnNoneZombies.prototype.BirthCallBack(self);
     },
     GoingDie() {
@@ -2901,6 +2901,7 @@ oBossA = (() => {
         [a, b])
         },
         GoingDieHead: function () {},
+        SetWater(){},
         NormalDie: function () {
             oAudioManager.playAudio("machineExplosion");
             let self = this,
@@ -6871,7 +6872,6 @@ oCrystal = InheritO(oConeheadZombie, {
 }),
 oSculpture = (() => {
     const getHit = (self, attack) => {
-        if (self.SunUponHit > 0) oS.SunNum+=self.SunUponHit;
         if((self.HP -= attack) <= 0) {  //死亡
             self.getHit0 = self.getHit1 = self.getHit2 = self.getHit3 = _=>{};
             self.NormalDie();
@@ -6893,7 +6893,6 @@ oSculpture = (() => {
         PicArr: (path => ['Sculpture0.png', 'Sculpture1.png', 'Sculpture2.png', 'damage1.png', 'damage2.png'].map(s => path + s))("images/Props/Sculpture/"),
         AudioArr: ['sculpture1' ,'sculpture2', 'sculpture3'],
         getShadow: _ => `left: 3px;top: 144px;`,
-        SunUponHit: 0, //industry6jx
         isMoving: 0,
         ChkActs: (o,R,arR,i) =>o.GoLeft(o,R,arR,i),  //默认向左走
         FangXiang: 'GoLeft',
