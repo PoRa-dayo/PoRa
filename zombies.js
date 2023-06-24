@@ -19,6 +19,8 @@ var CZombies = NewO({
         BreakPoint: 90,
         Ornaments: 0,
         OrnHP: 0,
+        OShieldHP: 0,
+        ShieldHP: 0,
         OSpeed: 1.6,
         Speed: 1.6,
         PZ: 1,
@@ -558,6 +560,13 @@ var CZombies = NewO({
             let ele = self.Ele = $(id);
             self.EleShadow = ele.firstChild;
             self.EleBody = ele.childNodes[1];
+            if(self.ShieldHP > 0){
+                self.OShieldHP = self.ShieldHP;
+                NewImg(`buff_shield_${Math.random()}`, "images/Zombies/buff_shield.png", self.getShadow(
+                    self) + "z-index:5;left:65px;top:60px;transform: scale(1);", ele, {
+                    className: 'buff_shield'
+                });
+            }
             if(oS.ZombieRandomSpeed && !self.isPuppet){
                 let delta = Math.Clamp(Math.Grandom(0,oS.ZombieRandomSpeed/3),-oS.ZombieRandomSpeed/3,oS.ZombieRandomSpeed/3);
                 self.Speed+=delta;
@@ -610,11 +619,32 @@ var CZombies = NewO({
             return this.DisappearDie(),
                 1
         },
+        getShieldHit(self) {
+            self.ShieldHP--;
+            let ele = self.Ele;
+            if(self.ShieldHP <= 0) {
+                oSym.addTask(100, () => {
+                    oEffects.Animate(ele.querySelector('.buff_shield'), {
+                        opacity: 0,
+                        transform: `scale(2)`
+                    }, 0.3 / oSym.NowSpeed);
+                });
+            }else if(Math.ceil(self.ShieldHP)===Math.ceil(self.OShieldHP/2)){
+                ClearChild(ele.querySelector('.buff_shield'));
+                NewImg(`buff_shield_${Math.random()}`, "images/Zombies/buff_shield_2.png", self.getShadow(
+                    self) + "z-index:5;left:65px;top:60px;transform: scale(1);", ele, {
+                    className: 'buff_shield'
+                });
+            }
+        },
         /* 如果僵尸血量大于1800，则扣除血量1800
             如果僵尸血量小于1800，则可被炸弹直接炸死 */
         getExplosion: function() {
             let self = this;
-            self.HP > 1800 ? self.HP -= 1800 : $Z[self.id] && !self.isGoingDie && self.ExplosionDie();
+            if (self.ShieldHP > 0) {
+                self.getShieldHit(self);
+            }
+            else {self.HP > 1800 ? self.HP -= 1800 : $Z[self.id] && !self.isGoingDie && self.ExplosionDie();}
         },
         getThump: function() {
             this.DisappearDie()
@@ -740,7 +770,7 @@ var CZombies = NewO({
             let body = self.__TMP_ELEBODY__ || self.EleBody;
             // StaticEffectList用于标记僵尸处于定身状态
             let list = self.StaticEffectList ?? (self.StaticEffectList = new Set());
-            if (!forced && (!$Z[id] || self.HP < self.BreakPoint || self.isPuppet || self.isGoingDie)) {
+            if (!forced && (!$Z[id] || self.ShieldHP > 0 || self.HP < self.BreakPoint || self.isPuppet || self.isGoingDie)) {
                 return;
             }
             // 生成canvas，绘制僵尸静态图片
@@ -828,7 +858,7 @@ var CZombies = NewO({
         },
         getFreeze(freezeKeepTime = 400, slowKeepTime = 1500) {
             const self = this;
-            if (!$Z[self.id] || self.isGoingDie || self.Altitude === 3) {
+            if (!$Z[self.id] || self.ShieldHP > 0 || self.isGoingDie || self.Altitude === 3) {
                 return;
             }
             self.getPea(self, 20, 0);
@@ -858,7 +888,7 @@ var CZombies = NewO({
             });
         },
         getSlow(self, keepTime = 1000) {
-            if (self.isGoingDie) {
+            if (self.isGoingDie || self.ShieldHP > 0) {
                 return;
             }
             let ele = self.Ele;
@@ -926,7 +956,7 @@ var CZombies = NewO({
             }
         },
         getVertigo(self, attackPower, dir, style, keepTime = 1000) {
-            if (self.isGoingDie) {
+            if (self.isGoingDie || self.ShieldHP > 0) {
                 return;
             }
             let ele = self.Ele;
@@ -996,7 +1026,7 @@ var CZombies = NewO({
             self.Speed *= intensity;
             self.Attack *= intensity;
             if (!oldTimeStamp) {
-                NewImg(`buff_excited_${Math.random()}`, "images/Zombies/buff_excited.png", self.getShadow(
+                NewImg(`buff_excited_${Math.random()}`, "images/Zombies/buff_excited.gif", self.getShadow(
                     self) + "z-index:5;transform: scale(1);", ele, {
                     className: 'buff_excited'
                 });
@@ -1432,10 +1462,13 @@ var CZombies = NewO({
 }),
 OrnNoneZombies = function() {
     let getHit = function(self, attack) {
-        if((self.HP -= attack) < self.BreakPoint) {
+        if(self.ShieldHP > 0) {self.getShieldHit(self);}
+        else{
+            if((self.HP -= attack) < self.BreakPoint) {
             self.GoingDie(self.PicArr[[self.LostHeadGif, self.LostHeadAttackGif][self.isAttacking]]);
             self.getHit0 = self.getHit1 = self.getHit2 = self.getHit3 = function() {};
             return;
+            }
         }
         self.SetBrightness(self, self.EleBody, 1);
         oSym.addTask(10, _ => $Z[self.id] && self.SetBrightness(self, self.EleBody, 0));
@@ -1487,7 +1520,8 @@ OrnIZombies = function() {
         var d = f.OrnHP,
         c = f.HP,
         e = OrnNoneZombies.prototype;
-        if((d = f.OrnHP -= b) < 1){
+        if((f.OrnHP - b) < 1){
+            d = f.OrnHP -= b;
             f.HP += d;
             f.Ornaments = 0;
             f.EleBody.src = f.PicArr[[f.NormalGif = f.OrnLostNormalGif,f.AttackGif = f.OrnLostAttackGif][f.isAttacking]];
@@ -1497,11 +1531,14 @@ OrnIZombies = function() {
             f.getHit = f.getHit0 = f.getHit1 = f.getHit2 = f.getHit3 = e.getHit;
             f.getHit(f,0);
         }else{
+            if (f.ShieldHP>0) {f.getShieldHit(f);}
+            else{
+            d = f.OrnHP -= b;
             f.SetBrightness(f, f.EleBody, 1);
             oSym.addTask(10,
             function(h, g) { (g = $Z[h]) && g.SetBrightness(g, g.EleBody, 0)
             },
-            [f.id]);
+            [f.id]);}
         }
     };
     return InheritO(OrnNoneZombies, {
@@ -3011,7 +3048,7 @@ oMembraneZombie = InheritO(OrnNoneZombies, {
         return rV;
     },
     getPlants(){
-        return hasPlants(true, v => v.PKind===1);
+        return hasPlants(true, v => v.C>0&&v.PKind===1);
     },
     Conjure() {
         let obj = this;
@@ -3142,6 +3179,7 @@ oMakeRifterZombie = InheritO(OrnNoneZombies, {
     StandGif: 8,
     BoomDieGif: 9,
     width: 200,
+    AudioArr: ['icecutter'],
     height: 153,
     beAttackedPointL: 85,
     beAttackedPointR: 165,
@@ -3187,10 +3225,9 @@ oMakeRifterZombie = InheritO(OrnNoneZombies, {
         });
     },
     NormalAttack: function(d, c) {
-        oAudioManager.playAudio(["chomp", "chompsoft", 'chomp2'][Math.floor(Math.random() * 3)]);
         oSym.addTask(50,
             function(e) {
-                $Z[e] && oAudioManager.playAudio(["chomp", "chompsoft", 'chomp2'][Math.floor(Math.random() * 3)])
+                $Z[e] && oAudioManager.playAudio("icecutter")
             },
             [d]);
         oSym.addTask(100,
@@ -3565,7 +3602,7 @@ oZomboni = function () {
             self.Speed *= intensity;
             self.Attack *= intensity;
             if(!oldTimeStamp){
-                NewImg(`buff_excited_${Math.random()}`, "images/Zombies/buff_excited.png", "left:50px;top:200px;height:38px;z-index:5;", ele, {className: 'buff_excited'});
+                NewImg(`buff_excited_${Math.random()}`, "images/Zombies/buff_excited.gif", "left:50px;top:200px;height:38px;z-index:5;", ele, {className: 'buff_excited'});
                 !$User.LowPerformanceMode && EditCompositeStyle({
                     ele: self.EleBody,
                     styleName: 'filter',
@@ -4340,7 +4377,7 @@ oBeetleCarZombie = (() => {
         CardStars: 4,
         getShadow: self => `position: absolute;width: 231px;height: 44px;left: 15px;background:url(images/Zombies/BeetleCarZombie/Shadow.png);top: 166px;background-size: 100% 120%;`,
         PicArr: (path => [path + "Idle.webp", path + 'Walk.webp', path + 'Release.webp', path + 'FlatTire.webp', path + 'Die.webp', path + 'Exhaust.png', path + 'Shadow.png'])("images/Zombies/BeetleCarZombie/"),
-        AudioArr: ["zamboni", "shieldhit", "shieldhit2", 'beetleCarDie'],
+        AudioArr: ["zamboni", "shieldhit", "shieldhit2", "beetle", 'beetleCarDie'],
         Almanac:{
             Tip:"甲壳虫车僵尸一段时间会往后发出毒气，会让后面的所有僵尸亢奋。",
             Speed:"慢",
@@ -4410,6 +4447,7 @@ oBeetleCarZombie = (() => {
             if(self.changingX >= 150) {
                 self.changingX = 0;
                 self.isReleasing = 1;
+                oAudioManager.playAudio('beetle');
                 self.EleBody.src = self.PicArr[self.ReleaseGif];
                 oSym.addTask(100, () => {
                     if(!$Z[id]) return;
@@ -4512,6 +4550,7 @@ oThiefZombie = InheritO(OrnNoneZombies, {
     isFloating: true,
     FangXiang: 'GoRight',
     WalkDirection: 1,
+    IZombieMode:false,
     AudioArr: ["ThiefZombie"],
     HeadTargetPosition: [{
         x: 24,
@@ -4778,12 +4817,27 @@ oThiefZombie = InheritO(OrnNoneZombies, {
         if (!plant) {
             return;
         }
-        ThrowACard(plant, pos, function(p) {
-            let bc = p.SetBrightness;
-            p.SetBrightness = function() {};
-            p.getHurt(null, 0, hurt); //造成伤害
-            p.SetBrightness = bc;
-        });
+        let self = this;
+        if(self.IZombieMode){
+            let data = [],R=self.R,C = GetC(pos[0]);
+            for(let f = 0, _$ = oGd.$; f <= PKindUpperLimit; f++) {
+                data.push(_$[R + "_" + C + "_" + f]);
+            }
+            if(plant.prototype.CanGrow(data, R, C)){
+                let p = CustomSpecial(plant,R,C);
+                let bc = p.SetBrightness;
+                p.SetBrightness = function() {};
+                p.getHurt(null, 0, hurt); //造成伤害
+                p.SetBrightness = bc;
+            }
+        }else{
+            ThrowACard(plant, pos, function(p) {
+                let bc = p.SetBrightness;
+                p.SetBrightness = function() {};
+                p.getHurt(null, 0, hurt); //造成伤害
+                p.SetBrightness = bc;
+            });
+        }
     },
     CrushDie: CZombies.prototype.DisappearDie,
     ExplosionDie(...arr) {
@@ -6817,6 +6871,7 @@ oCrystal = InheritO(oConeheadZombie, {
 }),
 oSculpture = (() => {
     const getHit = (self, attack) => {
+        if (self.SunUponHit > 0) oS.SunNum+=self.SunUponHit;
         if((self.HP -= attack) <= 0) {  //死亡
             self.getHit0 = self.getHit1 = self.getHit2 = self.getHit3 = _=>{};
             self.NormalDie();
@@ -6838,6 +6893,7 @@ oSculpture = (() => {
         PicArr: (path => ['Sculpture0.png', 'Sculpture1.png', 'Sculpture2.png', 'damage1.png', 'damage2.png'].map(s => path + s))("images/Props/Sculpture/"),
         AudioArr: ['sculpture1' ,'sculpture2', 'sculpture3'],
         getShadow: _ => `left: 3px;top: 144px;`,
+        SunUponHit: 0, //industry6jx
         isMoving: 0,
         ChkActs: (o,R,arR,i) =>o.GoLeft(o,R,arR,i),  //默认向左走
         FangXiang: 'GoLeft',
