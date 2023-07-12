@@ -299,6 +299,19 @@ oLawnCleaner = InheritO(CPlants, {
         if (zombie.beAttacked && zombie.Altitude) {
             this.canTrigger = 0;
             this.NormalAttack(this);
+            if(zombie.constructor===oBalloonZombie&&zombie.isFloating){
+                let ps = function(name,ach,type="成就"){
+                    if($User.Achievement[ach]){
+                        return;
+                    }
+                    PlaySubtitle(`解锁${type}：${name}`);
+                    oSym.addTask(500,function(){
+                        PlaySubtitle();
+                    });
+                    DataManager.SetAchievement(ach,1);
+                };
+                ps("犯罪高手","The_oLawnCleaner_Egg");
+            }
             localStorage.JNG_DEV !== 'true' && CSpeed(1);
         }
     },
@@ -1250,23 +1263,32 @@ oNutBowling = InheritO(CPlants, {
     EName: "oNutBowling",
     CName: "坚果保龄球",
     width: 65,
-    height: 73,
+    height: 69,
     beAttackedPointR: 45,
     canEat: 0,
-    zIndex: 1,
     Immediately: true,
-    PicArr: ["images/Card/WallNut.webp", "images/Plants/WallNut/0.webp", "images/Plants/WallNut/WallNutRoll.webp"],
+    PicArr: ["images/Card/WallNut.webp", "images/Plants/WallNut/0.webp", "images/Plants/WallNut/0.webp"],
     AudioArr: ["bowling", "bowlingimpact", "bowlingimpact2"],
     CanAttack: 1,
     traditionalTypeCollide:false,//传统的碰撞模式，类似pvz1，不能像旅行那样连续撞很多下
     InitTrigger() {},
     getHurt() {},
+    radius:64.5,//坚果平均半径
     PrivateBirth(self) {
         oAudioManager.playAudio("bowling");
         let ele = $(self.id);
+        let subEle = ele.childNodes[1];
         let dir = 0;  //坚果的上下移动方向，0为不移动，1为向下，-1为向上
         let minY = GetY1Y2(1)[0]+40;    //坚果可以运动到的上边界坐标
         let maxY = GetY1Y2(oS.R)[1];   //坚果可以运动到的下边界坐标
+        let updateFrame = $User.LowPerformanceMode?10:6;//更新图片的时间
+        let nowFrame = 0;//当前运行时间
+        let nowDistance = 0;//坚果在这段运行时间内走了多少距离
+        let currentRad = 0;//当前坚果转了多少角度
+        let realHeight = 69;
+        let realWidth = 60;
+        let drawingFrame = $User.LowPerformanceMode?4:2;//改变坚果位置的时间间隔
+        let _save_drawingFrame = drawingFrame;
         function changeDir(R){//改变坚果运行方向
             switch(R) {
                 case oS.R:
@@ -1336,20 +1358,31 @@ oNutBowling = InheritO(CPlants, {
                     let curR = 0,bottomR = 0;
                     if(self.traditionalTypeCollide){
                         if(dir===1){
-                            curR = Math.Clamp(GetR((self.pixelTop + dir * 2)+20),1,oS.R);   //计算坚果处在行, 45是一个魔法数字，代表坚果的实际高度
+                            curR = Math.Clamp(GetR((self.pixelTop + dir * 2)+20),1,oS.R);   //计算坚果处在行, 20是一个魔法数字，代表坚果的实际高度
                             bottomR = GetR(self.pixelBottom += dir * 2);
                         }else{
                             bottomR = curR = GetR(self.pixelBottom += dir * 2);   //计算坚果处在行
                         }
                     }else{
-                        curR = GetR(self.pixelBottom += dir * 2);   //计算坚果处在行
+                        if(dir===1){
+                            curR = Math.Clamp(GetR((self.pixelBottom + dir * 2)-10),1,oS.R);
+                            bottomR = GetR(self.pixelBottom += dir * 2);
+                        }else{
+                            bottomR = curR = GetR(self.pixelBottom += dir * 2);   //计算坚果处在行
+                        }
                     }
                     let curC = GetC(self.pixelRight += 2);   //计算坚果处在列
-                    SetStyle(ele, {
-                        left: (self.pixelLeft += 2) + "px",
-                        top: (self.pixelTop += dir * 2) + "px",
-                        zIndex: (self.zIndex = 3 * bottomR),
-                    });
+                    self.pixelLeft += 2;
+                    self.pixelTop += dir * 2;
+                    self.zIndex = 3 * bottomR;
+                    if(drawingFrame--==0){
+                        SetStyle(ele, {
+                            left: (self.pixelLeft) + "px",
+                            top: (self.pixelTop) + "px",
+                            zIndex: (self.zIndex),
+                        });
+                        drawingFrame=_save_drawingFrame;
+                    }
                     if(dir*(curR-R) > 0){
                         self.R = curR;
                         flag = true;
@@ -1388,7 +1421,18 @@ oNutBowling = InheritO(CPlants, {
                     }                 
                 }
             }
-            oSym.addTask(1/3, fun);
+            nowDistance+=2;//如果不等于0就是斜着走，距离是根二倍
+            //更新图片的旋转角
+            if((nowFrame++)>=updateFrame){
+                //console.log(subEle);
+                currentRad += nowDistance/self.radius*2;
+                EditCompositeStyle({ele:subEle, delFuncs:["rotate","translateY"], addFuncs:[
+                    ["translateY",`${(Math.Lerp(realHeight,realWidth,(Math.cos(currentRad*2)+1)/2)-realHeight)/2}px`],
+                    ["rotate",`${currentRad}rad`],
+                ], option:2});
+                nowDistance = nowFrame = 0;
+            }
+            oSym.addTask(1, fun);
         })();
     },
     Die(ticket) {
@@ -1408,17 +1452,28 @@ oBigWallNutPay = InheritO(oNutBowling, {
     SunNum:225,
     coolTime:5,
     CName:"巨大坚果保龄球",
+    radius:129,
     PicArr: (function() {
         var a = "images/Plants/WallNut/";
-        return ["images/Card/BigWallNut.webp", a + "0.webp", a + "WallNutRoll.webp"]
+        return ["images/Card/BigWallNut.webp", a + "0.webp", a + "0.webp"]
     })(),
-    PrivateBirth: function(c) {
-        c.height=146;
-        let d = $(c.id);
+    PrivateBirth: function(self) {
+        self.height=146;
+        let d = $(self.id);
+        let subEle = d.childNodes[1];
+        subEle.style.transform="translateX(13px)";
+        let updateFrame = $User.LowPerformanceMode?10:6;//更新图片的时间
+        let nowFrame = 0;//当前运行时间
+        let nowDistance = 0;//坚果在这段运行时间内走了多少距离
+        let currentRad = 0;//当前坚果转了多少角度
+        let realHeight = 138;
+        let realWidth = 120;
+        let drawingFrame = $User.LowPerformanceMode?4:2;//改变坚果位置的时间间隔
+        let _save_drawingFrame = drawingFrame;
         oAudioManager.playAudio("bowling");
-        oGd.del({ R: c.R, C: c.C, PKind: 1 });
+        oGd.del({ R: self.R, C: self.C, PKind: 1 });
         (function fun(){
-            let z = oZ.getArZ(c.pixelLeft, c.pixelRight, c.R);
+            let z = oZ.getArZ(self.pixelLeft, self.pixelRight, self.R);
             for(let i =z.length-1;i>=0;i--){
                 if($Z[z[i].id]){
                     (z[i].HP+z[i].OrnHP)>3000?z[i].getHit0(z[i],3000):z[i].CrushDie(0.15);
@@ -1428,13 +1483,28 @@ oBigWallNutPay = InheritO(oNutBowling, {
                 oEffects.ScreenShake(2);
                 oAudioManager.playAudio(["bowlingimpact", "bowlingimpact2"].random());
             }
-            SetStyle(d,{
-                left:(c.pixelLeft+=2)+"px",
-            });
-            c.pixelRight+=2;
-            if(c.pixelLeft>oS.W){
-                c.Die();
+            self.pixelLeft+=2;
+            if(drawingFrame--==0){
+                SetStyle(d,{
+                    left:(self.pixelLeft)+"px",
+                });
+                drawingFrame=_save_drawingFrame;
+            }
+            self.pixelRight+=2;
+            if(self.pixelLeft>oS.W){
+                self.Die();
                 return;
+            }
+            nowDistance+=2;
+            //更新图片的旋转角
+            if((nowFrame++)>=updateFrame){
+                //console.log(subEle);
+                currentRad += nowDistance/self.radius*2;
+                EditCompositeStyle({ele:subEle, delFuncs:["rotate","translateY"], addFuncs:[
+                    ["translateY",`${(Math.Lerp(realHeight,realWidth,(Math.cos(currentRad*2)+1)/2)-realHeight)/2+10}px`],
+                    ["rotate",`${currentRad}rad`],
+                ], option:2});
+                nowDistance = nowFrame = 0;
             }
             oSym.addTask(1,fun);
         })();
@@ -1453,18 +1523,30 @@ oBigWallNut = InheritO(oBigWallNutPay, {
     SunNum:0,
     PicArr: (function() {
         var a = "images/Plants/WallNut/";
-        return ["images/Card/BigWallNut.webp", a + "0.webp", a + "WallNutRoll.webp"]
+        return ["images/Card/BigWallNut.webp", a + "0.webp", a + "0.webp"]
     })(),
 }),
 oBoomNutBowling = InheritO(oNutBowling, {
     EName: "oBoomNutBowling",
     CName: "爆炸坚果",
+    height:72,
+    width:82,
+    radius:68,
     PicArr: (function() {
         var a = "images/Plants/WallNut/";
-        return ["images/Card/BoomNutBowling.webp", a + "1.gif", a + "BoomNutBowling.webp", "images/Plants/CherryBomb/Boom.png"]
+        return ["images/Card/BoomNutBowling.webp", a + "1.gif", a + "1.gif", "images/Plants/CherryBomb/Boom.png"]
     })(),
     AudioArr: ["cherrybomb", "bowling"],
     PrivateBirth: function(self) {
+        let subEle = $(self.id).childNodes[1];
+        let updateFrame = $User.LowPerformanceMode?10:6;//更新图片的时间
+        let nowFrame = 0;//当前运行时间
+        let nowDistance = 0;//坚果在这段运行时间内走了多少距离
+        let currentRad = 0;//当前坚果转了多少角度
+        let realHeight = 72;
+        let realWidth = 64;
+        let drawingFrame = $User.LowPerformanceMode?4:2;//改变坚果位置的时间间隔
+        let _save_drawingFrame = drawingFrame;
         oAudioManager.playAudio("bowling");
         (function fun(self, GroundWidth, AttackedLX, AttackedRX, dom) {
             var oldR = self.R,
@@ -1495,9 +1577,13 @@ oBoomNutBowling = InheritO(oNutBowling, {
                     curC = GetC(self.pixelRight += 2);
                     self.AttackedLX = AttackedLX += 2;
                     self.AttackedRX = AttackedRX += 2;
-                    SetStyle(dom, {
-                        left: (self.pixelLeft += 2) + "px"
-                    });
+                    self.pixelLeft+=2;
+                    if(drawingFrame--==0){
+                        SetStyle(dom,{
+                            left:(self.pixelLeft)+"px",
+                        });
+                        drawingFrame=_save_drawingFrame;
+                    }
                     if(curC!=oldC){
                         self.C = curC;
                         let id = oldR + "_" + curC + "_1";
@@ -1511,6 +1597,17 @@ oBoomNutBowling = InheritO(oNutBowling, {
                             oGd.add(self, id);
                         }
                     }
+                    nowDistance+=2;
+                    //更新图片的旋转角
+                    if((nowFrame++)>=updateFrame){
+                        //console.log(subEle);
+                        currentRad += nowDistance/self.radius*2;
+                        EditCompositeStyle({ele:subEle, delFuncs:["rotate","translateY"], addFuncs:[
+                            ["translateY",`${(Math.Lerp(realHeight,realWidth,(Math.cos(currentRad*2)+1)/2)-realHeight)/2}px`],
+                            ["rotate",`${currentRad}rad`],
+                        ], option:2});
+                        nowDistance = nowFrame = 0;
+                    }
                     oSym.addTask(1, fun, [self, GroundWidth, self.AttackedLX, self.AttackedRX, dom]);
                 }
             }
@@ -1523,7 +1620,7 @@ oBoomNutBowlingPay = InheritO(oBoomNutBowling, {
     coolTime:5,
     PicArr: (function() {
         var a = "images/Plants/WallNut/";
-        return ["images/Card/BoomNutBowling.webp", a + "1.gif", a + "BoomNutBowling.webp", "images/Plants/CherryBomb/Boom.png"]
+        return ["images/Card/BoomNutBowling.webp", a + "1.gif", a + "1.gif", "images/Plants/CherryBomb/Boom.png"]
     })(),
 }),
 //极光冰原植物
@@ -3746,6 +3843,7 @@ oGraveBuster = InheritO(CPlants, {
     Immediately: true,
     beAttackedPointL: 50,
     beAttackedPointR: 133,
+    PKind:5,
     PicArr: ["images/Card/GraveBuster.webp", "images/Plants/GraveBuster/0.webp", "images/Plants/GraveBuster/attack.webp"],
     Tooltip: "噬碑藤能够就地吞噬墓碑",
     Story: "噬碑藤虽然在别人眼里像一条盘起来的浑身长满刺的，凶神恶煞的蛇，但他其实一直想要被拥抱，想要获得那种不需要证明自己有异于常人的能力也可以享受的真心的拥抱，即使被当成一条狗也无所谓。但当他原本信赖的人为了更好地利用他而杀掉了他所有亲近的植物，甚至没有放过他的朋友养的猫以后，他现在只想摧毁所有墓碑，直到彻底黑化，在墓地和那人对决并且把它彻底吞掉为止。",
@@ -3760,7 +3858,7 @@ oGraveBuster = InheritO(CPlants, {
         return "display:none;";
     },
     CanGrow(data, R, C) {
-        return !!oGd.$Tombstones[`${R}_${C}`];
+        return !!oGd.$Tombstones[`${R}_${C}`]||!!oGd.$Sculpture[`${R}_${C}`]||oGd.$Crystal[`${R}_${C}`]||(oGd.$[`${R}_${C}_1`]?.constructor===oFruitBasket&&oGd.$[`${R}_${C}_1`].HasFruits===true);
     },
     Die() {
         const self = this;
@@ -3775,19 +3873,59 @@ oGraveBuster = InheritO(CPlants, {
     },
     PrivateBirth(self) {
         const id = self.id;
-        const tombElement = $(`Tomb_${self.R}_${self.C}`);
-        oSym.addTask(100, () => {
-            if ($P[id]) {
-                SetNone(tombElement);
-            }
-        });
-        oSym.addTask(290, () => {
-            if ($P[self.id]) {
-                let [R, C] = [self.R, self.C];
-                CPlants.prototype.Die.call(self);
-                oGd.$Tombstones[R + "_" + C] && oTombstone.destroy(R, C);
-            }
-        });
+        let obj = oGd.$[`${self.R}_${self.C}_1`];
+        if(obj?.constructor===oFruitBasket){
+            let ps = function(name,ach,type="成就"){
+                if($User.Achievement[ach]){
+                    return;
+                }
+                PlaySubtitle(`解锁${type}：${name}`);
+                oSym.addTask(500,function(){
+                    PlaySubtitle();
+                });
+                DataManager.SetAchievement(ach,1);
+            };
+            ps("这都可以吃？","The_oGraveBuster_Egg");
+            $(id).childNodes[1].style.transform = "translateX(-10px) translateY(20px)";
+            oSym.addTask(100, () => {
+                if ($P[id]&&obj?.constructor===oFruitBasket) {
+                    $(obj.id).childNodes[1].src = obj.PicArr[obj.EmptyGif];
+                    obj.HasFruits=false;
+                }
+            });
+            oSym.addTask(290, () => {
+                if ($P[id]) {
+                    CPlants.prototype.Die.call(self);
+                }
+            });
+        }else if(!!(obj=oGd.$Sculpture[`${self.R}_${self.C}`])||!!(obj=oGd.$Crystal[`${self.R}_${self.C}`])){
+            oSym.addTask(100, () => {
+                if ($P[id]&&(!!(obj=oGd.$Sculpture[`${self.R}_${self.C}`])||!!(obj=oGd.$Crystal[`${self.R}_${self.C}`]))) {
+                    console.log(obj);
+                    oEffects.Animate($(id).childNodes[1],{transform:"scale(1.5) translateY(-25%)",opacity:0},0.2/oSym.NowSpeed,"ease-out");
+                    obj.getHit0(obj,400);
+                }
+            });
+            oSym.addTask(120, () => {
+                if ($P[id]) {
+                    CPlants.prototype.Die.call(self);
+                }
+            });
+        }else{
+            const tombElement = $(`Tomb_${self.R}_${self.C}`);
+            oSym.addTask(100, () => {
+                if ($P[id]) {
+                    SetNone(tombElement);
+                }
+            });
+            oSym.addTask(290, () => {
+                if ($P[self.id]) {
+                    let [R, C] = [self.R, self.C];
+                    CPlants.prototype.Die.call(self);
+                    oGd.$Tombstones[R + "_" + C] && oTombstone.destroy(R, C);
+                }
+            });
+        }
     },
 }),
 oUmbrellaLeaf = InheritO(CPlants, {
@@ -4249,7 +4387,7 @@ oSquash=InheritO(oStoneFlower,{
                         top:tarTop-oriY+"px",
                     });
                     oZ.getArZ(checkX-45, checkX+45, R).forEach(z=>{
-                        z.getHit2(z,1800);
+                        z.getHit2(z,(z.Boss)?(500/z.Boss):1800);
                     });
                     oAudioManager.playAudio(self.AudioArr[Math.floor(Math.random()*(self.AudioArr.length-self.HmmAudioNum))+self.HmmAudioNum]);
                     if(oGd.$GdType[R][C]!=2){
@@ -4309,7 +4447,21 @@ oFlowerPot = InheritO(oLilyPad, {
         let flatCoord = R + "_" + C;
         return oGd.$GdType[R][C]!=2&&!(!oGd.$GdType[R][C] || C < 1 || C > 9 || plantArgs[1] || plantArgs[2] || plantArgs[0] || oGd.$LockingGrid[flatCoord]);
     },
-    PrivateBirth() {},
+    PrivateBirth(self) {
+        if(oGd.$GdType[self.R][self.C]===1){
+            let ps = function(name,ach,type="成就"){
+                if($User.Achievement[ach]){
+                    return;
+                }
+                PlaySubtitle(`解锁${type}：${name}`);
+                oSym.addTask(500,function(){
+                    PlaySubtitle();
+                });
+                DataManager.SetAchievement(ach,1);
+            };
+            ps("真是个陶艺家，邻居！","The_oFlowerPot_Egg");
+        }
+    },
 }),
 oLight = InheritO(CPlants, {
     EName: "oLight",
@@ -4383,6 +4535,90 @@ olSPCase = InheritO(CPlants, {  //保护膜实例
         if(list.has(ticket)) {  //只有接收到特定标示才会死亡
             CPlants.prototype.Die.call(this);
         }
+    },
+}),
+oBatStaff = InheritO(oLight, {
+    EName: "oBatStaff",
+    CName: "特殊道具-半血法杖",
+    coolTime: 0,
+    width: 85,
+    height: 91,
+    HP: Infinity,
+    isPlant: 0,
+    getShadow: self => `left:10px;top:90px;`,
+    PicArr: (function() {
+        var a = "images/Props/BatStaff/";
+        return ["images/Card/Light.webp", a + "BatStaff.webp", a + "BatStaff.webp"]
+    })(),
+    GetDY: function(b, c, a) {
+        return - 30
+    },
+    InitTrigger: function() {},
+    PrivateBirth(self) {
+        self.EleBody = $(self.id).childNodes[1];
+        self.EleBody.src = self.PicArr[1];
+        oSym.addTask(150, () => {
+            for (let col = self.C-1; col<=self.C+1; col++) {
+                if (col>0 && col<10) CustomSpecial(oBats, self.R, col);
+            }
+        });
+        oSym.addTask(250, () => {
+            const o = $P[self.id];
+            o && o.Die();
+        });
+    },
+}),
+oBats = InheritO(oLight, {
+    EName: "oBats",
+    CName: "蝙蝠",
+    width: 200,
+    height: 80,
+    PKind: 4,
+    HP: Infinity,
+    isPlant: 0,
+    getShadow: () => "display:none",
+    PicArr: (function() {
+        var a = "images/Props/BatStaff/";
+        return ["", a + "bats.webp", ""]
+    })(),
+    InitTrigger: function() {},
+    PrivateBirth(self) {
+        oEffects.ImgSpriter({
+            ele: NewEle(self.id+'_Exhaust', "div", `pointer-events:none;position:absolute;z-index:${self.zIndex-1};width:255px;height:216px;left:${self.pixelLeft}px;top:${self.pixelTop-30}px;background:url(images/Zombies/BeetleCarZombie/Exhaust.png) no-repeat;`, 0, EDPZ),
+            changeValue: -255,
+            frameNum: 58,
+        });
+        oSym.addTask(50, () => {
+            oAudioManager.playAudio("bats");
+            let ele = NewImg("", self.PicArr[1], `left:${self.pixelLeft}px;top:${self.pixelTop-10}px;opacity:0;z-index:${self.zIndex};`, EDPZ);
+            oEffects.Animate(ele, {
+                opacity: 1,
+            }, 0.3);
+            oSym.addTask(100, () => {
+                oEffects.Animate(ele, {
+                    opacity: 0,
+                }, 0.3);
+                oSym.addTask(100, () => {
+                    ClearChild(ele);
+                });
+            });
+            let leftborder = self.pixelLeft+80,
+                rightborder = self.pixelRight-80;
+            let ArrZ=oZ.getArZ(leftborder,rightborder,self.R);
+            for (var zom of ArrZ) {
+                let half=Math.round((zom.HP-zom.BreakPoint)/2);
+                if (!zom.isPuppet && !zom.Boss) {
+                    if (zom.HP-half>=zom.BreakPoint+1) zom.HP-=half;
+                }
+            }
+            for (let plant of hasPlants(false, v => v.C == self.C & v.R == self.R && v.EName !== 'oBrains' && v.EName !== 'oLawnCleaner' && v.HP > 1 && v.isPlant && v.PKind === 1)) {
+                let half=Math.round(plant.HP/2);
+                if (plant.HP-half>=1) plant.HP-=half;
+            }
+        });
+        oSym.addTask(350, () => {
+            self.Die();
+        });
     },
 }),
 o8BitApple = InheritO(oStoneFlower,{
@@ -5779,9 +6015,11 @@ oTrafficLight=InheritO(oElecTurnip,{
     },
 }),
 oFruitBasket = InheritO(oObstacle3, {  
-    PicArr: ["","","images/Props/Terrains/FruitBasket.png"],
+    PicArr: ["","","images/Props/Terrains/FruitBasket.png","images/Props/Terrains/EmptyFruitBasket.png"],
+    EmptyGif:3,
     height:76,
-    width:90
+    width:90,
+    HasFruits:true,
 }),
 oHeatFloor = InheritO(oSpikeweed, {
     EName: "oHeatFloor",
@@ -5832,6 +6070,8 @@ oIBrains = InheritO(oBrains, {
     width: 32,
     height: 40,
     NormalGif: 0,
+    isPlant:0,
+    Tools:true,
     PicArr: (function() {
         return ["images/Plants/Brain.webp"]
     })(),
