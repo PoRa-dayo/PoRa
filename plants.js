@@ -4550,6 +4550,7 @@ oBatStaff = InheritO(oLight, {
         var a = "images/Props/BatStaff/";
         return ["images/Card/Light.webp", a + "BatStaff.webp", a + "BatStaff.webp"]
     })(),
+    Tooltip: "3x1范围内的植物和非boss的僵尸血量减半。无视盔甲与限击盾牌。",
     GetDY: function(b, c, a) {
         return - 30
     },
