@@ -882,32 +882,84 @@ CheckCursor = function(ele={"checked":localStorage.JNG_TR_BIGCURSOR}){//游戏�
 const oFog = {
     isAttacking:false,
     locked: false,
+    canvasVersion:false,
+    canvasCtx:null,
+    canvasFogNodes:{},
+    canvasRatio:1/4,
+    
     init() {
         this.locked = false;
         this.isAttacking = false;
+        this.canvasVersion = $User.LowPerformanceMode;
+        this.canvasFogNodes = {};
         return Object.assign(this, oS.HaveFog);
     },
     render() {
         let innerHTML = "";
         let imgY = 0;
         let MaxFogCId = 2 * this.leftBorder + 3;
-        let date = new Date().getMonth()*100+new Date().getDate();
+        let fogType = this.type;
         function getFogPicture(){
-            if(date===301){
-                return `images/interface/fog_frog${Math.floor(Math.random() * 2)}.webp`;
+            if(fogType==="strongFog"){
+                return `images/interface/haze${Math.floor(Math.random() * 4)}.png`;
             }
             return `images/interface/fog${Math.floor(Math.random() * 4)}.png`;
         }
-        let createImg = (id, x, y) => `<img id='Fog${id}' class='${this.type} show' src='${getFogPicture()}' style='left:${x}px;top:${y}px;'>`;
+        let createImg = (id, x, y) => `<img id='Fog${id}' class='${fogType} show' src='${getFogPicture()}' style='will-change: opacity; position:absolute;left:0px;top:${y}px;pointer-events:none;transform:translateX(${x}px) rotate(${Math.random()}turn)'>`;
+        let ImgObjects = new Map();
+        let imgArrToLoad = [];
         //从上至下，从左至右绘制迷雾
         for(let idY = 1; idY < oS.R+1; idY++) {
             for(let idX = 0, imgX = 0; idX <= MaxFogCId; idX++, imgX += 35) {
-                innerHTML += createImg(idY + "_" + idX, imgX, imgY);
+                if(this.canvasVersion){
+                    let src = getFogPicture();
+                    let tmp;
+                    this.canvasFogNodes[`Fog${idY}_${idX}`] = {
+                        img:ImgObjects.get(src)??(ImgObjects.set(src,(tmp=new Image(),tmp.src=src,imgArrToLoad.push(tmp),tmp)),tmp),
+                        x:Math.round(imgX*this.canvasRatio),
+                        y:Math.round(imgY*this.canvasRatio),
+                        show:true,
+                    };
+                }else{
+                    innerHTML += createImg(idY + "_" + idX, imgX, imgY);
+                }
             }
             imgY += 540/oS.R;
         }
-        let ele = NewEle("dFog", "div", null, {innerHTML}, EDAll);
-        ele.className=this.type+"Div";
+        let ele = NewEle("dFog", this.canvasVersion?"canvas":"div", "will-change: left;", {innerHTML}, EDAll);
+        ele.className=fogType+"Div";
+        if(this.canvasVersion){
+            ele.width = 1290*this.canvasRatio;
+            ele.height = 600*this.canvasRatio;
+            ele.style.width = (MaxFogCId+2)*35;
+            this.canvasCtx = ele.getContext("2d");
+            this.canvasCtx.imageSmoothingEnabled = false;
+            this.renderCanvas(imgArrToLoad);
+        }
+    },
+    async renderCanvas(loadImages){
+        let ctx = this.canvasCtx;
+        await oLoadRes.loadElement(loadImages);
+        ctx.clearRect(0,0,1200,600);
+        let lstAlpha = ctx.globalAlpha;
+        let targetAlpha = this.type==="strongFog"?0.7:0.8;
+        for(let i of this.canvasFogNodes){
+            if(!i.width){
+                i.width = Math.round(i.img.width*this.canvasRatio);
+                i.height = Math.round(i.img.height*this.canvasRatio);
+            }
+            if(i.show){
+                if(lstAlpha != targetAlpha){
+                    lstAlpha = ctx.globalAlpha = targetAlpha;
+                }
+                ctx.drawImage(i.img,i.x,i.y,i.width,i.height);
+            }else if(this.type==="strongFog"){
+                if(lstAlpha != 0.4){
+                    lstAlpha = ctx.globalAlpha = 0.4;
+                }
+                ctx.drawImage(i.img,i.x,i.y,i.width,i.height);
+            }
+        }
     },
     moveLeft(callback) {  //迷雾进入场地
         // 如果迷雾被锁定则无法进行任何形式的移动
@@ -942,8 +994,15 @@ const oFog = {
                 oSym.addTask(1250, this.moveLeft.bind(this));
             }
         }
-        for(let ele of wrap.children) {
-            this.toggleState(ele, 'show');
+        if(this.canvasVersion){
+            for(let ele of this.canvasFogNodes){
+                ele.show=true;
+            }
+            this.renderCanvas([]);
+        }else{
+            for(let ele of wrap.children) {
+                this.toggleState(ele, 'show');
+            }
         }
         oEffects.Animate($("dFog"), {left}, (this.type === 'Fog' ? 0.4 : 1)/oSym.NowSpeed, 'cubic-bezier(0.4, 0.0, 0.6, 1)', callback);
     },
@@ -984,7 +1043,9 @@ const oFog = {
         if(isShowFog) { //如果是恢复，则重新激活一遍仍然存活的火炬路灯的去雾，以排除掉它们可能照亮的区域
             for(let id of oGd.$TrafficLights) {
                 let light = $P[id];
-                fun(light.R, light.C, 0, 0, 'delete');
+                if(light.color!==2){//红绿灯如果开着灯
+                    fun(light.R, light.C, 1, 1, 'delete');
+                }
             }
             for(let id of oGd.$Torch) {
                 let torch = $P[id];
@@ -995,7 +1056,16 @@ const oFog = {
                 fun(plantern.R, plantern.C, 1, 1, 'delete');
             }
         }
-        FogIDs.forEach(eleId => this.toggleState($(eleId), isShowFog ? 'show' : 'hide'));
+        FogIDs.forEach(eleId => {
+            if(this.canvasVersion){
+                this.canvasFogNodes[eleId].show = isShowFog;
+            }else{
+                this.toggleState($(eleId), isShowFog ? 'show' : 'hide');
+            }
+        });
+        if(this.canvasVersion){
+            this.renderCanvas([]);
+        }
 	},
     toggleState(ele, newState) {  //切换雾单体元素的显示/隐藏状态
         ele.classList.remove(newState === 'show' ? 'hide' : 'show');
@@ -1021,7 +1091,9 @@ const oFog = {
 const oWaterPath = {
     points: null,
     defaultDepth: 30,
+    autoRenderPath:true,//是否自动渲染水道
     init(depth) {
+        this.autoRenderPath = true;//是否自动渲染水道
         depth = depth ?? this.defaultDepth;
         this.fullWaterImage = oS.InitWaterPath?.fullWaterImage ?? 
                 (oS.DKind ? "images/interface/Mirage_FullWater.webp" : "images/interface/Mirage_FullWater_Night.webp");
@@ -1034,7 +1106,9 @@ const oWaterPath = {
         for (let r = 1; r <= oS.R; r++) {
             for (let c = 0; c <= oS.C + 1; c++) {
                 if (oGd.$GdType[r][c] === 2) {
-                    oGd.$WaterDepth[r][c] = depth;
+                    if(oGd.$WaterDepth[r][c]===undefined){//若没定义才需要设置深度
+                        oGd.$WaterDepth[r][c] = depth;
+                    }
                     oGd.$WaterFlowDirection[r][c] = "Static";
                     this.points.add([r, c]);
                 } else {
@@ -1055,7 +1129,7 @@ const oWaterPath = {
         // afterDFS仅用于极个别特殊情况下需要对dfs生成的路径进行修正。
         oS.InitWaterPath?.afterDFS && oS.InitWaterPath.afterDFS(oGd.$GdType, oGd.$WaterFlowDirection, this.points);
         // 绘制矩阵蒙版
-        this.render();
+        this.autoRenderPath&&this.render();
         return this;
     },
     bfsCreateWaterFlowDirection(allRes = false,changeStatic=true,diyStartPoints=false){
@@ -2017,7 +2091,7 @@ toOver = function(type) {
         SetNone($("shade"));
         $("shade").style.opacity = 0;
     };
-    oEffects.fadeTo($("shade"), 0.375, 'cubic-bezier(0.4, 0.0, 1, 1)');
+    oEffects.fadeTo($("shade"), 0.375, 0.1);
     oEffects.Animate(
         NewEle(`GameOver`, 'div', `background-position:0 -${(type-1)*439}px;`, null, EDAll),
         {transform: `scale(1)`}, 0.3, 'cubic-bezier(.4,0,.2,1)'
@@ -2157,7 +2231,7 @@ oCoinContent = {
     show() {
         const ele = this.__ele__;
         if(GetStyle(ele, 'opacity') !== '1') {
-            ele.style.transition = "";
+            oEffects.StopAllAnims(ele,true);
             oEffects.Animate(ele, {opacity: 1}, 0.2);
         }
         return this;
@@ -2702,6 +2776,7 @@ PlaySubtitle = (str, delay) => {
         $("Zimu").innerText = str;
     } else {
         SetNone(ele);
+        $("Zimu").innerText = "";
     };
     delay && oSym.addTask(delay, SetNone, [ele]);
 },
@@ -2857,7 +2932,7 @@ Exitlevel = function(lvl = oS.Lvl, deep) {
             path = 'SelectionMap';
             isAdventure = false;
             break;
-        case (/Fanmade|LevelLoader/).test(lvl):
+        case (/Fanmade|LevelLoader|pvp/).test(lvl):
             output = 'Room';
             path = 'AS_Room';
             isAdventure = false;
@@ -3087,7 +3162,7 @@ PlaceZombie = function(constructor, R, C, animation=true,sync=false) {//修改�
         zombie.Init(GetX(C), constructor.prototype, oGd.$ZF, oS.R + 1);
     }
     // 场外生成的僵尸动画会被强制关闭
-    animation = C <= oS.C ? animation : false;
+    animation = (C <= oS.C&&oGd.$GdType[R][C]!==2) ? animation : false;
     if(animation) {
         oAudioManager.playAudio('dirt_rise');
         oEffects.ImgSpriter({
@@ -3626,7 +3701,8 @@ oMiniGames = {
         }
         function closeFunction(){
             openThundering = false;
-            Mask.style.transition="";FlashMask.style.opacity=0;
+            oEffects.StopAllAnims(Mask,true);
+            FlashMask.style.opacity=0;
             oSym.addTask(1,()=>{
                 oEffects.AudioFadeOut("rain",0,1/oSym.NowSpeed);
                 oEffects.Animate(canvas,{"opacity":0},1/oSym.NowSpeed,"linear");
@@ -4140,47 +4216,33 @@ oMiniGames = {
     },
     IZombie() {
         /* 初始化进度条 */
-        const scoreMax=5;
+    	let Brains=hasPlants(false, plant=>{return plant.EName === "oIBrains"});
+    	let TotalBrainsNum = Brains.length, BrainsNum=TotalBrainsNum;
         oS.ControlFlagmeter = false;
         oFlagContent.init({
             MeterType: 'LeftBar GreenBar',
             HeadType: 'NoneHead',
             canMoveHead: false,
-            fullValue: scoreMax,
+            fullValue: TotalBrainsNum,
         }).show();
         SetBlock($('dGameScore'));
-        /* 监听oS.GameScore */
-        let $score = 0;
         let Text_ScoreNum = $('scoreNum');
-        $('scoreMax').innerText = scoreMax;
-        Object.defineProperty(oS, 'GameScore', {
-            get: _ => $score,
-            set : x => {
-                x = Math.max( Math.min(x, scoreMax), 0 );  //屏蔽负分和超分
-                Text_ScoreNum.innerText = $score = x;
-                oFlagContent.update({ curValue: x });
-                if($score === scoreMax) {
-                    delete oS.GameScore;
-                    toWin();
-                }
-            },
-            configurable: true,
-        });
-    	let Brains=hasPlants(false, plant=>{return plant.EName == "oIBrains"});
-    	let BrainsNum=Brains.length;
-        let CBrainsNum=BrainsNum;
-        let Sculps=[];
-    	for(let i=0;i<Brains.length;i++){Brains[i].PrivateDie=_=>oSym.Timer && BrainsNum--}
-        loop();
-        function loop(){
-            oSym.addTask(300, _=>{
-                oSym.addTask(200,function chkWin(){   
-                    if(BrainsNum<5-oS.GameScore){
-                        oS.GameScore+=1;
-                    }
-                    oSym.addTask(200,chkWin);
-                 });
+        $('scoreMax').innerText = TotalBrainsNum;
+        function updateScore(){
+            oFlagContent.update({ 
+                curValue: (Text_ScoreNum.innerText = TotalBrainsNum-BrainsNum)
             });
+            if(BrainsNum<=0) {
+                toWin();
+            }
+        }
+    	for(let i=TotalBrainsNum-1;i>=0;i--){
+            let oriPrivateDie = Brains[i]?.oriPrivateDie;
+            Brains[i].PrivateDie=(...arr)=>{
+                oriPrivateDie&&oriPrivateDie.bind(Brains[i])(...arr);
+                BrainsNum--;
+                updateScore();
+            };
         }
     },
     oStg:{
@@ -4704,6 +4766,566 @@ oMiniGames = {
             }),
         },
     },
+
+
+    oZuma:{
+        InterpSampleNum:10000,
+        ALPHA:0,
+        passedTime:0,
+        colorCount:0,//多少种颜色
+        Variables:{},
+        canvas:null,
+        Init0(){
+            let self = this;
+            self.inited=true;
+            for (let key in self) {
+                if(key!="Variables"){
+                    self.Variables[key]=self[key];
+                }
+            }
+        },
+        Init(){
+            let self = this;
+            if(!self.inited){
+                self.Init0();
+            }else{
+                for (let key in self) {
+                    if(key!="Variables"){
+                        self[key]=self.Variables[key];
+                    }
+                }
+            }
+            self.Samples = [];
+            self.Distances = [];
+            self.BallHeads = [];//存入球头的listObj，不是ballObj
+            self.BallTails = [];//球的尾部
+            self.totalDistance = [];
+            self.ballColorCount=[];//每种球的颜色数量
+            self.canvas = NewEle("","canvas","position:absolute;left:115px;top:0;width:900px;height:600px;",{
+                width:900,
+                height:600
+            },EDAll);
+            self.speedConfigs={
+                maxSpeed:16,
+                maxGapBackwardSpeed:16,
+                accelerationNormalMove:0.04,
+                accelerationCollide:0.3,
+                accelerationGapBackward:0.05,
+                leastBorder:0.2,
+                slowBorder:0.5,
+                emergencyBorder:0.95,
+            };
+        },
+        AddBallIntoList(obj,lastBall,nextBall=null,lane=0){
+            let self = this;
+            let wantToAdd;
+            if(!lastBall){
+                wantToAdd={
+                    nextBall:nextBall,
+                    lastBall:null,
+                    ballObj:obj,
+                    realPos:null,
+                };
+                if(nextBall){
+                    //console.log(nextBall);
+                    nextBall.lastBall = wantToAdd;
+                }
+                //console.log("change",wantToAdd)
+                self.BallHeads[lane] = wantToAdd;
+            }else{
+                wantToAdd={
+                    nextBall:nextBall||lastBall.nextBall,
+                    lastBall:lastBall,
+                    ballObj:obj,
+                    realPos:null,
+                };
+                lastBall.nextBall = wantToAdd;
+                if(wantToAdd.nextBall){
+                    wantToAdd.nextBall.lastBall = wantToAdd;
+                }
+            }
+            if(!wantToAdd.nextBall){
+                self.BallTails[lane] = wantToAdd;
+            }
+            return wantToAdd;
+        },
+        DeleteABall(listObj){
+            let self = this;
+            if(listObj.lastBall){
+                if(!listObj.nextBall){
+                    self.BallTails[listObj.ballObj.lane] = listObj.lastBall;
+                }
+                listObj.lastBall.nextBall = listObj.nextBall;
+            }
+            if(listObj.nextBall){
+                if(!listObj.lastBall){
+                    self.BallHeads[listObj.ballObj.lane] = listObj.nextBall;
+                }
+                listObj.nextBall.lastBall = listObj.lastBall;
+            }
+            listObj.ballObj.Destroy();
+        },
+        Update(){
+            let self = this;
+            let timer = new Date();
+            let deltaTime = 0,curTime= timer;
+            let ctx = self.canvas.getContext("2d");
+            let tmpMaxSpeed = self.speedConfigs.maxSpeed,tmpAcc=self.speedConfigs.accelerationNormalMove;
+            let nowPercentage = 5;
+            let lanesNum = self.Distances.length;
+            let distancesLenArr = [];
+            let distancePrefixSumArr = [];
+            for(let a = 0;a<lanesNum;a++){
+                distancesLenArr[a] = self.Distances[a].length;
+                distancePrefixSumArr[a] = [self.Distances[a][0]];//前缀和
+                for(let i = 1;i<distancesLenArr[a];i++){
+                    distancePrefixSumArr[a][i] = distancePrefixSumArr[a][i-1]+self.Distances[a][i];
+                }
+                distancePrefixSumArr[a][distancesLenArr[a]]=Infinity;
+            }
+            function MainLoop(){
+                curTime = new Date();
+                deltaTime  = (curTime - timer)*oSym.NowSpeed/100;//除以100是为了统一oSym.addTask的帧
+                timer = curTime;//计算经过时间，祖玛全体按时间运行，不卡顿
+                if(oSym.Timer&&!document.hidden){
+                    addHeadBalls();
+                    drawBalls();
+                    requestAnimationFrame(MainLoop);
+                }else{
+                    oSym.addTask(1,()=>{timer=new Date();MainLoop();});
+                }
+            };
+            function drawBalls(){
+                ctx.clearRect(0,0,900,600);
+                function SearchDistanceArea(totalDistance,from=-1,lane=0){
+                    if(from<0){
+                        console.log("searching for Distance Area Error");
+                        from = 0;
+                    }
+                    for(let i = from;i<=distancesLenArr[lane];i++){
+                        if(distancePrefixSumArr[lane][i]>=totalDistance&&(i===0||distancePrefixSumArr[lane][i-1]<=totalDistance)){
+                            return i;
+                        }
+                    }
+                    return -1;
+                }
+                for(let lane = 0;lane<lanesNum;lane++){
+                    let currentBall = self.BallHeads[lane];//保存listObj
+                    if(!currentBall){
+                        continue;
+                    }
+                    let distanceArea = 0;
+                    let ball = null;//保存ballObj
+                    while(currentBall){
+                        ball = currentBall.ballObj;
+                        ball.Update(deltaTime);
+                        let realPos = null;
+                        if(ball.s<0){
+                            realPos = self.Samples[lane][0];
+                        }else{
+                            if((distanceArea=SearchDistanceArea(ball.s,distanceArea,lane))===-1){
+                                distanceArea=SearchDistanceArea(ball.s,distanceArea,lane);
+                            }
+                            if(distanceArea>=distancesLenArr[lane]){
+                                realPos = self.Samples[lane][distancesLenArr[lane]];//samples永远比distances的长度大1
+                                self.DeleteABall(currentBall);
+                                currentBall=currentBall.nextBall;
+                                continue;
+                            }else{
+                                let i = distanceArea;
+                                //console.log(i);
+                                realPos = self.XYLerpUnClamped(self.Samples[lane][i],self.Samples[lane][i+1],(ball.s-((i-1)<0?0:distancePrefixSumArr[lane][i-1]))/self.Distances[lane][i]);
+                            }
+                        }
+                        currentBall.realPos = realPos;
+                        ctx.drawImage(ball.PicArr[ball.color],realPos.x-ball.r,realPos.y-ball.r,2*ball.r,2*ball.r)
+                        currentBall = currentBall.nextBall;
+                    }
+                    
+                    if(self.BallTails[lane]){
+                        let ball = self.BallTails[lane].ballObj;
+                        //console.log(ball.s,self.totalDistance[lane],self.speedConfigs.leastBorder);
+                        if(ball.s<self.totalDistance[lane]*self.speedConfigs.leastBorder){
+                            nowPercentage=5;
+                        }else if(ball.s>self.totalDistance[lane]*self.speedConfigs.emergencyBorder){
+                            nowPercentage=0.2;
+                        }else if(ball.s>self.totalDistance[lane]*self.speedConfigs.slowBorder){
+                            nowPercentage=0.5;
+                        }else{
+                            nowPercentage=1;
+                        }
+                        self.speedConfigs.maxSpeed=tmpMaxSpeed*nowPercentage;
+                        self.speedConfigs.accelerationNormalMove = (nowPercentage<1?1/Math.pow(nowPercentage,2):nowPercentage)*tmpAcc;
+                        //console.log(nowPercentage,self.speedConfigs.maxSpeed,self.speedConfigs.accelerationNormalMove);
+                    }
+                }
+            }
+            let added=0;
+            function addHeadBalls(){
+                //if(added>15){return;}
+                for(let lane=0;lane<lanesNum;lane++){
+                    let currentBall = self.BallHeads[lane];
+                    while(currentBall&&currentBall.ballObj.s>=currentBall.ballObj.r*2&&currentBall.ballObj.velocity>0){
+                        //console.log(currentBall.ballObj.s,currentBall.ballObj.r*2);
+                        new self.Obj.Ball().Birth(currentBall.ballObj.s-currentBall.ballObj.r*2,null,currentBall,[0,1].random(),lane)
+                        //added++;
+                        //if(added>15){return;}
+                        //currentBall.lastBall.ballObj.velocity = currentBall.ballObj.velocity;
+                        //currentBall.ballObj.velocity=0;
+                        //currentBall.ballObj.connectingLast = true;
+                        currentBall = currentBall.lastBall;
+                    }
+                }
+            }
+            MainLoop();
+        },
+        LineIntersect(line1st,line1ed,line2st,line2ed)
+        {
+            if(
+               ( Math.max(line1st.x,line1ed.x)>=Math.min(line2st.x,line2ed.x)&&Math.min(line1st.x,line1ed.x)<=Math.max(line2st.x,line2ed.x) )&&  //判断x轴投影
+               ( Math.max(line1st.y,line1ed.y)>=Math.min(line2st.y,line2ed.y)&&Math.min(line1st.y,line1ed.y)<=Math.max(line2st.y,line2ed.y) )    //判断y轴投影
+            ){
+                if(
+                    ( (line2st.x-line1st.x)*(line1ed.y-line1st.y)-(line2st.y-line1st.y)*(line1ed.x-line1st.x) ) *          //判断B是否跨过A
+                    ( (line2ed.x-line1st.x)*(line1ed.y-line1st.y)-(line2ed.y-line1st.y)*(line1ed.x-line1st.x) ) <=0 &&
+                    ( (line1st.x-line2st.x)*(line2ed.y-line2st.y)-(line1st.y-line2st.y)*(line2ed.x-line2st.x) ) *          //判断A是否跨过B
+                    ( (line1ed.x-line2st.x)*(line2ed.y-line2st.y)-(line1ed.y-line2st.y)*(line2ed.x-line2st.x) ) <=0
+                ){
+                    return true;
+                }else{
+                    return false;
+                }
+            }else{
+                return false;
+            }
+        },
+        MakeSamples(pointsArr,lane=0){
+            function testAngle(a,b){//两角度之差
+                return Math.PI-Math.abs((a-b)%(2*Math.PI)-Math.PI);
+            }
+            let points = [];
+            let distances = [];//从points[1]开始到上一个点的距离
+            let totalDistance = 0;
+            let pointsLen = 0;
+            let lastAng = -114514;
+            let SampleNum = this.InterpSampleNum;
+            for(let i = 0;i<=SampleNum;i++){
+                let rad=null;
+                let pos = this.CSplineInterp(pointsArr,i/SampleNum,this.ALPHA);
+                if(!(lastAng<-360||i===0||i===SampleNum||Math.abs(testAngle(lastAng,(rad = Math.atan2(pos.y-points[pointsLen-1].y,pos.x-points[pointsLen-1].x))))>=0.08)){
+                    continue;
+                }
+                lastAng = rad;
+                if(pointsLen>0){
+                    distances.push(Math.hypot(points[pointsLen-1].x-pos.x,points[pointsLen-1].y-pos.y));
+                    totalDistance+=distances[pointsLen-1];
+                }
+                points.push(pos);
+                pointsLen++;
+            }
+            this.Samples[lane] = points;
+            this.Distances[lane] = distances;
+            this.totalDistance[lane] = totalDistance;
+        },
+        GetKnotInterval(a, b, alpha=0.5){
+            return Math.pow((a.x - b.x)**2+(a.y-b.y)**2, 0.5 * alpha);
+        },
+        CSplineInterp(pointsArr, t, alpha=0.5){
+                t = Math.Clamp(t, 0.0, 2.0);
+                let numSections = pointsArr.length - 3;
+                let currPt = Math.min(Math.floor(t * numSections), numSections - 1);
+                t = t * numSections - currPt;
+                let p0 = pointsArr[currPt];
+                let p1 = pointsArr[currPt + 1];
+                let p2 = pointsArr[currPt + 2];
+                let p3 = pointsArr[currPt + 3];
+
+                let k0 = 0;
+                let k1 = this.GetKnotInterval(p0, p1,alpha);
+                let k2 = this.GetKnotInterval(p1, p2,alpha) + k1;
+                let k3 = this.GetKnotInterval(p2, p3,alpha) + k2;
+
+                // evaluate the point
+                let u = Math.LerpUnclamped(k1, k2, t);
+                let A1 = this.Remap(k0, k1, p0, p1, u);
+                let A2 = this.Remap(k1, k2, p1, p2, u);
+                let A3 = this.Remap(k2, k3, p2, p3, u);
+                let B1 = this.Remap(k0, k2, A1, A2, u);
+                let B2 = this.Remap(k1, k3, A2, A3, u);
+                return this.Remap(k1, k2, B1, B2, u);
+        },
+        Remap(a, b, c, d, u){
+            return {
+                x:((b-u)*c.x+(u-a)*d.x)/(b-a),
+                y:((b-u)*c.y+(u-a)*d.y)/(b-a)
+            };
+        },
+        XYLerpUnClamped(a,b,t,setToA=false){
+            if(setToA){
+                a.x = a.x + (b.x - a.x) * t;
+                a.y = a.y + (b.y - a.y) * t;
+            }else{
+                return {x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t};
+            }
+        },
+        Obj:{
+            Ball:NewO({
+                r:20,
+                velocity:0,
+                connectingLast:false,
+                color:0,
+                listObj: null,
+                insertingTime:0,
+                PicArr:(()=>{
+                    let objArr = [];
+                    ["images/Plants/WallNut/0.webp","images/Plants/FlowerPot/FlowerPot.png"].forEach((i)=>{
+                        let k = new Image();
+                        k.src=i;
+                        objArr.push(k);
+                    });
+                    return objArr;
+                })(),
+                Birth(s,lastBall=null,nextBall=null,color=0,lane=0){
+                    this.s = s; 
+                    this.listObj = oMiniGames.oZuma.AddBallIntoList(this,lastBall,nextBall);
+                    this.lane = lane;
+                    this.color = color;
+                    if(!oMiniGames.oZuma.ballColorCount[this.color]){
+                        oMiniGames.oZuma.ballColorCount[this.color]=0;
+                    }
+                    oMiniGames.oZuma.ballColorCount[this.color]++;
+                    return this;
+                },
+                insertAnimation(){
+                    this.insertingTime=30;
+                },
+                insertAnimationUpdate(deltaFrame){
+                    this.insertingTime-=deltaFrame;
+                    this.insertingTime = Math.max(0,insertingTime);
+                    this.r = Math.Lerp(20,0,insertingTime/30);
+                    if(this.insertingTime===0){
+                        this.DiffuseDestroySameColor(this);
+                    }
+                },
+                Update(deltaFrame){
+                    if(this.insertingTime>0){
+                        insertAnimationUpdate(deltaFrame);
+                    }
+                    this.Move(deltaFrame);
+                },
+                Move(deltaFrame=1){
+                    let self = this;
+                    //console.log(self.listObj.lastBall);
+                    if(!self.listObj.lastBall){//球头情况
+                        let oldVelocity = self.velocity;
+                        let accelerateFrame = 0;
+                        if(self.velocity<0){
+                            if(self.velocity+oMiniGames.oZuma.speedConfigs.accelerationCollide*deltaFrame>0){
+                                accelerateFrame = Math.abs(self.velocity/oMiniGames.oZuma.speedConfigs.accelerationCollide);
+                                self.velocity = 0;
+                            }else{
+                                self.velocity += oMiniGames.oZuma.speedConfigs.accelerationCollide*deltaFrame;
+                            }
+                        }else{
+                            if(self.velocity>oMiniGames.oZuma.speedConfigs.maxSpeed){
+                                if(self.velocity-oMiniGames.oZuma.speedConfigs.accelerationNormalMove*deltaFrame<oMiniGames.oZuma.speedConfigs.maxSpeed){
+                                    accelerateFrame = (self.velocity-oMiniGames.oZuma.speedConfigs.maxSpeed)/oMiniGames.oZuma.speedConfigs.accelerationNormalMove;
+                                    self.velocity = oMiniGames.oZuma.speedConfigs.maxSpeed;
+                                }else{
+                                    self.velocity -= oMiniGames.oZuma.speedConfigs.accelerationNormalMove*deltaFrame;
+                                }
+                            }else{
+                                if(self.velocity+oMiniGames.oZuma.speedConfigs.accelerationNormalMove*deltaFrame>oMiniGames.oZuma.speedConfigs.maxSpeed){
+                                    accelerateFrame = (oMiniGames.oZuma.speedConfigs.maxSpeed-self.velocity)/oMiniGames.oZuma.speedConfigs.accelerationNormalMove;
+                                    self.velocity = oMiniGames.oZuma.speedConfigs.maxSpeed;
+                                }else{
+                                    self.velocity += oMiniGames.oZuma.speedConfigs.accelerationNormalMove*deltaFrame;
+                                }
+                            }
+                        }
+                        self.s+=(oldVelocity+self.velocity)/2*accelerateFrame+self.velocity*(deltaFrame-accelerateFrame);//取平均速度
+                        self.s=Math.max(self.s,0);
+                        if(self.listObj.nextBall&&self.s===0&&self.velocity<0){
+                            oMiniGames.oZuma.DeleteABall(self.listObj);
+                            if(self.listObj.nextBall){
+                                self.listObj.nextBall.ballObj.velocity=self.velocity;
+                            }
+                        }
+                    }else{//不是球头
+                        //console.log(self.listObj.lastBall.ballObj,self.r+self.listObj.lastBall.ballObj.r);
+                        if(self.s-self.listObj.lastBall.ballObj.s<=self.r+self.listObj.lastBall.ballObj.r){
+                            self.connectingLast = true;
+                        }
+                        if(self.connectingLast){
+                            if(self.velocity!=0){
+                                self.speedConveyBack(self,self.velocity);
+                                self.DiffuseDestroySameColor(self);
+                            }
+                            self.velocity=0;
+                            //console.log(self.listObj.lastBall.ballObj.s,self.s,self.listObj.lastBall.ballObj,self);
+                            if(self.listObj.lastBall.ballObj.s<self.s){
+                                self.s = self.listObj.lastBall.ballObj.s+self.listObj.lastBall.ballObj.r+self.r;
+                            }
+                        }else{
+                            console.log(244);
+                            let oldVelocity = self.velocity;
+                            let accelerateFrame = deltaFrame;
+                            if(self.listObj.lastBall.ballObj.color===self.color){
+                                if(self.velocity-oMiniGames.oZuma.speedConfigs.accelerationGapBackward*deltaFrame<-oMiniGames.oZuma.speedConfigs.maxGapBackwardSpeed){
+                                    accelerateFrame = Math.abs((-oMiniGames.oZuma.speedConfigs.maxGapBackwardSpeed-self.velocity)/oMiniGames.oZuma.speedConfigs.accelerationGapBackward);
+                                    self.velocity = -oMiniGames.oZuma.speedConfigs.maxGapBackwardSpeed;
+                                }else{
+                                    self.velocity-=oMiniGames.oZuma.speedConfigs.accelerationGapBackward*deltaFrame;
+                                }
+                            }else{
+                                if(self.velocity<0){
+                                    if(self.velocity+oMiniGames.oZuma.speedConfigs.accelerationGapBackward*3*deltaFrame>0){
+                                        accelerateFrame = Math.abs(-self.velocity)/(oMiniGames.oZuma.speedConfigs.accelerationGapBackward*3);
+                                        self.velocity = 0;
+                                    }else{
+                                        self.velocity+=oMiniGames.oZuma.speedConfigs.accelerationGapBackward*3*deltaFrame;
+                                    }
+                                }
+                            }
+                            self.s+=(oldVelocity+self.velocity)/2*accelerateFrame+self.velocity*(deltaFrame-accelerateFrame);//取平均速度
+                        }
+                    }
+                },
+                DiffuseDestroySameColor(self){
+                    let ball = self;
+                    let targeted = [self.listObj];
+                    while(ball.connectingLast&&ball.listObj.lastBall&&ball.color===ball.listObj.lastBall.ballObj.color){
+                        targeted.push(ball.listObj.lastBall);
+                        ball=ball.listObj.lastBall.ballObj;
+                        //oMiniGames.oZuma.DeleteABall(ball.listObj.lastBall.ballObj);
+                    }
+                    ball=self;
+                    while(ball.listObj?.nextBall?.connectingLast&&ball.color===ball.listObj.nextBall.ballObj.color){
+                        targeted.push(ball.listObj.nextBall);
+                        ball=ball.listObj.nextBall.ballObj;
+                        //oMiniGames.oZuma.DeleteABall(ball.listObj.lastBall.ballObj);
+                    }
+                    if(targeted.length<3){
+                        return;
+                    }
+                    targeted.forEach((i)=>{
+                        oMiniGames.oZuma.DeleteABall(i);
+                    });
+                },
+                speedConveyBack(self,speed){
+                    let obj = self.listObj.lastBall;
+                    while(obj&&obj.ballObj.connectingLast){
+                        obj=obj.lastBall;
+                    }
+                    if(obj){
+                        if(obj.ballObj.velocity>1){
+                            obj.ballObj.velocity = Math.sqrt(obj.ballObj.velocity);
+                        }
+                        obj.ballObj.velocity += speed;
+                    }
+                },
+                CheckCollide(colli){
+                    let self = this;
+                    if(!self.listObj.realPos){
+                        return false;
+                    }
+                    return (colli.x-self.listObj.realPos.x)**2+(colli.y-self.listObj.realPos.y)**2<4*self.r*self.r;
+                },
+                Destroy(){
+                    oMiniGames.oZuma.ballColorCount[this.color]--;
+                },
+            }),
+            BallShooted:NewO({
+                speed:16,
+                r:20,
+                Birth(x,y,ang,color=0){
+                    this.oriX=this.x=x;
+                    this.oriY=this.y=y;
+                    this.color = color;
+                    this.angle = ang;
+                    this.tmp_cossin = [Math.cos(this.angle),Math.sin(this.angle)];
+                    this.InfinityPoint = {x:this.oriX+this.tmp_cossin[0]*100000,y:this.oriY+this.tmp_cossin[1]*100000};
+                },
+                Move(deltaFrame){
+                    let self = this;
+                    let oldX=self.x,oldY=self.y,lineX,lineY;
+                    self.x+=self.tmp_cossin[0]*self.speed*deltaFrame;
+                    self.y+=self.tmp_cossin[1]*self.speed*deltaFrame;
+                    lineX = self.x+self.tmp_cossin[0]*self.r;
+                    lineY = self.y+self.tmp_cossin[1]*self.r;
+                    let pos0={x:oldX,y:oldY},pos1={x:lineX,y:lineY},pos={x:self.x,y:self.y},posOri={x:self.oriX,y:self.oriY};
+                    //let colliResSave = new Map();
+                    for(let i of oMiniGames.oZuma.BallHeads){
+                        if(!i){continue;}
+                        let lastInter = false;
+                        let listObj=i;
+                        while(listObj){
+                            if(!listObj.nextBall){//如果其他的都没有撞到就他撞到了
+                                if(!lastInter){
+                                    if(listObj.ballObj.CheckCollide(pos)){
+                                        self.insertFront(listObj);
+                                        return;
+                                    }
+                                }
+                            }else{
+                                if(oMiniGames.oZuma.LineIntersect(posOri,self.InfinityPoint,listObj.realPos,listObj.nextBall.realPos)){
+                                    lastInter=true;
+                                    if(listObj.ballObj.CheckCollide(pos)){
+                                        self.insertFront(listObj);
+                                        return;
+                                    }else if(colliResSavelistObj.nextBall.ballObj.CheckCollide(pos)){
+                                        self.insertBack(listObj.nextBall);
+                                        return;
+                                    }
+                                }else{
+                                    lastInter=false;
+                                }
+                            }
+                            listObj = listObj.nextBall;
+                        }
+                    }
+                },
+                insertFront(listObj){
+                    new oMiniGames.oZuma.Obj.Ball().Birth(listObj.ballObj.s+0.01,listObj,listObj.nextBall,this.color,listObj.ballObj.lane).insertAnimation();
+                },
+                insertBack(listObj){
+                    new oMiniGames.oZuma.Obj.Ball().Birth(listObj.ballObj.s-0.01,listObj.lastBall,listObj,this.color,listObj.ballObj.lane).insertAnimation();
+                },
+            }),
+            Shooter:NewO({
+                nowBallColor:0,
+                nextBallColor:1,
+                ang:0,
+                Birth(x,y){
+                    this.x=x;
+                    this.y=y;
+                    this.setColor();
+                    this.register();
+                    
+                },
+                setColor(){
+                    this.nowBallColor = Math.floor(Math.random()*oMiniGames.oZuma.colorCount);
+                    this.nextBallColor = Math.floor(Math.random()*oMiniGames.oZuma.colorCount);
+                },
+                register(){
+                    let self = this;
+                    oMiniGames.oZuma.canvas.addEventListenerRecord("mousemove",(ev)=>{
+                        self.CheckMove(ev);
+                    });
+                    oMiniGames.oZuma.canvas.addEventListenerRecord("mousedown",(ev)=>{
+                        self.CheckMove(ev);
+                        self.ShootBall();
+                    });
+                },
+                CheckMove(evt){
+                    console.log(evt.offsetX,evt.offsetY);
+                },
+                ShootBall(){
+                    
+                }
+            })
+        }
+    },
 },
 oEffects = {
     AudioFadeOut(audio, targetVolume = 0, duration = 1, callback) {
@@ -4902,6 +5524,15 @@ oEffects = {
     callback: 动画完成后的回调函数
     delay: 动画延迟执行的时间（秒）（默认无延迟）
     */
+    StopAllAnims(ele,stop=false){//stop代指是不是终止而不是完成动画
+        ele.getAnimations().map(anim=>{
+            if(stop){
+                anim.cancel();
+            }else{
+                anim.finish();
+            }
+        });
+    },
     Animate(ele, properties, duration = 0.4, ease = 'linear', callback, delay = 0, iterationCount = 1) {
         let cssValues = {};
         let cssProperties = [];
@@ -4920,14 +5551,25 @@ oEffects = {
             cssValues['animation-iteration-count'] = iterationCount;
             cssValues['animation-fill-mode'] = 'none';
             effectType = 'animation';
+            cssList = cssList.map(key => effectType + key);
+            /* 设置动画完成监听 */
+            ele.addEventListener(effectType + 'end', function _callback(event) {
+                if (event.target !== event.currentTarget) return; //规避冒泡
+                ele.removeEventListener(effectType + 'end', _callback); //避免多个属性同时改变时重复触发回调！
+                for (let index of cssList) ele.style[index] = ''; //还原动画配置属性
+                callback && callback(ele); //触发传入回调
+            });
+            /* 触发动画 */
+            ele.clientLeft; //触发页面的回流，使得动画的样式设置上去时可以立即执行
+            SetStyle(ele, cssValues);
         } else {
-            for (let index in properties) {
+            /*for (let index in properties) {
                 //自定义样式
                 cssValues[index] = properties[index];
                 cssProperties.push(index); //记录需要为哪些样式调用动画
-            }
-            cssValues['transition-property'] = cssProperties.join(', ');
-            let traverse = {
+            }*/
+            //cssValues['transition-property'] = cssProperties.join(', ');
+            /*let traverse = {
                 "duration": [duration, "s, ", "s"],
                 "delay": [delay, "s, ", "s"],
                 "timing-function": [ease, ", ", ""]
@@ -4939,19 +5581,30 @@ oEffects = {
                     cssValues['transition-' + i] = traverse[i][0].join(traverse[i][1]) + traverse[i][2];
                 }
             }
-            effectType = 'transition';
+            effectType = 'transition';*/
+            let anim = ele.animate([properties],{
+                easing:ease||"linear",
+                duration:duration*1000,
+                delay:delay*1000,
+                iterations:iterationCount,
+            });
+            anim.onfinish = function(){
+                anim.onfinish=()=>{};
+                SetStyle(ele,properties);
+                callback && callback(ele); //触发传入回调
+            };
+            /*cssList = cssList.map(key => effectType + key);
+            /* 设置动画完成监听 */
+            /*ele.addEventListener(effectType + 'end', function _callback(event) {
+                if (event.target !== event.currentTarget) return; //规避冒泡
+                ele.removeEventListener(effectType + 'end', _callback); //避免多个属性同时改变时重复触发回调！
+                for (let index of cssList) ele.style[index] = ''; //还原动画配置属性
+                callback && callback(ele); //触发传入回调
+            });*/
+            /* 触发动画 */
+            //ele.clientLeft; //触发页面的回流，使得动画的样式设置上去时可以立即执行
+            //SetStyle(ele, cssValues);*/
         }
-        cssList = cssList.map(key => effectType + key);
-        /* 设置动画完成监听 */
-        ele.addEventListener(effectType + 'end', function _callback(event) {
-            if (event.target !== event.currentTarget) return; //规避冒泡
-            ele.removeEventListener(effectType + 'end', _callback); //避免多个属性同时改变时重复触发回调！
-            for (let index of cssList) ele.style[index] = ''; //还原动画配置属性
-            callback && callback(ele); //触发传入回调
-        });
-        /* 触发动画 */
-        ele.clientLeft; //触发页面的回流，使得动画的样式设置上去时可以立即执行
-        SetStyle(ele, cssValues);
         return ele;
     },
     animatePromise(ele, properties, {duration, easing, delay, iterationCount}) {
@@ -5168,10 +5821,12 @@ const SkipLoading = () => {
     }
 };
 const willPlayDialogue=(type=-1)=>{
-    if(false&&localStorage.JNG_DEV==="true"){
-        return 0;
+    if(!$User.IS_PLOT_OPEN){	
+        return -1;	
     }
-                                                //这里加上通关前后的标志可以表明看的是通关对话或者通过前对话
+    if(localStorage.JNG_DEV==="true"){
+        return 0;
+    }	                                     //这里加上通关前后的标志可以表明看的是通关对话或者通过前对话
     if(!sessionStorage["___PLAY_DIALOGUE___"+oS.Lvl+"_"+(type>=0?type:oS.isStartGame)]){
         sessionStorage["___PLAY_DIALOGUE___"+oS.Lvl+"_"+(type>=0?type:oS.isStartGame)]=1;
         return 0;
