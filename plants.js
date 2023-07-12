@@ -3696,7 +3696,7 @@ oMacintosh = InheritO(oWallNut, {
     },
     PicArr: (function() {
         var a = "images/Plants/Macintosh/";
-        return ["images/Card/Macintosh.webp", a + "static.webp", a + "Normal.webp", a + "Summon.webp"]
+        return ["images/Card/Macintosh.webp", a + "Static.webp", a + "Normal.webp", a + "Summon.webp"]
     })(),
     getHurt:CPlants.prototype.getHurt,
     PrivateBirth(self) {
@@ -3885,7 +3885,7 @@ oGraveBuster = InheritO(CPlants, {
                 });
                 DataManager.SetAchievement(ach,1);
             };
-            ps("这都可以吃？","The_oGraveBuster_Egg");
+            ps("跨界美食家","The_oGraveBuster_Egg");
             $(id).childNodes[1].style.transform = "translateX(-10px) translateY(20px)";
             oSym.addTask(100, () => {
                 if ($P[id]&&obj?.constructor===oFruitBasket) {
@@ -4387,7 +4387,7 @@ oSquash=InheritO(oStoneFlower,{
                         top:tarTop-oriY+"px",
                     });
                     oZ.getArZ(checkX-45, checkX+45, R).forEach(z=>{
-                        z.getHit2(z,(z.Boss)?(500/z.Boss):1800);
+                        z.getHit2(z,1800);
                     });
                     oAudioManager.playAudio(self.AudioArr[Math.floor(Math.random()*(self.AudioArr.length-self.HmmAudioNum))+self.HmmAudioNum]);
                     if(oGd.$GdType[R][C]!=2){
@@ -4535,91 +4535,6 @@ olSPCase = InheritO(CPlants, {  //保护膜实例
         if(list.has(ticket)) {  //只有接收到特定标示才会死亡
             CPlants.prototype.Die.call(this);
         }
-    },
-}),
-oBatStaff = InheritO(oLight, {
-    EName: "oBatStaff",
-    CName: "特殊道具-半血法杖",
-    coolTime: 0,
-    width: 85,
-    height: 91,
-    HP: Infinity,
-    isPlant: 0,
-    getShadow: self => `left:10px;top:90px;`,
-    PicArr: (function() {
-        var a = "images/Props/BatStaff/";
-        return ["images/Card/Light.webp", a + "BatStaff.webp", a + "BatStaff.webp"]
-    })(),
-    Tooltip: "3x1范围内的植物和非boss的僵尸血量减半。无视盔甲与限击盾牌。",
-    GetDY: function(b, c, a) {
-        return - 30
-    },
-    InitTrigger: function() {},
-    PrivateBirth(self) {
-        self.EleBody = $(self.id).childNodes[1];
-        self.EleBody.src = self.PicArr[1];
-        oSym.addTask(150, () => {
-            for (let col = self.C-1; col<=self.C+1; col++) {
-                if (col>0 && col<10) CustomSpecial(oBats, self.R, col);
-            }
-        });
-        oSym.addTask(250, () => {
-            const o = $P[self.id];
-            o && o.Die();
-        });
-    },
-}),
-oBats = InheritO(oLight, {
-    EName: "oBats",
-    CName: "蝙蝠",
-    width: 200,
-    height: 80,
-    PKind: 4,
-    HP: Infinity,
-    isPlant: 0,
-    getShadow: () => "display:none",
-    PicArr: (function() {
-        var a = "images/Props/BatStaff/";
-        return ["", a + "bats.webp", ""]
-    })(),
-    InitTrigger: function() {},
-    PrivateBirth(self) {
-        oEffects.ImgSpriter({
-            ele: NewEle(self.id+'_Exhaust', "div", `pointer-events:none;position:absolute;z-index:${self.zIndex-1};width:255px;height:216px;left:${self.pixelLeft}px;top:${self.pixelTop-30}px;background:url(images/Zombies/BeetleCarZombie/Exhaust.png) no-repeat;`, 0, EDPZ),
-            changeValue: -255,
-            frameNum: 58,
-        });
-        oSym.addTask(50, () => {
-            oAudioManager.playAudio("bats");
-            let ele = NewImg("", self.PicArr[1], `left:${self.pixelLeft}px;top:${self.pixelTop-10}px;opacity:0;z-index:${self.zIndex};`, EDPZ);
-            oEffects.Animate(ele, {
-                opacity: 1,
-            }, 0.3);
-            oSym.addTask(100, () => {
-                oEffects.Animate(ele, {
-                    opacity: 0,
-                }, 0.3);
-                oSym.addTask(100, () => {
-                    ClearChild(ele);
-                });
-            });
-            let leftborder = self.pixelLeft+80,
-                rightborder = self.pixelRight-80;
-            let ArrZ=oZ.getArZ(leftborder,rightborder,self.R);
-            for (var zom of ArrZ) {
-                let half=Math.round((zom.HP-zom.BreakPoint)/2);
-                if (!zom.isPuppet && !zom.Boss) {
-                    if (zom.HP-half>=zom.BreakPoint+1) zom.HP-=half;
-                }
-            }
-            for (let plant of hasPlants(false, v => v.C == self.C & v.R == self.R && v.EName !== 'oBrains' && v.EName !== 'oLawnCleaner' && v.HP > 1 && v.isPlant && v.PKind === 1)) {
-                let half=Math.round(plant.HP/2);
-                if (plant.HP-half>=1) plant.HP-=half;
-            }
-        });
-        oSym.addTask(350, () => {
-            self.Die();
-        });
     },
 }),
 o8BitApple = InheritO(oStoneFlower,{
