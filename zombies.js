@@ -640,11 +640,12 @@ var CZombies = NewO({
         /* 如果僵尸血量大于1800，则扣除血量1800
             如果僵尸血量小于1800，则可被炸弹直接炸死 */
         getExplosion: function() {
-            let self = this;
+            let self = this,
+                dmg = (z.Boss)?(500/z.Boss):1800;
             if (self.ShieldHP > 0) {
                 self.getShieldHit(self);
             }
-            else {self.HP > 1800 ? self.HP -= 1800 : $Z[self.id] && !self.isGoingDie && self.ExplosionDie();}
+            else {self.HP > dmg ? self.HP -= dmg : $Z[self.id] && !self.isGoingDie && self.ExplosionDie();}
         },
         getThump: function() {
             this.DisappearDie()
@@ -2687,6 +2688,7 @@ oBossA = (() => {
         StandGif: 1,
         HP: 8000,
         HPT: 8000,
+        Boss: 2,
         OSpeed: 0.5,
         Speed: 0.5,
         width: 704,
@@ -4493,6 +4495,41 @@ oBeetleCarZombie = (() => {
         getThump: _Die,
         ExplosionDie: _Die,
         getSlow(){},
+        getExcited(intensity,duration_=undefined) {
+            let self = this;
+            let ele = self.Ele;
+            let duration = duration_??1200;
+            let oldTimeStamp = self.FreeExcitedTime;
+            let newTimeStamp = oSym.Now + duration;
+            self.Speed *= intensity;
+            self.Attack *= intensity;
+            if(!oldTimeStamp){
+                NewImg(`buff_excited_${Math.random()}`, "images/Zombies/buff_excited.gif", "left:75px;transform:scale(1.25);top:170px;height:38px;z-index:5;", ele, {className: 'buff_excited'});
+                !$User.LowPerformanceMode && EditCompositeStyle({
+                    ele: self.EleBody,
+                    styleName: 'filter',
+                    addFuncs: [['url', oSVG.getSVG('getExcited')]],
+                    option: 2,
+                });
+            }
+            if(oldTimeStamp < newTimeStamp) {  
+                self.FreeExcitedTime = newTimeStamp;
+                oSym.addTask(duration, () => {
+                    if($Z[self.id] && self.FreeExcitedTime === newTimeStamp){
+                        ClearChild(ele.querySelector('.buff_excited'));
+                        self.FreeExcitedTime = 0;
+                        self.Attack = self.OAttack;
+                        self.Speed && (self.Speed = self.OSpeed);
+                        !$User.LowPerformanceMode && EditCompositeStyle({
+                            ele: self.EleBody,
+                            styleName: 'filter',
+                            delFuncs: [['url',oSVG.getSVG('getExcited')]],
+                            option: 2
+                        });
+                    }
+                });
+            }  
+        },
         JudgeAttack: oZomboni.prototype.JudgeAttack,
         JudgeLR(self, crood, C, ZX, G) { //远程判定，普通僵尸的远程是自己前面一格
             if (C > 10 || C < 1) return;
@@ -6280,6 +6317,731 @@ oZomboss_Industry = (function(){
         }
     });
 })(),
+//雾都僵尸镜像从以下开始
+oMembraneZombieSP = InheritO(oMembraneZombie, {
+    EName: "oMembraneZombieSP",
+    CName: "魔法变装者",
+    Speed: 1,
+    HP: 1800,
+    Boss: 1,
+    OAttack: 600,
+    Attack: 600,
+    height: 235,
+    CardStars: 5,
+    Lvl: 20,
+    CanAppearFromTomb: false,  
+    Almanac:{
+        Tip:"为浓雾弃都庆典活动盛装的进阶僵尸。通常待在大后方，把植物变成南瓜。常优先锁定最右侧的植物。攻击力高。",
+        Story:"又到了一年一度的浓雾弃都嘉年华！只有被伟大的僵王博士选中的少数精英才可以带领游行的队伍，而魔法变装者就被选中了！虽然他不知道该穿万圣节还是圣诞节的服饰好，但是僵王给了他一套有着万圣节能力的圣诞节服饰。",
+    },
+    getAlmanacDom(pro) {
+        if (!pro.Almanac.Dom) {
+            let ClassAlmanac = CZombies.prototype.Almanac;
+            for (let i in ClassAlmanac) {
+                if (!pro.Almanac[i]) {
+                    pro.Almanac[i] = ClassAlmanac[i];
+                }
+            }
+            let _width = pro.displayWidth ?? pro.width;
+            let _height = pro.displayHeight ?? pro.height;
+            pro.Almanac.Dom = pro.getDisplayHTML("", 140 - _width / 2, 420 - _height, "1;height:" + _height + "px;width:" + _width + "px", "block", "auto", pro.GetDTop, pro.PicArr[pro.StandGif]);
+        }
+    },
+    getShadow(self) {
+        return `left:${self.beAttackedPointL-30}px;top:${self.height-20}px;width:150px;background-size:150px 38px;height:38px;`;
+    },
+    GoingDieHead(id, PicArr, self) {
+        return self.GoingDieHeadNew(id, PicArr, self, {
+            top: self.pixelTop + 90,
+            left: self.X + 144,
+            bc: self.pixelTop + 160,
+        });
+    },
+    GoingDieHeadNew(id, PicArr, self, config = {}) { //通过旋转图片来达到掉头
+        let bca, topa = self.pixelTop + (Number.parseInt(self.EleBody.style.top) || 0),
+            lefta = self.AttackedLX; //默认数据
+        let R = self.R;
+        bca = GetY(R);
+        let rand = (Math.random() >= 0.5 ? 1 : -1);
+        let {
+            vy = -3,
+                ay = 0.4,
+                vx = rand * (-Math.random() * 1 - 1),
+                rotate = 0,
+                bc = bca,
+                top = topa,
+                left = lefta,
+                times = 0,
+                rotateSpeed = rand * (Math.random() * 1.5 + 1.5)
+        } = config;
+        top += self.DivingDepth;
+        let ele = NewImg(`${id}_Head`, PicArr[self.HeadGif], `left:${left}px;top:${top}px;z-index:${self.zIndex};transform:rotate(${-rotate}deg) scale(1.25)`, EDPZ);
+        oSym.addTask(3, function loop() {
+            top += (vy += ay);
+            left += vx;
+            ele.style.top = top + "px";
+            ele.style.left = left + "px";
+            ele.style.transform = `rotate(-${rotate}deg) scale(1.25)`;
+            rotate += rotateSpeed;
+            while (rotate < 0) {
+                rotate = (360 + rotate) % 360;
+            }
+            if (top <= bc) {
+                oSym.addTask(3, loop);
+            } else {
+                if (times > 3) {
+                    oSym.addTask(50, oEffects.fadeOut, [ele, 'fast', ClearChild]);
+                } else if (oGd.$GdType[R][GetC(left)] !== 2) {
+                    top = bc;
+                    vy = -vy / 3;
+                    times++;
+                    oSym.addTask(3, loop);
+                } else {
+                    ClearChild(ele);
+                    let tmp = NewImg(0, null, `position:absolute;left:${left}px;top:${top}px;z-index:${self.zIndex};width:100px;height:122px;transform:translateX(-50%) translateY(-50%);`, EDPZ);
+                    tmp.src = oDynamicPic.require(WaterSplashImg, tmp);
+                    oSym.addTask(113, ClearChild, [tmp]);
+                }
+            }
+        });
+        let url = EditCompositeStyle({
+            ele: self.EleBody,
+            styleName: 'filter',
+            targetFunc: 'url'
+        });
+        EditCompositeStyle({
+            ele: ele,
+            styleName: 'filter',
+            addFuncs: [
+                ["url", url]
+            ],
+            option: 2
+        });
+    },
+    getExcited(intensity, duration_ = undefined) {
+        let self = this;
+        let ele = self.Ele;
+        let duration = duration_ ?? 1200;
+        let oldTimeStamp = self.FreeExcitedTime;
+        let newTimeStamp = oSym.Now + duration;
+        self.Speed *= intensity;
+        self.Attack *= intensity;
+        if (!oldTimeStamp) {
+            NewImg(`buff_excited_${Math.random()}`, "images/Zombies/buff_excited.gif", "left:155px;top:205px;height:38px;z-index:5;", ele, {
+                className: 'buff_excited'
+            });
+            !$User.LowPerformanceMode && EditCompositeStyle({
+                ele: self.EleBody,
+                styleName: 'filter',
+                addFuncs: [
+                    ['url', oSVG.getSVG('getExcited')]
+                ],
+                option: 2,
+            });
+        }
+        if (oldTimeStamp < newTimeStamp) {
+            self.FreeExcitedTime = newTimeStamp;
+            oSym.addTask(duration, () => {
+                if ($Z[self.id] && self.FreeExcitedTime === newTimeStamp) {
+                    ClearChild(ele.querySelector('.buff_excited'));
+                    self.FreeExcitedTime = 0;
+                    self.Attack = self.OAttack;
+                    self.Speed && (self.Speed = self.OSpeed);
+                    !$User.LowPerformanceMode && EditCompositeStyle({
+                        ele: self.EleBody,
+                        styleName: 'filter',
+                        delFuncs: [
+                            ['url', oSVG.getSVG('getExcited')]
+                        ],
+                        option: 2
+                    });
+                }
+            });
+        }
+    },
+    getPlants() {
+        let maxC = 0;
+        //more likely to target rightmost plants
+        //can target oApple
+        for (let i of hasPlants(false, v => v.EName !== 'oBrains' && v.EName !== 'oLawnCleaner' && v.isPlant && v.PKind === 1)) {
+            if (i.C > maxC) {
+                maxC = i.C;
+            }
+        }
+        return hasPlants(false, v => ((Math.random() < 0.85) ? v.C >= maxC : v.C > 0) && v.EName !== 'oBrains' && v.EName !== 'oLawnCleaner' && v.isPlant && v.PKind === 1);
+    },
+    getDisplayHTML(id, wrapLeft, wrapTop, zIndex, display, clip, top, img) {
+        const self = this;
+        return `<div id="${id}" data-jng-constructor="${self.EName}" style="width:${self.displayWidth ?? self.width}px;height:${self.displayHeight ?? self.height}px;position:absolute;left:${wrapLeft}px;top:${wrapTop}px;z-index:${zIndex};display:${display};transform:scale(1.25)"><div class='Shadow' style="${self.getDisplayShadow(self)}"></div><img style="position:absolute;clip:rect(0,auto,${clip},0);top:30px;left:15px;" src="${img}"></div>`;
+        //add scale(1.25) to enlarge
+    },
+    getFreezeCSS: _ => 'left:175px;top:215px;',
+    Birth(json = {}) { //唤醒僵尸，注册$Z和oZ
+        let self = this;
+        if (!json.dont_set_original_value) { //不设置原始数据，例如OAttack,OSpeed之类，否则默认备份OAttack,OSpeed
+            self.OAttack = self.Attack;
+            self.OSpeed = self.Speed;
+        }
+        self.HeadTargetPosition = JSON.parse(JSON.stringify(self.HeadTargetPosition)); //深拷贝头部坐标，避免改的时候直接改成prototype的
+        self.PicArr = self.PicArr.slice(); //复制一份数组，避免中途更改PicArr
+        self.DiyConfigs = {};
+        $Z[self.id] = self;
+        oZ.add(self);
+        let id = self.id;
+        let ele = self.Ele = $(id);
+        self.EleShadow = ele.firstChild;
+        self.EleBody = ele.childNodes[1];
+        if (self.ShieldHP > 0) {
+            self.OShieldHP = self.ShieldHP;
+            NewImg(`buff_shield_${Math.random()}`, "images/Zombies/buff_shield.png", self.getShadow(
+                self) + "z-index:5;left:65px;top:60px;transform: scale(1);", ele, {
+                className: 'buff_shield'
+            });
+        }
+        if (oS.ZombieRandomSpeed && !self.isPuppet) {
+            let delta = Math.Clamp(Math.Grandom(0, oS.ZombieRandomSpeed / 3), -oS.ZombieRandomSpeed / 3, oS.ZombieRandomSpeed / 3);
+            self.Speed += delta;
+            self.OSpeed += delta;
+        }
+        self.BirthCallBack(self);
+        if (self.CanGoThroughWater && oGd.$GdType[self.R][Math.Clamp(GetC(self.ZX), 1, oS.C)] === 2) {
+            self.ChkActs = self.GoThroughWater;
+        }
+        oSym.addTask(self.delayT, _ => {
+            self.PicArr = self.PicArr.map(pic => oDynamicPic.checkOriginalURL(pic) ? oDynamicPic.require(pic, null, true) : oURL.removeParam(pic, "useDynamicPic"));
+            IsHttpEnvi && ele.addEventListener("DOMNodeRemoved", (event) => {
+                if (event.target === ele && (!ele.id || !$(ele.id))) {
+                    setTimeout(self.RemoveDynamicPic.bind(self), 1);
+                }
+            });
+            self.EleBody.src = self.PicArr[self.NormalGif];
+            self.EleBody['style']['transform'] = 'scale(1.25)';
+        });
+    },
+    GoLeft(o, R, arR, i) { //往左走的僵尸行动
+        var Speed,
+            AttackedRX,
+            rV,
+            id = o.id;
+        if (o.X <= 645 && o.X > 630 && o.Speed < 1.4 && o.Speed != 0) {
+            o.Speed = 0;
+            $Z[id] && !o.isGoingDie && (o.isAttacking = 0, o.EleBody.src = o.PicArr[o.StandGif]);
+            if (!o.isGoingDie && !o.isAttacking) {
+                for (let conjtime = 0; conjtime < 9; conjtime++) { //stand still, conjure 8 times with 15s interval before moving again at 1.5 speed
+                    oSym.addTask(1500 * conjtime, function() {
+                        o.Conjure();
+                        if (conjtime >= 8) {
+                            o.Speed = 1.5;
+                            $Z[id] && !o.isGoingDie && (o.isAttacking = 0, o.EleBody.src = o.PicArr[o.NormalGif]);
+                        }
+                    });
+                }
+            }
+        }
+        (o.isNotStaticed()) ? (
+            !o.isGoingDie && !o.isAttacking && o.JudgeAttack(), //未临死，未攻击，进行攻击判断
+            !o.isAttacking ? (
+                (AttackedRX = o.AttackedRX -= (Speed = o.Speed * o.SpeedCoefficient)) < -50 ?
+                (arR.splice(i, 1), o.DisappearDie(), rV = 0) : ( //向左走出屏幕，算作直接死亡，不排序只更新
+                    //未走出屏幕，当右攻击点小于100的时候，进行移动判断
+                    o.ZX = o.AttackedLX -= Speed,
+                    $(id) != null && SetStyle($(id), {
+                        left: (o.X -= Speed) + 'px'
+                    }), //不知道为啥会出现没有$(id)的bug
+                    rV = 1,
+                    o.Conjure() //施法回调
+                )
+            ) : rV = 1
+        ) : rV = 1;
+        //检查场地事件
+        o.ChkCell_GdType(o);
+        return rV;
+    },
+    Conjure() {
+        let obj = this;
+        const id = obj.id;
+
+        function drawALink(R, C, oldCanvas = null) {
+            let pos = [obj.ZX, obj.pixelTop + 25];
+            let currentPos = pos;
+            let targetPos = [GetX(C), GetY(R) - 20];
+            let theta = Math.atan2((targetPos[1] - currentPos[1]), (targetPos[0] - currentPos[0]));
+            let delta = [Math.cos(theta), Math.sin(theta)];
+            let canvas = oldCanvas ?? NewEle("Canvas_Magician" + Math.random(), "canvas", "position:absolute;z-index:" + 3 * (oS.R + 1) + ";pointer-events:none;left:0;top:0;widht:100%;height:100%;" + (!$User.LowPerformanceMode ? "filter:brightness(220%);" : ""), {
+                width: 900,
+                height: 600,
+            }, FightingScene);
+            let ctx = canvas.getContext("2d");
+            let kk = 0;
+
+            function RotatePaint(pic, x, y, width, height, rotate = 0, mirror = 0) {
+                let dist = [x + width / 2, y + height / 2];
+                ctx.save(); // 保存状态，以免影响其它物体
+                ctx.translate(dist[0], dist[1]); // 将画布偏移到物体中心
+                ctx.rotate(rotate); // 旋转角度
+                ctx.translate(-dist[0], -dist[1]); // 将画布偏移回来
+                if (mirror) {
+                    let mx = x + width / 2;
+                    ctx.translate(mx, 0);
+                    ctx.scale(-1, 1);
+                    ctx.translate(-mx, 0);
+                }
+                ctx.fillStyle = ["#000", "#fff"][kk ^= 1];
+                ctx.drawImage(pic, x, y, width, height);
+                // 坐标参考还原
+                ctx.restore(); // 恢复状态
+            }
+            let distance = Math.sqrt(Math.pow(targetPos[1] - currentPos[1], 2) + Math.pow(targetPos[0] - currentPos[0], 2));
+            let times = Math.max(2, Math.floor(distance / 80));
+            let k = distance / times;
+            let picPos = [];
+            while (times-- > 0) {
+                let randLength = k;
+                distance -= randLength;
+                picPos.push({
+                    x: currentPos[0],
+                    y: currentPos[1],
+                    width: randLength,
+                    rotate: theta
+                });
+                currentPos[1] += delta[1] * randLength;
+                currentPos[0] += delta[0] * randLength;
+            }
+            for (let t = 0; t < picPos.length; t++) {
+                let i = picPos[t];
+                //想改的时候自己根据数学推导一下，a里面的那个-i.width/2和37.5/2为宽度和高度的一半，帮忙把旋转原点和锚点变成坐标中心点用的，然后10*delta[1/0]是因为闪电图片的中心不在中间，需要增加一个偏移量
+                //然后delta[0]*i.width/2为把图片的锚点挪到图片(中心，顶端)用的
+                let a = [-i.width / 2 + 10 * delta[1], -37.5 / 2 - 10 * delta[0]];
+                if (t === 0) {
+                    RotatePaint(obj.ElecPic[1], i.x + delta[0] * i.width / 2 + a[0], i.y + delta[1] * i.width / 2 + a[1], i.width, 37.5, i.rotate, 0);
+                } else {
+                    RotatePaint(obj.ElecPic[0], i.x + delta[0] * i.width / 2 + a[0], i.y + delta[1] * i.width / 2 + a[1], i.width, 37.5, i.rotate, Math.floor(Math.random() * 2));
+                }
+            }
+            return canvas;
+        }
+        if (!$Z[id]) return;
+        let arrPlants = obj.getPlants();
+        obj.Pianyi++; //更新偏移
+        if (obj.AttackedLX <= oS.W + 80 && !obj.isAttacking && !obj.isGoingDie && obj.Pianyi >= 190 && arrPlants.length > 0) { //判定是否释放膜法
+            obj.Pianyi = 0; //重置计数器
+            obj.isAttacking = 2; //标记正在施法，确保僵尸停止运动
+            obj.EleBody.src = obj.PicArr[obj.ConjureGif];
+            oAudioManager.playAudio('conjure');
+            oSym.addTask(300, _ => { //300
+                //随机变一株植物为挨炮
+                let aPlant = arrPlants.random(),
+                    {
+                        R,
+                        C
+                    } = aPlant;
+                if ($P[aPlant.id]?.Immediately === false && $Z[id]) {
+                    aPlant.Die('JNG_TICKET_MembraneZombie');
+                    CustomSpecial(oPumpkinHead, R, C);
+                    let canvas = drawALink(R, C),
+                        ctx = canvas.getContext("2d");
+                    if (!$User.LowPerformanceMode) {
+                        for (let i = 0; i < 3; i++) {
+                            oSym.addTask(2 * i, () => {
+                                if (!$(canvas.id)) {
+                                    return;
+                                }
+                                ctx.clearRect(0, 0, 900, 600);
+                                drawALink(R, C, canvas);
+                            });
+                        }
+                    }
+                    let img_index = Math.floor(Math.random() * 4);
+                    let elecEffect = NewEle("", "img", `position:absolute;z-index:${3*R+2};left:${GetX(C)}px;top:${GetY(R)}px;transform: translate(-50%, -65%) scale(0.5);`, {
+                        src: obj.PicArr[obj.ElectricShockGif + img_index]
+                    }, FightingScene);
+                    if (!$User.LowPerformanceMode) {
+                        elecEffect.style.filter = "brightness(200%)";
+                    }
+                    oSym.addTask(80, ClearChild, [elecEffect]);
+                    {
+                        let json = $User.LowPerformanceMode ? {
+                            opacity: 0
+                        } : {
+                            filter: "",
+                            opacity: 0
+                        };
+                        oEffects.Animate(canvas, json, 0.3 / oSym.NowSpeed, "linear", ClearChild, 0.1 / oSym.NowSpeed);
+                    };
+                    oEffects.ImgSpriter({
+                        ele: NewEle(id + '_Effect', "div", `position:absolute;z-index:${R*3+2};width:208px;height:198px;left:${80*C}px;top:${30+100*(R-1)}px;background:url(images/Zombies/MembraneZombie/effect.png) no-repeat;`, 0, EDPZ),
+                        styleProperty: 'X',
+                        changeValue: -209,
+                        frameNum: 13,
+                        interval: 9,
+                    });
+                }
+            });
+            oSym.addTask(390, _ => //恢复 390
+                $Z[id] && !obj.isGoingDie && (obj.isAttacking = 0, obj.EleBody.src = obj.PicArr[(obj.Speed != 0) ? obj.NormalGif : obj.StandGif])
+            );
+        }
+    },
+    Bounce() {},
+    getCharredCSS: (self) => ({
+        top: 112 + self.DivingDepth / 1.5,
+        left: 158,
+        transform: "scale(1.25)",
+        clip: self.DivingDepth > 0 ? "rect(0px, auto, 95px, 0px)" : "",
+    }),
+    JudgeAttack() {
+        let self = this;
+        let ZX = self.ZX;
+        let crood = self.R + "_";
+        let C = GetC(ZX);
+        let G = oGd.$;
+        let arr = self.JudgeLR(self, crood, C, ZX, G) || self.JudgeSR(self, crood, C, ZX, G);
+        if (arr && self.Altitude === 1) { //地上的僵尸才能检测攻击
+            !self.isAttacking && (self.isAttacking = 1, self.EleBody.src = self.PicArr[self.AttackGif]); //如果是首次触发攻击，需要更新到攻击状态
+            self.NormalAttack(...arr); //实施攻击
+        } else {
+            //撤销攻击状态
+            self.isAttacking && (self.isAttacking = 0, self.EleBody.src = self.PicArr[(self.Speed != 0) ? self.NormalGif : self.StandGif]);
+        }
+    },
+}),
+oBeetleCarZombieSP = InheritO(oBeetleCarZombie, {
+    EName: "oBeetleCarZombieSP",
+    CName: "甲壳虫女王",
+    HP: 6500,
+    Boss: 1,
+    height: 220,
+    Speed: 4,
+    OSpeed: 4,
+    skilltime: 0,
+    CardStars: 5,
+    getShadow: self => `position: absolute;width: 231px;height: 44px;left: 15px;background:url(images/Zombies/BeetleCarZombie/Shadow.png);top: 190px;background-size: 100% 120%;`,
+    beAttackedPointL: 20,
+    beAttackedPointR: 200,
+    BackwardsGif: 7,
+    Lvl: 50,
+    PicArr: (function() {
+        let path = "images/Zombies/BeetleCarZombie/",
+            b = "images/Zombies/Zomboni/";
+        return [path + "Idle.webp", path + 'Walk.webp', path + 'Release.webp', path + 'FlatTire.webp', path + 'Die.webp', path + 'Exhaust.png', path + 'Shadow.png', path + 'Backwards.webp', b + "ice_n.webp", b +
+            "ice_m.webp", b + "ice_cap_n.webp", b + "ice_cap_m.webp", b + 'BoomDie.webp'
+        ];
+    })(),
+    AudioArr: ["zamboni", "cucaracha", "beetle_crash", "shieldhit", "shieldhit2", "beetle", 'beetleCarDie'],
+    flatTire() {},
+    Almanac:{
+        Tip:"带领浓雾弃都游行队伍的升级版甲壳虫车僵尸。拥有着冰车僵尸的特性以及无法被刺穿的加固车轮。<br/><br/>技能1：高速冲向你的防线。每用前轮撞到植物就会减速。要倒车后才能再次加速，同时回血。<br/>技能2：发射导弹摧毁植物，同时生成僵尸。<br/>技能3：在后方生成僵尸。产生气体，立即使后面及在附近线上的僵尸加速并冲前。",
+        Speed:"快",
+        Story:"甲壳虫车僵尸很喜欢4个一组行动，由甲壳虫女王领队。他们管自己叫“蚾头四”，整晚用着大喇叭播老歌。",
+    },
+    getAlmanacDom(pro) {
+        if (!pro.Almanac.Dom) {
+            let ClassAlmanac = CZombies.prototype.Almanac;
+            for (let i in ClassAlmanac) {
+                if (!pro.Almanac[i]) {
+                    pro.Almanac[i] = ClassAlmanac[i];
+                }
+            }
+            let _width = pro.displayWidth ?? pro.width;
+            let _height = pro.displayHeight ?? pro.height;
+            pro.Almanac.Dom = pro.getDisplayHTML("", 200 - _width / 2, 450 - _height, "1;height:" + _height + "px;width:" + _width + "px", "block", "auto", pro.GetDTop, pro.PicArr[pro.StandGif]);
+        }
+    },
+    getDisplayHTML(id, wrapLeft, wrapTop, zIndex, display, clip, top, img) {
+        const self = this;
+        return `<div id="${id}" data-jng-constructor="${self.EName}" style="width:${self.displayWidth ?? self.width}px;height:${self.displayHeight ?? self.height}px;position:absolute;left:${wrapLeft}px;top:${wrapTop}px;z-index:${zIndex};display:${display};transform:scale(1.25)"><div class='Shadow' style="${self.getDisplayShadow(self)}"></div><img style="position:absolute;clip:rect(0,auto,${clip},0);top:20px" src="${img}"></div>`;
+        //add scale(1.25) to enlarge
+    },
+    getCrushed() { //reduces damage received by lawn mower
+        this.getHit(this,50);
+    },
+    Birth(json = {}) { //唤醒僵尸，注册$Z和oZ
+        let self = this;
+        if (!json.dont_set_original_value) { //不设置原始数据，例如OAttack,OSpeed之类，否则默认备份OAttack,OSpeed
+            self.OAttack = self.Attack;
+            self.OSpeed = self.Speed;
+        }
+        self.HeadTargetPosition = JSON.parse(JSON.stringify(self.HeadTargetPosition)); //深拷贝头部坐标，避免改的时候直接改成prototype的
+        self.PicArr = self.PicArr.slice(); //复制一份数组，避免中途更改PicArr
+        self.DiyConfigs = {};
+        $Z[self.id] = self;
+        oZ.add(self);
+        let id = self.id;
+        let ele = self.Ele = $(id);
+        self.EleShadow = ele.firstChild;
+        self.EleBody = ele.childNodes[1];
+        if (self.ShieldHP > 0) {
+            self.OShieldHP = self.ShieldHP;
+            NewImg(`buff_shield_${Math.random()}`, "images/Zombies/buff_shield.png", self.getShadow(
+                self) + "z-index:5;left:65px;top:60px;transform: scale(1);", ele, {
+                className: 'buff_shield'
+            });
+        }
+        if (oS.ZombieRandomSpeed && !self.isPuppet) {
+            let delta = Math.Clamp(Math.Grandom(0, oS.ZombieRandomSpeed / 3), -oS.ZombieRandomSpeed / 3, oS.ZombieRandomSpeed / 3);
+            self.Speed += delta;
+            self.OSpeed += delta;
+        }
+        self.BirthCallBack(self);
+        if (self.CanGoThroughWater && oGd.$GdType[self.R][Math.Clamp(GetC(self.ZX), 1, oS.C)] === 2) {
+            self.ChkActs = self.GoThroughWater;
+        }
+        oSym.addTask(self.delayT, _ => {
+            self.PicArr = self.PicArr.map(pic => oDynamicPic.checkOriginalURL(pic) ? oDynamicPic.require(pic, null, true) : oURL.removeParam(pic, "useDynamicPic"));
+            IsHttpEnvi && ele.addEventListener("DOMNodeRemoved", (event) => {
+                if (event.target === ele && (!ele.id || !$(ele.id))) {
+                    setTimeout(self.RemoveDynamicPic.bind(self), 1);
+                }
+            });
+            self.EleBody.src = self.PicArr[self.NormalGif];
+            self.EleBody['style']['transform'] = 'scale(1.25)'; //add scale(1.25) to enlarge
+        });
+    },
+    JudgeIce: function() { //冰道后续机制
+        let R = this.R,
+            dIceCar = $("dIceCar" + R),
+            $Ice = oGd.$Ice[R],
+            $Crater = oGd.$Crater;
+        //如果现在当前行已经没冰车了，激活清除程序
+        $Ice && (--$Ice[0]) <= 0 && oSym.addTask(3000, _ => {
+            let leftBorderC = $Ice[1];
+            $Ice = oGd.$Ice[R];
+            if ($Ice && $Ice[0] <= 0 && dIceCar) {
+                oEffects.fadeOut(dIceCar, 'fast', ClearChild);
+                while (leftBorderC < 11) {
+                    delete $Crater[R + "_" + leftBorderC];
+                    oGd.unlockGrid(R, leftBorderC);
+                    leftBorderC++;
+                }
+                delete oGd.$Ice[R];
+            }
+        });
+    },
+    JudgeAttack: function() {
+        var f = this,
+            c = f.ZX,
+            d = f.R + "_",
+            e = GetC(c),
+            g = oGd.$,
+            b;
+        if (b = f.JudgeLR(f, d, e, c, g) || f.JudgeSR(f, d, e, c, g)) {
+            f.NormalAttack(b[0], b[1]);
+            if (GetC(f.X) <= 7) { //the charging attack
+                oAudioManager.playAudio('beetle_crash');
+                if (f.Speed - 1.4 >= 1) {
+                    f.Speed -= 1.4;
+                } //when a plant is crushed by its front wheels, lower speed by 1.4
+                else { //after speed is lowered too much, speed becomes 0
+                    f.EleBody.src = f.PicArr[f.StandGif];
+                    f.Speed = 0;
+                }
+            }
+        }
+    },
+    ChkActs: function(self, R, arR, i) {
+        if (oGd.$GdType[R][GetC(self.AttackedLX + 40)] == 2) {
+            self.NormalDie();
+            return 1;
+        }
+        if (self.isNotStaticed()) {
+            let Speed, AttackedRX, rV, BigDiv,
+                ArIce = oGd.$Ice[R], //当前行的冰道数据
+                X, X1, X2, C,
+                dIceCar = $('dIceCar' + R);
+            if ((AttackedRX = self.AttackedRX -= (Speed = self.Speed * self.SpeedCoefficient)) < -50) {
+                arR.splice(i, 1);
+                self.DisappearDie();
+                rV = 0;
+            } else {
+                self.ZX = (self.AttackedLX -= Speed);
+                SetStyle(self.Ele, {
+                    left: (self.X -= Speed) + 'px'
+                });
+                rV = 1;
+            }
+            if (!self.isReleasing) {
+                !self.isGoingDie && self.Speed && self.JudgeAttack();
+                X = self.X;
+                X1 = X + 170; //制冰点的X坐标
+                X2 = X + 40; //裁剪距离
+                C = GetC(X1 + 19);
+                if (C > -1 && ArIce && C < ArIce[1]) {
+                    //当冰车的列比冰道小，则锁定当前列的格子
+                    oGd.$Crater[R + '_' + C] = true;
+                    oGd.$LockingGrid[R + "_" + C] = true;
+                    let PData;
+                    for (let i = 0; i <= PKindUpperLimit; i++) {
+                        if (PData = oGd.$[`${R}_${C}_${i}`]) {
+                            PData.getHurt(self, 2, self.Attack);
+                        }
+                    }
+                    ArIce[1] = C; //保存当前行的冰车道最左到达了哪一列                    
+                }
+                if (X1 > 120 && ArIce && X1 < ArIce[2]) {
+                    ArIce[2] = X1;
+                    dIceCar && (dIceCar.firstChild.style['clip'] = "rect(0,auto,auto," + X2 + "px)",
+                        dIceCar.childNodes[1].style.left = Math.max(0, X2) + 'px');
+                }
+                if (self.skilltime < 3) {
+                    if (GetC(X) <= 7) {
+                        self.Release(self, self.Speed);
+                    }
+                } else {
+                    if (GetC(X) < 12) { //after skill is activated 3 times, go backwards until it reaches column 12
+                        if (self.Speed > -1) self.EleBody.src = self.PicArr[self.BackwardsGif];
+                        self.Speed = -3;
+                    } else { //then restores HP and repeats the charging attack
+                        self.HP+=1000;
+                        oAudioManager.playAudio('beetle');
+                        oAudioManager.playAudio('cucaracha');
+                        self.Speed = 4;
+                        self.EleBody.src = self.PicArr[self.NormalGif];
+                        self.skilltime = 0;
+                    }
+                }
+            }
+            //检查场地事件
+            self.ChkCell_GdType(self);
+            return rV;
+        }
+        return 1;
+    },
+    BirthCallBack(self) {
+        oAudioManager.playAudio('zamboni');
+        oAudioManager.playAudio('cucaracha');
+        let delayT = self.delayT;
+        let id = self.id;
+        let ele = self.Ele = $(id);
+        let R = self.R;
+        let $Ice = oGd.$Ice;
+        self.EleShadow = ele.firstChild;
+        self.EleBody = ele.childNodes[1];
+        //如果此行不存在冰道数据
+        if (!$Ice[R] || !$("dIceCar" + R)) {
+            let wrap = NewEle("dIceCar" + R, "div",
+                `position:absolute;z-index:1;left:145px;top:${GetY(R) - 80}px;width:800px;height:72px`,
+                0, EDPZ);
+            NewEle(`Ice_${R}`, 'div',
+                `position:absolute;width:800px;height:72px;left:5px;clip:rect(0,auto,auto,800px);background:url(images/Zombies/Zomboni/ice_${oS.DKind ? 'm' : 'n'}.webp) repeat-x`,
+                null, wrap);
+            NewImg(`Ice_Cap_${R}`, `images/Zombies/Zomboni/ice_cap_${oS.DKind ? 'm' : 'n'}.webp`,
+                "position:absolute;left:956px;", wrap);
+            $Ice[R] = [1, 11, self.X + 150]; //第二个参数为制冰点X坐标，并不是AttackedLX，这里做出修改
+        } else {
+            ++$Ice[R][0];
+        }
+        if (delayT) {
+            oSym.addTask(delayT, () => {
+                self.freeStaticEffect(self, "SetBody");
+                $Z[id] && SetBlock(ele);
+            });
+        } else {
+            SetBlock(ele);
+        }
+    },
+    Release(self, speed) {
+        const id = self.id;
+        const X = self.X;
+        self.changingX += 1; //every time this function is called, changingX gets increased
+        if (self.changingX >= 80 && self.skilltime < 3 && speed < 3) { //once changingX reaches 80 and the boss isn't fully charging, activate skill and reset changingX
+            self.isReleasing = 1;
+            self.changingX = 0;
+            self.Speed = 0;
+            if (1 + Math.round(Math.random() * 2) !== 2) { //randomly selects between shooting missiles and speeds up zombies
+                for (let tem = 0; tem < 2; tem++) {
+                    PlaceZombie([oConeheadZombie, oBucketheadZombie, oFootballZombie, oCaskZombie, oNewspaperZombie, oMakeRifterZombie, oCigarZombie, oSadakoZombie, oMembraneZombie, oSculptorZombie, oPushIceImp].random(), [1, 2, 3, 4, 5].random(), 9, 1);
+                }
+                oAudioManager.playAudio('beetle');
+                self.EleBody.src = self.PicArr[self.ReleaseGif];
+                oSym.addTask(100, () => {
+                    if (!$Z[id]) return;
+                    oEffects.ImgSpriter({
+                        ele: NewEle(self.id + '_Exhaust', "div", `pointer-events:none;position:absolute;z-index:${self.zIndex+2};width:255px;height:216px;left:${self.X+230}px;top:${self.pixelTop+23}px;background:url(images/Zombies/BeetleCarZombie/Exhaust.png) no-repeat;`, 0, EDPZ),
+                        changeValue: -255,
+                        frameNum: 58,
+                    });
+                    let zombieArr = [];
+                    for (let ro = self.R - 1; ro <= self.R + 1; ro++) {
+                        if (ro > 0 && ro < 6) zombieArr = zombieArr.concat(oZ.getArZ(self.AttackedRX + 5, 880, ro));
+                    }
+                    zombieArr.forEach(zombie => zombie.Bounce({
+                        distance: -1,
+                        velocity: -2,
+                    }));
+                    //傀儡不加速
+                    zombieArr.forEach(zombie => !zombie.isPuppet && zombie.getExcited(1.4));
+                });
+            } else {
+                if (speed > 0) self.EleBody.src = self.PicArr[self.StandGif];
+                let R = self.R,
+                    pos = 1,
+                    pixelTop = self.pixelTop + 50,
+                    zIndex = self.zIndex - 1,
+                    upele = NewEle(0, "div", "position:absolute;");
+                NewImg(0, "images/Props/Missile/Missile.webp", "transform:rotate(180deg)", upele);
+                EditEle(upele, {
+                    id: id
+                }, {
+                    left: (self.X + 85) + "px",
+                    top: pixelTop + "px",
+                    zIndex: zIndex
+                }, EDPZ);
+                oAudioManager.playAudio("missileshoot");
+                oSym.addTask(70, function move() {
+                    if (pixelTop > -100) {
+                        upele.style.top = (pixelTop = pixelTop - (pos++)) + 'px';
+                        oSym.addTask(1, move);
+                    } else {
+                        ClearChild(upele);
+                    }
+                });
+                oSym.addTask(90, _ => {
+                    oAudioManager.playAudio("missilefall");
+                });
+                oSym.addTask(120,
+                    function(d) {
+                        let arrZ = [oZombie, oBalloonZombie, oSkatingZombie, oStrollZombie, oConeheadZombie];
+                        let arrP = hasPlants(true, v => v.C > 3 && v.C < 7);
+                        if (arrP.length < 2) {
+                            let R1 = [1, 3, 5].random();
+                            let R2 = [2, 4].random();
+                            let C = [4, 5, 6].random();
+                            CustomSpecial(oMissile, R1, C);
+                            CustomSpecial(oMissile, R2, C);
+                            oSym.addTask(150, _ => {
+                                PlaceZombie(arrZ.random(), R1, C, 1);
+                                PlaceZombie(arrZ.random(), R2, C, 1);
+                            });
+                        } else {
+                            for (let is = 0; is < 2; is++) {
+                                let Select = parseInt(Math.random() * arrP.length);
+                                let ssd = 0;
+                                for (let i of arrP) {
+                                    if (ssd == Select) {
+                                        CustomSpecial(oMissile, i.R, i.C);
+                                        oSym.addTask(150, _ => {
+                                            PlaceZombie(arrZ.random(), i.R, i.C, 1);
+                                        });
+                                    }
+                                    ssd++;
+                                }
+                            }
+                        }
+                    }
+                );
+            }
+            oSym.addTask(204, () => {
+                if ($Z[id]) {
+                    self.Speed = speed;
+                    self.EleBody.src = self.PicArr[(self.Speed != 0) ? self.NormalGif : self.StandGif];
+                    self.skilltime++;
+                    self.isReleasing = 0;
+                }
+            });
+        }
+    },
+    PrivateDie: self => self.JudgeIce(),
+}),
 // 镜花水月僵尸从下面开始
 oSnorkelerZombie = InheritO(oZombie, {
     EName: "oSnorkelerZombie",
@@ -6736,7 +7498,7 @@ oCrystal = InheritO(oConeheadZombie, {
         self.pixelTop = pixelTop,
         self.CR = R + '_' + C;
         self.zIndex = zIndex;
-        oGd.$Crystal[self.CR] = true;
+        oGd.$Crystal[self.CR] = self;
         oGd.$LockingGrid[self.CR] = true; //当前格子禁止种植
         oGd.killAll(R, C);  //杀死当前格的植物
         NewImg(id + "_Light", "images/Props/Crystal/Crystal10.png", "left:" + (self.AttackedLX - self.beAttackedPointL) + "px;top:" + self.pixelTop + "px;z-index:" + self.zIndex, EDPZ); //初始化发光特效
@@ -6872,6 +7634,7 @@ oCrystal = InheritO(oConeheadZombie, {
 }),
 oSculpture = (() => {
     const getHit = (self, attack) => {
+        if (self.SunUponHit > 0) oS.SunNum+=self.SunUponHit;
         if((self.HP -= attack) <= 0) {  //死亡
             self.getHit0 = self.getHit1 = self.getHit2 = self.getHit3 = _=>{};
             self.NormalDie();
@@ -6893,6 +7656,7 @@ oSculpture = (() => {
         PicArr: (path => ['Sculpture0.png', 'Sculpture1.png', 'Sculpture2.png', 'damage1.png', 'damage2.png'].map(s => path + s))("images/Props/Sculpture/"),
         AudioArr: ['sculpture1' ,'sculpture2', 'sculpture3'],
         getShadow: _ => `left: 3px;top: 144px;`,
+        SunUponHit: 0, //industry6jx
         isMoving: 0,
         ChkActs: (o,R,arR,i) =>o.GoLeft(o,R,arR,i),  //默认向左走
         FangXiang: 'GoLeft',
