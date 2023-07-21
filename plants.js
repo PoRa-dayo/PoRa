@@ -519,7 +519,7 @@ oPotatoMine = InheritO(CPlants, {
     NormalAttack: function(lx, rx, r) {
         oAudioManager.playAudio("cherrybomb");
         let self = this, id = self.id, zombies = oZ.getArZ(lx, rx, r);
-        zombies.forEach(zombie => zombie.Altitude < 2 && zombie.getExplosion());
+        zombies.forEach(zombie => zombie.Altitude < 2 && (self.EName=="oPotatoMineWeak")?zombie.getExplosionWeak():zombie.getExplosion());
         self.Die();
 		oEffects.ScreenShake();
         oEffects.ImgSpriter({
@@ -535,6 +535,11 @@ oPotatoMine2 = InheritO(oPotatoMine, {
     EName: "oPotatoMine2",
     CName: "冷却减少-土豆雷",
     coolTime: 5,
+    Tooltip: "敌人接触后爆炸且需要时间安放<br>优化：冷却减少。"
+}),
+oPotatoMineWeak = InheritO(oPotatoMine, {
+    EName: "oPotatoMineWeak",
+    CName: "冷却减少-土豆雷",
     Tooltip: "敌人接触后爆炸且需要时间安放<br>优化：冷却减少。"
 }),
 oWallNut = InheritO(CPlants, {
@@ -784,7 +789,7 @@ oCherryBomb = InheritO(CPlants, {
                 rightBorder = self.pixelRight + 80;
                 do {
                     oZ.getArZ(leftBorder, rightBorder, floorR)
-                        .forEach(zombie=>zombie.getExplosion());
+                        .forEach(zombie=>(self.EName=="oCherryBombWeak")?zombie.getExplosionWeak():zombie.getExplosion());
                 } while (floorR++ < ceilingR);
                 self.Die('JNG_TICKET_SuperPower');
                 self.BoomGIF(self.pixelLeft, self.pixelTop);
@@ -797,6 +802,11 @@ oCherryBomb2 = InheritO(oCherryBomb, {
     EName: "oCherryBomb2",
     CName: "减少冷却-樱桃炸弹",
     coolTime: 10,
+    Tooltip: "炸掉一定区域内的所有僵尸<br>优化：冷却减少。"
+}),
+oCherryBombWeak = InheritO(oCherryBomb, {
+    EName: "oCherryBombWeak",
+    CName: "减少冷却-樱桃炸弹",
     Tooltip: "炸掉一定区域内的所有僵尸<br>优化：冷却减少。"
 }),
 oTallNut = InheritO(oWallNut, {
@@ -1190,7 +1200,7 @@ oBambooUncle = InheritO(CPlants, {
         leftBorder = self.pixelLeft - 80,
         rightBorder = self.pixelRight + 80;
         do {
-            oZ.getArZ(leftBorder, rightBorder, floorR).forEach(zombie=>zombie.getExplosion());
+            oZ.getArZ(leftBorder, rightBorder, floorR).forEach(zombie=>(self.EName=="oBambooUncleWeak")?zombie.getExplosionWeak():zombie.getExplosion());
         } while (floorR++ < ceilingR);
         self.BoomGIF(self.pixelLeft, self.pixelTop);
         oEffects.ScreenShake();
@@ -1200,6 +1210,11 @@ oBambooUncle1 = InheritO(oBambooUncle, {
     EName: "oBambooUncle1",
     CName: "冷却减少-爆竹爷",
     CoolTime: 3,
+    Tooltip: "僵尸接近后爆竹爷会启动自爆程序！<br>优化：冷却减少。"
+}),
+oBambooUncleWeak = InheritO(oBambooUncle, {
+    EName: "oBambooUncleWeak",
+    CName: "冷却减少-爆竹爷",
     Tooltip: "僵尸接近后爆竹爷会启动自爆程序！<br>优化：冷却减少。"
 }),
 oDoomShroom = InheritO(oCherryBomb, {
@@ -1234,7 +1249,7 @@ oDoomShroom = InheritO(oCherryBomb, {
                 ];
                 do {
                     let range = borders[2-Math.abs(floorR-o.R)];
-                    oZ.getArZ(obj.pixelLeft+range[0], obj.pixelRight + range[1], floorR).forEach(o=>o.getExplosion());
+                    oZ.getArZ(obj.pixelLeft+range[0], obj.pixelRight + range[1], floorR).forEach(o=>(obj.EName=="oDoomShroomWeak")?o.getExplosionWeak():o.getExplosion());
                 } while (floorR ++< ceilingR);
                 oEffects.ScreenShake();
                 obj.Die('JNG_TICKET_SuperPower');
@@ -1257,6 +1272,11 @@ oDoomShroom1 = InheritO(oDoomShroom, {
     EName: "oDoomShroom1",
     CName: "冷却减少-毁灭菇",
     coolTime: 12,
+    Tooltip: "可以对僵尸造成大规模打击, 但冷却时间却很长<br>优化：冷却减少。"
+}),
+oDoomShroomWeak = InheritO(oDoomShroom, {
+    EName: "oDoomShroomWeak",
+    CName: "冷却减少-毁灭菇",
     Tooltip: "可以对僵尸造成大规模打击, 但冷却时间却很长<br>优化：冷却减少。"
 }),
 oNutBowling = InheritO(CPlants, {
@@ -4387,7 +4407,7 @@ oSquash=InheritO(oStoneFlower,{
                         top:tarTop-oriY+"px",
                     });
                     oZ.getArZ(checkX-45, checkX+45, R).forEach(z=>{
-                        z.getHit2(z,1800);
+                        z.getHit2(z,(z.Boss)?(500/z.Boss):1800);
                     });
                     oAudioManager.playAudio(self.AudioArr[Math.floor(Math.random()*(self.AudioArr.length-self.HmmAudioNum))+self.HmmAudioNum]);
                     if(oGd.$GdType[R][C]!=2){
@@ -4535,6 +4555,121 @@ olSPCase = InheritO(CPlants, {  //保护膜实例
         if(list.has(ticket)) {  //只有接收到特定标示才会死亡
             CPlants.prototype.Die.call(this);
         }
+    },
+}),
+oBatStaff = InheritO(oKiwibeast, {
+    EName: "oBatStaff",
+    CName: "特殊道具-蝙蝠法杖",
+    coolTime: 45,
+    canEat: 1,
+    Attack: 5,
+    width: 110,
+    height: 118,
+    Tools:true, //cannot be transformed by oMembraneZombie
+    HP: 300,
+    getHurt:CPlants.prototype.getHurt,
+    getShadow: self => `left:10px;top:100px;`,
+    AudioArr: ["bats","Artichoke_Attack"],
+    PicArr: (function() {
+        var a = "images/Props/BatStaff/";
+        return ["images/Card/Light.webp", a + "BatStaff.webp", a + "BatStaff.webp", a + "bats.webp"]
+    })(),
+    Tooltip: "9*3范围内的植物和僵尸血量减半，无视盔甲与限击盾牌。使5*3范围内所有僵尸减速及受持续伤害。Boss不受影响。不能被铲子移除。",
+    PrivateBirth(self) {
+        self.EleBody = $(self.id).childNodes[1];
+        self.EleBody.src = self.PicArr[1];
+        oAudioManager.playAudio("bats");
+        //RANGE: 9x3
+        let num=0;
+        for (let row=(self.R-1>0?self.R-1:1); row<=(self.R+1<6?self.R+1:5); row++) {
+            for (let col=self.C-4; col<=self.C+4; col++) {
+                oEffects.ImgSpriter({
+                    ele: NewEle(self.id+'_Exhaust', "div", `pointer-events:none;position:absolute;z-index:${self.zIndex-1};width:255px;height:216px;left:${self.pixelLeft+(col-self.C-1)*80}px;top:${self.pixelTop+(row-self.R)*80-30}px;background:url(images/Zombies/BeetleCarZombie/Exhaust.png) no-repeat;`, 0, EDPZ),
+                    changeValue: -255,
+                    frameNum: 58,
+                });
+                //bats only appear in 5x3 and cannot appear outside the lawn
+                if (col>=self.C-2 && col<=self.C+2 && col>0 && col<10) {
+                    let ele = NewImg(self.id+'_bats'+num, self.PicArr[3], `left:${self.pixelLeft+(col-self.C)*80-10}px;top:${self.pixelTop+(row-self.R)*100+45}px;opacity:0;transform:scale(1.25);z-index:${self.zIndex};`, EDPZ);
+                    oEffects.Animate(ele, {
+                        opacity: 1,
+                    }, 0.3);
+                    num++;
+                }
+            }
+            let leftborder = self.pixelLeft-400,
+                rightborder = self.pixelRight+400;
+            let ArrZ=oZ.getArZ(leftborder,rightborder,row);
+            for (var zom of ArrZ) {
+                let half=Math.round((zom.HP-zom.BreakPoint)/2);
+                if (!zom.isPuppet && !zom.Boss) {
+                    if (zom.HP-half>=zom.BreakPoint+1) zom.HP-=half;
+                }
+            }
+        }
+        for (let plant of hasPlants(false, v => v.C<=self.C+4 && v.C>=self.C-4 && v.R>=self.R-1 && v.R<=self.R+1 && v.EName!== 'oBatStaff' && v.EName !== 'oBrains' && v.EName !== 'oLawnCleaner' && v.HP > 1 && v.isPlant && v.PKind === 1)) {
+            let half=Math.round(plant.HP/2);
+            if (plant.HP-half>=1) plant.HP-=half;
+        }
+    },
+    //TRIGGERRANGE: 5x3 (Cannot appear outside lawn)
+    getTriggerRange() {
+        let X = GetX(this.C),
+        MinX = this.MinX = X - 180,
+        MaxX = this.MaxX = X + 180;
+        return [[Math.max(GetX(1)+20,MinX), Math.min(GetX(9)-20,MaxX), 0]];
+    },
+    getTriggerR(R) {
+        let MinR = this.MinR = R > 1 ? R - 1 : 1,
+        MaxR = this.MaxR = R < oS.R ? R + 1 : oS.R;
+        return [MinR, MaxR];
+    },
+    CheckLoop(zid, direction) {  //开始攻击，并且循环检查攻击条件1,2
+        let self = this;
+        let pid = self.id;
+        if($P[pid]) {
+            self.NormalAttack(zid);  //触发植物攻击，并传入触发者僵尸之id
+            oSym.addTask(70, _=>$P[pid] && self.AttackCheck1(zid, direction));            
+        }
+    }, 
+    NormalAttack() {
+        let o = this, MaxR = o.MaxR, MinX = o.MinX, MaxX = o.MaxX,
+        id = o.id, Attack = o.Attack;
+        oSym.addTask(130, _=>{
+            if($P[id]) {
+                o.AttackEffect(o.pixelLeft, o.pixelTop);
+                for (let _R = o.MinR; _R <= MaxR; _R++) {  //遍历所有有效行,查询所有进入触发范围的僵尸并攻击
+                    oZ.getArZ(MinX, MaxX, _R).forEach(zombie=>{
+                        if (!zombie.isPuppet && !zombie.Boss) {
+                            zombie.getVertigo(zombie, o.Attack, 0);
+                            oAudioManager.playAudio("Artichoke_Attack");
+                        }
+                    });
+                }
+            }
+        });
+    },
+    AttackEffect(left, top) {},
+    Die: function(ticket=undefined) {
+        if (ticket == 'JNG_TICKET_ShovelPlant') {
+            SetAlpha($(this.id).childNodes[1],1);
+            return;
+        }
+        var self = this,
+        c = self.id;
+        for (let t=0; t<15; t++) {
+            if($(c+'_bats'+t)) {
+                oEffects.Animate($(c+'_bats'+t), {
+                    opacity: 0,
+                }, 0.3);
+            }
+        }
+        self.oTrigger && oT.delP(self);
+        self.HP = 0;
+        delete $P[c];
+        delete oGd.$[self.R + "_" + self.C + "_" + self.PKind];
+        ClearChild($(c));
+        IsHttpEnvi && self.RemoveDynamicPic(self);
     },
 }),
 o8BitApple = InheritO(oStoneFlower,{
