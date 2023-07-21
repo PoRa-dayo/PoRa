@@ -86,6 +86,7 @@ var CPlants = NewO({
         self.pixelRight = pixelLeft + self.width;
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self);  //默认植物底部相对距离=pt+植物身高
+        self.zIndex_cont = self.zIndex + GetMidY(R) + 30;
         self.zIndex += 3 * R;
         self.InitTrigger(self, id,
             self.R = R,
@@ -105,7 +106,7 @@ var CPlants = NewO({
         self.BirthStyle(self, id, ele, Object.assign({
             left: pixelLeft,
             top: pixelTop,
-            zIndex: self.zIndex,
+            zIndex: self.zIndex_cont,
         }, self.ImgStyle));
         // 为植物EleBody本体设置样式
         self.BirthStyle_EleBody(self, id, self.EleBody);
@@ -132,7 +133,7 @@ var CPlants = NewO({
             }
         });
     },
-    BirthStyle: (self, id, ele, style) => EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ),
+    BirthStyle: (self, id, ele, style) => EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R]),
     BirthStyle_EleBody() {},
     getHurt(zombie, AKind, Attack) {
         const o = this, id = o.id, ele = $(id).childNodes[1];
@@ -255,7 +256,8 @@ oLawnCleaner = InheritO(CPlants, {
         self.pixelRight = pixelLeft + self.width;
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self); //默认植物底部相对距离=pt+植物身高
-        self.zIndex += 3 * R;
+        self.zIndex = 3 * R;
+        self.zIndex_cont = GetMidY(R) + 30;
         self.PicArr = self.PicArr.map(pic => oDynamicPic.checkOriginalURL(pic) ? oDynamicPic.require(pic, null, true) : oURL.removeParam(pic, "useDynamicPic"));
         IsHttpEnvi && ele.addEventListener("DOMNodeRemoved", (event) => {
             if (event.target === ele) {
@@ -276,7 +278,7 @@ oLawnCleaner = InheritO(CPlants, {
         self.BirthStyle(self, id, ele, {
             left: pixelLeft + "px",
             top: pixelTop + "px",
-            zIndex: self.zIndex,
+            zIndex: self.zIndex_cont,
         });
         oGd.add(self, `${R}_${C}_${self.PKind}`); //在场景注册
         self.PrivateBirth(self);
@@ -519,7 +521,7 @@ oPotatoMine = InheritO(CPlants, {
     NormalAttack: function(lx, rx, r) {
         oAudioManager.playAudio("cherrybomb");
         let self = this, id = self.id, zombies = oZ.getArZ(lx, rx, r);
-        zombies.forEach(zombie => zombie.Altitude < 2 && (self.EName=="oPotatoMineWeak")?zombie.getExplosionWeak():zombie.getExplosion());
+        zombies.forEach(zombie => zombie.Altitude < 2 && zombie.getExplosion());
         self.Die();
 		oEffects.ScreenShake();
         oEffects.ImgSpriter({
@@ -535,11 +537,6 @@ oPotatoMine2 = InheritO(oPotatoMine, {
     EName: "oPotatoMine2",
     CName: "冷却减少-土豆雷",
     coolTime: 5,
-    Tooltip: "敌人接触后爆炸且需要时间安放<br>优化：冷却减少。"
-}),
-oPotatoMineWeak = InheritO(oPotatoMine, {
-    EName: "oPotatoMineWeak",
-    CName: "冷却减少-土豆雷",
     Tooltip: "敌人接触后爆炸且需要时间安放<br>优化：冷却减少。"
 }),
 oWallNut = InheritO(CPlants, {
@@ -788,8 +785,7 @@ oCherryBomb = InheritO(CPlants, {
                 leftBorder = self.pixelLeft - 80,
                 rightBorder = self.pixelRight + 80;
                 do {
-                    oZ.getArZ(leftBorder, rightBorder, floorR)
-                        .forEach(zombie=>(self.EName=="oCherryBombWeak")?zombie.getExplosionWeak():zombie.getExplosion());
+                    oZ.getArZ(leftBorder, rightBorder, floorR).forEach(zombie=>zombie.getExplosion());
                 } while (floorR++ < ceilingR);
                 self.Die('JNG_TICKET_SuperPower');
                 self.BoomGIF(self.pixelLeft, self.pixelTop);
@@ -802,11 +798,6 @@ oCherryBomb2 = InheritO(oCherryBomb, {
     EName: "oCherryBomb2",
     CName: "减少冷却-樱桃炸弹",
     coolTime: 10,
-    Tooltip: "炸掉一定区域内的所有僵尸<br>优化：冷却减少。"
-}),
-oCherryBombWeak = InheritO(oCherryBomb, {
-    EName: "oCherryBombWeak",
-    CName: "减少冷却-樱桃炸弹",
     Tooltip: "炸掉一定区域内的所有僵尸<br>优化：冷却减少。"
 }),
 oTallNut = InheritO(oWallNut, {
@@ -872,7 +863,7 @@ oSunShroom = InheritO(CPlants, {
     SunNum: 25,
     Stature: -1,
     Status: 0,
-    CanSpawnSun:true,
+    CanSpawnSun: true,
     AlmanacGif: 3,
     AudioArr: ['plantgrow'],
     PicArr: (function() {
@@ -884,50 +875,56 @@ oSunShroom = InheritO(CPlants, {
     InitTrigger: function() {},
     BirthStyle: function(c, d, b, a) {
         let self = this;
-            b.childNodes[1].src = this.PicArr[2];
-            EditEle(b, {id: d, 'data-jng-constructor': self.EName},a, EDPZ);
-        function fun(_this,c,d,b,a){
-            oSym.addTask(600, (h, g, f)=>{
+        b.childNodes[1].src = this.PicArr[2];
+        EditEle(b, {
+            id: d,
+            'data-jng-constructor': self.EName
+        }, a, oZombieLayerManager.$Containers[self.R]);
+        function fun(_this, c, d, b, a) {
+            oSym.addTask(600, (h, g, f) => {
                 let e = $P[h];
                 e && e.ProduceSun(e, g, f)
-            }, [d, GetX(c.C)-40, GetY(c.R)-60]);
-            oSym.addTask(12000, f=>{
+            }, [d, GetX(c.C) - 40, GetY(c.R) - 60]);
+            oSym.addTask(12000, f => {
                 oAudioManager.playAudio('plantgrow');
                 let e = $P[f];
                 e && (e.Stature = 0, e.Sleep = 0, $(f).childNodes[1].src = e.PicArr[4], e.Status = 1);
-                oSym.addTask(233, f=>{
+                oSym.addTask(233, f => {
                     let e = $P[f];
                     e && ($(f).childNodes[1].src = e.PicArr[3]);
                 }, [d]);
             }, [d]);
         }
-        if(oS.isStartGame===0){//修复阳光菇在LoadAccess产阳光bug
-            addEventListenerRecord("jng-event-startgame",function sd(){fun(self,c,d,b,a);removeEventListenerRecord("jng-event-startgame",sd);});
-        }else{
-            fun(self,c,d,b,a);
+        if (oS.isStartGame === 0) { //修复阳光菇在LoadAccess产阳光bug
+            addEventListenerRecord("jng-event-startgame", function sd() {
+                fun(self, c, d, b, a);
+                removeEventListenerRecord("jng-event-startgame", sd);
+            });
+        } else {
+            fun(self, c, d, b, a);
         }
     },
     ProduceSun: function(a, c, b) {
         (a && a.Status) && a.ChangePosition(a.id, 1);
-        oSym.addTask(80,()=>{
-            $P[a.id]&&AppearSun(c+65, b, !a.Status ? 25 : 50, 0,30-Math.random()*10,10);
+        oSym.addTask(80, () => {
+            $P[a.id] && AppearSun(c + 65, b, !a.Status ? 25 : 50, 0, 30 - Math.random() * 10, 10);
         });
         oSym.addTask(250,
-        function() {
-            (a && a.Status) && a.ChangePosition(a.id, 0);
-        })
+            function() {
+                (a && a.Status) && a.ChangePosition(a.id, 0);
+            })
         oSym.addTask(2100,
-        function(g, f, e) {
-            var d = $P[g];
-            d && d.ProduceSun(d, f, e)
-        },
-        [a.id, c, b])
+            function(g, f, e) {
+                var d = $P[g];
+                d && d.ProduceSun(d, f, e)
+            },
+            [a.id, c, b])
     },
     ChangePosition: function(id, a) {
-        if($P[id]) {
+        if ($P[id]) {
             let obj = $P[id],
-                 dom = $(id);
-            obj.beAttackedPointR=40;
+                dom = $(id);
+            obj.beAttackedPointR = 40;
             dom.childNodes && (a ? dom.childNodes[1].src = obj.PicArr[5] : dom.childNodes[1].src = obj.PicArr[3]);
         }
     }
@@ -1200,7 +1197,7 @@ oBambooUncle = InheritO(CPlants, {
         leftBorder = self.pixelLeft - 80,
         rightBorder = self.pixelRight + 80;
         do {
-            oZ.getArZ(leftBorder, rightBorder, floorR).forEach(zombie=>(self.EName=="oBambooUncleWeak")?zombie.getExplosionWeak():zombie.getExplosion());
+            oZ.getArZ(leftBorder, rightBorder, floorR).forEach(zombie=>zombie.getExplosion());
         } while (floorR++ < ceilingR);
         self.BoomGIF(self.pixelLeft, self.pixelTop);
         oEffects.ScreenShake();
@@ -1210,11 +1207,6 @@ oBambooUncle1 = InheritO(oBambooUncle, {
     EName: "oBambooUncle1",
     CName: "冷却减少-爆竹爷",
     CoolTime: 3,
-    Tooltip: "僵尸接近后爆竹爷会启动自爆程序！<br>优化：冷却减少。"
-}),
-oBambooUncleWeak = InheritO(oBambooUncle, {
-    EName: "oBambooUncleWeak",
-    CName: "冷却减少-爆竹爷",
     Tooltip: "僵尸接近后爆竹爷会启动自爆程序！<br>优化：冷却减少。"
 }),
 oDoomShroom = InheritO(oCherryBomb, {
@@ -1249,7 +1241,7 @@ oDoomShroom = InheritO(oCherryBomb, {
                 ];
                 do {
                     let range = borders[2-Math.abs(floorR-o.R)];
-                    oZ.getArZ(obj.pixelLeft+range[0], obj.pixelRight + range[1], floorR).forEach(o=>(obj.EName=="oDoomShroomWeak")?o.getExplosionWeak():o.getExplosion());
+                    oZ.getArZ(obj.pixelLeft+range[0], obj.pixelRight + range[1], floorR).forEach(o=>o.getExplosion());
                 } while (floorR ++< ceilingR);
                 oEffects.ScreenShake();
                 obj.Die('JNG_TICKET_SuperPower');
@@ -1272,11 +1264,6 @@ oDoomShroom1 = InheritO(oDoomShroom, {
     EName: "oDoomShroom1",
     CName: "冷却减少-毁灭菇",
     coolTime: 12,
-    Tooltip: "可以对僵尸造成大规模打击, 但冷却时间却很长<br>优化：冷却减少。"
-}),
-oDoomShroomWeak = InheritO(oDoomShroom, {
-    EName: "oDoomShroomWeak",
-    CName: "冷却减少-毁灭菇",
     Tooltip: "可以对僵尸造成大规模打击, 但冷却时间却很长<br>优化：冷却减少。"
 }),
 oNutBowling = InheritO(CPlants, {
@@ -1690,7 +1677,8 @@ oBegonia = InheritO(CPlants, {
         self.pixelRight = pixelLeft + self.width;
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self);  //默认植物底部相对距离=pt+植物身高
-        self.zIndex += 3 * R;
+        self.zIndex = 3 * R;
+        self.zIndex_cont = GetMidY(R) + 30;
         self.PicArr = self.PicArr.map(pic => oDynamicPic.checkOriginalURL(pic) ? oDynamicPic.require(pic, null, true) : oURL.removeParam(pic, "useDynamicPic"));
         IsHttpEnvi && ele.addEventListener("DOMNodeRemoved", (event) => {
             if (event.target === ele) {
@@ -1709,7 +1697,7 @@ oBegonia = InheritO(CPlants, {
         self.BirthStyle(self, id, ele, {
             left: pixelLeft + "px",
             top: pixelTop + "px",
-            zIndex: self.zIndex,
+            zIndex: self.zIndex_cont,
         });
         oGd.add(self, `${R}_${C}_${self.PKind}`);  //在场景注册
         self.PrivateBirth(self);
@@ -1785,7 +1773,7 @@ oIceAloe = InheritO(oPeashooter, {
     Tooltip: "对当前行的最后一只僵尸给予高杀伤的冰冻攻击。",
     Story: '外植听到这个名字，总会觉得这是个外表好冷内心歹毒的家伙。但其实，冰冻芦荟是治愈系的，每当植们受伤，无论是身体还是心灵，她总是第一个出现去帮助植物们，一看见她看似高冷却流淌着温柔的脸庞，植物们总会……担心自己钱包里的钱不够付她的医药费。',
     AttackCheck2: zombie=>zombie.Altitude < 3 && zombie.Altitude >= 0,  
-    BirthStyle: (self, id, ele, style) => {EditEle(ele.childNodes[1],{},{top:"15px"}); EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ)},
+    BirthStyle: (self, id, ele, style) => {EditEle(ele.childNodes[1],{},{top:"15px"}); EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R])},
     CheckLoop(zid, direction) {
         let self = this;
         let pid = self.id;
@@ -1860,7 +1848,8 @@ oPepper = InheritO(oPeashooter, {
         self.pixelRight = pixelLeft + self.width;
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self); //默认植物底部相对距离=pt+植物身高
-        self.zIndex += 3 * R;
+        self.zIndex = 3 * R;
+        self.zIndex_cont = GetMidY(R) + 30;
         self.PicArr = self.PicArr.map(pic => oDynamicPic.checkOriginalURL(pic) ? oDynamicPic.require(pic, null, true) : oURL.removeParam(pic, "useDynamicPic"));
         IsHttpEnvi && ele.addEventListener("DOMNodeRemoved", (event) => {
             if (event.target === ele) {
@@ -1881,7 +1870,7 @@ oPepper = InheritO(oPeashooter, {
         self.BirthStyle(self, id, ele, {
             left: pixelLeft + "px",
             top: pixelTop + "px",
-            zIndex: self.zIndex,
+            zIndex: self.zIndex_cont,
         });
         oGd.add(self, `${R}_${C}_${self.PKind}`); //在场景注册
         //只有在游戏关卡开始后privatebirth才会执行
@@ -1986,7 +1975,7 @@ oImitater = InheritO(CPlants, {
         EditEle(b, {
             id: e,
             'data-jng-constructor': self.EName
-        }, a, EDPZ);
+        }, a, oZombieLayerManager.$Containers[self.R]);
     },
     Imitat() {
         let arr = oS.StaticCard ? ArCard.map(card => card.PName) : oS.PName;
@@ -2159,7 +2148,7 @@ oKiwibeastStrong = InheritO(CPlants, {
         let a = "images/Plants/Kiwibeast/";
         return ["images/Card/Kiwibeast.webp", a + "0.webp", a + "Kiwibeast_0.webp", a + "Kiwibeast_0_attack.webp", a + "Kiwibeast_1.webp", a + "Kiwibeast_1_attack.webp", a + "Kiwibeast_2.webp", a + "Kiwibeast_2_attack.webp", a + 'Kiwibeast_growup_1.webp', a + 'Kiwibeast_growup_2.webp'];
     })(),
-    BirthStyle: (self, id, ele, style) => {EditEle(ele.childNodes[1],{},{top:"10px"}); EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ)},
+    BirthStyle: (self, id, ele, style) => {EditEle(ele.childNodes[1],{},{top:"10px"}); EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R])},
     PrivateBirth(o) {
         o.MinR = o.MaxR = o.R;
     },
@@ -2503,7 +2492,7 @@ oPlantern = InheritO(CPlants, {
     InitTrigger() {},
     BirthStyle(self, id, ele, style) {
         ele.childNodes[1].style.cssText += `left:-8px;top:6px;`;
-        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ);
+        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R]);
     },
     PrivateBirth() {
         oAudioManager.playAudio('plantern');
@@ -3242,14 +3231,14 @@ oFirefly = InheritO(oStoneFlower, {  //金铃花产物
             obj && obj.Die();
         });
     },
-    BirthStyle: function(c, d, b, a) {
+    BirthStyle(self, d, b, a) {
         b.childNodes[1].src = this.PicArr[2];
         EditEle(b, {
             id: d,
-            'data-jng-constructor': c.EName
+            'data-jng-constructor': self.EName
         },
-        a, EDPZ);
-        NewImg(d + "_shadow", "images/Plants/AbutilonHybriden/shadow.png", "left:" + c.pixelLeft + "px;top:" + (c.pixelTop + 20) + "px;z-index:" + (c.zIndex - 2), EDPZ)
+        a, oZombieLayerManager.$Containers[self.R]);
+        NewImg(d + "_shadow", "images/Plants/AbutilonHybriden/shadow.png", "left:" + self.pixelLeft + "px;top:" + (self.pixelTop + 20) + "px;z-index:" + (self.zIndex - 2), EDPZ)
     },
     NormalAttack: function(b, a) {
         oAudioManager.playAudio("Artichoke_Attack");
@@ -3341,16 +3330,16 @@ oPumpkinHead = InheritO(CPlants, {
     BirthStyle(self, id, wrap, style) {
         const ele = wrap.childNodes[1];
         ele.src = self.PicArr[5];
-        EditEle(wrap, {id, 'data-jng-constructor': self.EName}, style, EDPZ);
+        EditEle(wrap, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R]);
         self.BackId = "PBack_"+Math.random();
-        let dom = NewImg(self.BackId, self.PicArr[2], null, EDPZ);  
+        let dom = NewImg(self.BackId, self.PicArr[2], null, oZombieLayerManager.$Containers[self.R]);  
         //在生成完后复制所有样式不然可能会有样式没有复制
         oSym.addTask(1, () => {
             dom.style = ele.style.cssText;
             SetStyle(dom, {
                 "left": self.pixelLeft+"px",
                 "top": self.pixelTop + "px",
-                "zIndex": (self.zIndex - 2)
+                "zIndex": (self.zIndex_cont - 2)
             });
         });
     },
@@ -3439,7 +3428,7 @@ oJalapeno = InheritO(oCherryBomb, {
                     }
                 }
                 obj.Die('JNG_TICKET_SuperPower');
-                let effect = NewImg(fireId, null, `position: absolute;left:130px;top:${obj.pixelBottom-83}px;z-index:${obj.zIndex+1}`, EDPZ, {
+                let effect = NewImg(fireId, null, `position: absolute;left:130px;top:${obj.pixelBottom-83}px;z-index:${GetY(self.R)}`, oZombieLayerManager.$Containers[self.R], {
                     width: 752,
                     height: 103,
                 });
@@ -3472,7 +3461,7 @@ oXshooter = InheritO(oPeashooter,{
         return ["images/Card/Xshooter.webp", a + "idle.webp?useDynamicPic=false", a + "Normal.webp", a + "Attack.webp",a +"Bullet_Flower.webp?useDynamicPic=false",a +"Bullet_Flower_Splash.webp?useDynamicPic=false",a +"Bullet_Leaf.webp?useDynamicPic=false",a +"Bullet_Leaf_Splash.webp?useDynamicPic=false"]
     })(),
     getShadow: self => `left:${self.width*0.5-48}px;top:${self.height-22}px;transform:scale(0.75);`,
-    BirthStyle: (self, id, ele, style) => {EditEle(ele.childNodes[1],{},{left:"-7px",top:"5px"}); EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ)},
+    BirthStyle: (self, id, ele, style) => {EditEle(ele.childNodes[1],{},{left:"-7px",top:"5px"}); EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R])},
     PrivateBirth: function(a) {
         a.FlowerEle = NewImg(0, a.PicArr[a.FlowerGif], "left:" + a.AttackedLX + "px;top:" + (a.pixelTop + 15) + "px;visibility:hidden;z-index:" + (a.zIndex + 2));
         a.BulletEle = NewImg(0, a.PicArr[a.LeafGif],"left:" + a.AttackedLX + "px;top:" + (a.pixelTop + 15) + "px;visibility:hidden;z-index:" + (a.zIndex + 2))
@@ -3697,7 +3686,7 @@ oMacintosh = InheritO(oWallNut, {
     Story:`<br/>---Untitled---<br/>人们天天吐槽我内存只有128k说我内存太小打字打到第十页就无法再打字了可恶为什么要这么吐槽呢内存小又不是我的错是造我那堆人欠造再说谁让那个叫leobai的天天用我打那么老长的一个剧<br/><br/>Almost out of memory! Is it OK if you can’t Undo this command?<br/>Go Ahead Cancel`,
     height:108,
     Sons:[],
-    BirthStyle: (self, id, ele, style) => {EditEle(ele.childNodes[1],{},{top:"5px",left:"-5px"}); EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ)},
+    BirthStyle: (self, id, ele, style) => {EditEle(ele.childNodes[1],{},{top:"5px",left:"-5px"}); EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R])},
     CanGrow(data, R, C) {
         let flatCoord = `${R}_${C}`;
         if(oGd.$GdType[R][C] === 1 || (oGd.$GdType[R][C]===2&&oGd.$WaterDepth[R][C]===0)) {  //如果是草地地形
@@ -3794,8 +3783,9 @@ oLilyPad = InheritO(CPlants, {
         return !(oGd.$GdType[R][C]!=2 || C < 1 || C > 9 || plantArgs[0] || oGd.$LockingGrid[flatCoord]);
     },
     BirthStyle: (self, id, ele, style) => {
-        style.zIndex=(self.zIndex-=1);
-        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ);
+        self.zIndex -= 1;
+        style.zIndex = (self.zIndex_cont -= 1);
+        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R]);
     },
     InitTrigger: function() {},
     PrivateBirth(self) {
@@ -3869,10 +3859,11 @@ oGraveBuster = InheritO(CPlants, {
     Story: "噬碑藤虽然在别人眼里像一条盘起来的浑身长满刺的，凶神恶煞的蛇，但他其实一直想要被拥抱，想要获得那种不需要证明自己有异于常人的能力也可以享受的真心的拥抱，即使被当成一条狗也无所谓。但当他原本信赖的人为了更好地利用他而杀掉了他所有亲近的植物，甚至没有放过他的朋友养的猫以后，他现在只想摧毁所有墓碑，直到彻底黑化，在墓地和那人对决并且把它彻底吞掉为止。",
     InitTrigger() {},
     BirthStyle(self, id, ele, style) {
+        self.zIndex += 1;
         EditEle(ele, {id, 'data-jng-constructor': self.EName}, {
             ...style,
-            zIndex: (self.zIndex = 3 * self.R + 1),
-        }, EDPZ);
+            zIndex: (self.zIndex_cont += 1),
+        }, oZombieLayerManager.$Containers[self.R]);
     },
     getShadow() {
         return "display:none;";
@@ -4282,7 +4273,7 @@ oSquash=InheritO(oStoneFlower,{
             self.TurnGif+=4;
             ele.childNodes[1].src=self.PicArr[self.NormalGif];
         }
-        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ);
+        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R]);
     },
     getTriggerRange: function(a, b, c) {
         return [[this.pixelLeft+this.width/2 - 150, this.pixelLeft+this.width/2 +  70, 0]]
@@ -4407,7 +4398,7 @@ oSquash=InheritO(oStoneFlower,{
                         top:tarTop-oriY+"px",
                     });
                     oZ.getArZ(checkX-45, checkX+45, R).forEach(z=>{
-                        z.getHit2(z,(z.Boss)?(500/z.Boss):1800);
+                        z.getHit2(z,1800);
                     });
                     oAudioManager.playAudio(self.AudioArr[Math.floor(Math.random()*(self.AudioArr.length-self.HmmAudioNum))+self.HmmAudioNum]);
                     if(oGd.$GdType[R][C]!=2){
@@ -4541,7 +4532,7 @@ olSPCase = InheritO(CPlants, {  //保护膜实例
     },
     BirthStyle(self, id, ele, style) {
         ele.childNodes[1].src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADoAAABIBAMAAABVf/vRAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAASUExURdbW2MjJy+fo6UxpcdXV1svLzT6ksp4AAAAGdFJOU8zMzAA8imZsnvsAAAHySURBVEjHvZXNTuswEEa/seh+LGBv5QluVboH2u5Bun7/V2H+7DghrRAInC7SOT4zY7tpcLg18AV6Pp/m0NP8DYeny9s0FejYVWDSUZBrrSehz5MH5JqHzuV7oS/wcAJSClgsl1MJt/lBE0Zq4dKpq0afMeBQ00BZwkWzI31yX+0uJW0pjar1/OoTkXrHQdFpQtER0Chh4UptgyXKBjVZ7RR5jfKibvGt0vYSCWtuiq4QiylaFOzrLVFW60p2y8xg7+pf7yrZB5KLFDqNPTe7aG/WUnMnoGPV5SIZWFHL6ztBxLyksWydYnDt9kFZrjUt7UYghsw0t91c4OFK5pzV7ZRoTZurufiqG+fFS8q87TKRUJoz6+q7TOZKJ0HtvG66ubctSca6Es/6WwlMo7vvbtTOSnWuU4JBO1NmAXlwNaeeiZgSkyq2VdHzXgKSyib4jGyZgbvuKrakWiRcp5njO6uTHceK9qRtWCd5vtMlmkst4PXiXtxdd9eDZHd3S3eBydzjJuXIfLzieuZj9s254uYfufiBSzdd+mM3KNPWGTE3ik2XjMJ+vuu6TvexGf4ItGGPk9JZ04eosXBfeFXO3k/6oNIJh/et88v2N6x0a7XaF6B0DNX6X1+v5/OlSrzTx1oXL2F7Dwu9+PRvv9l/g34AN7WqFkcqQWsAAAAASUVORK5CYII=';
-        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ);
+        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R]);
     },
 	PrivateBirth(self) {
       oSym.addTask(1500, () => {
@@ -4685,7 +4676,7 @@ o8BitApple = InheritO(oStoneFlower,{
     BirthStyle(self, id, ele, style) {
         style.opacity=0.5;
         style.zIndex++;
-        EditEle(ele, {id, 'data-jng-constructor': self.EName,}, style, EDPZ);
+        EditEle(ele, {id, 'data-jng-constructor': self.EName,}, style, oZombieLayerManager.$Containers[self.R]);
     },
     PicArr:(function() {
         let a = "images/Plants/Macintosh/";
@@ -4779,7 +4770,7 @@ oLSP = InheritO(CPlants, {
     CanGrow: olSPCase.prototype.CanGrow,
     BirthStyle(self, id, ele, style) {
         ele.childNodes[1].src = self.PicArr[1];
-        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ);
+        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, oZombieLayerManager.$Containers[self.R]);
     },
     Check(R, C) {
         let data = [];
@@ -4885,17 +4876,17 @@ oMissile = InheritO(oLight, {
         return ["", "", a + "Missile.webp?useDynamicPic=false", 'images/Zombies/Boom.png'];
     })(),
     Birth: function(x, y, R, C) {
-        let self = this, pixelTop, pixelLeft, targetTop,
-              id = self.id = "P_" + Math.random(),
-              zIndex = self.zIndex += 3 * R,
-              ele = NewEle(0, "div", "position:absolute;");
+        let self = this, pixelTop, pixelLeft, targetTop;
+        let id = self.id = "P_" + Math.random();
+        let zIndex = self.zIndex += 3 * R;
+        let ele = NewEle(0, "div", "position:absolute;");
         self.pixelLeft = pixelLeft = x + self.GetDX(self),
         self.pixelTop = pixelTop = 0 - self.height;
         self.targetTop = targetTop = y - 15 - self.height;
         self.R = R;
         self.C= C;
         NewImg(0, self.PicArr[self.NormalGif], "", ele);
-        EditEle(ele, {id: id}, {left: pixelLeft + "px", top: pixelTop + "px", zIndex: zIndex}, EDPZ);
+        EditEle(ele, {id: id}, {left: pixelLeft + "px", top: pixelTop + "px", zIndex}, EDPZ);
         $P[id] = self;
         const callback = _=>{
             self.PrivateBirth(self, id, ele, pixelTop, targetTop)
@@ -4942,20 +4933,21 @@ oSummonZombieObs = InheritO(CPlants, {
     canEat: 0,
 	isPlant: 0,
     Stature: -1,//高度为低矮
+    zIndex: -1,
     Tools:true,
     Die: ()=>{},
     getShadow: ()=>'display:none',
     AudioArr: ["zombieobs"],
     PicArr: ["images/Props/MarshOrgan/SummonZombieObstacle.webp?useDynamicPic=false"],
-    BirthStyle(c, e, b, a) {
+    BirthStyle(self, e, b, a) {
         let d = b.childNodes[1];
         d.src = this.PicArr[0];
         d.style.clip = "rect(0,auto,76px,0)";
         d.style.height = "156px";
         EditEle(b, {
             id: e,
-            'data-jng-constructor': c.EName
-        }, a, EDPZ);
+            'data-jng-constructor': self.EName
+        }, a, oZombieLayerManager.$Containers[self.R]);
     },
     PrivateBirth: function(o) {
         o.ArZ = {};  //在实例上创建僵尸列表
@@ -5096,6 +5088,7 @@ oRifter = InheritO(oObstacle, {  //冰窟
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self);  //默认植物底部相对距离=pt+植物身高
         self.zIndex += 3 * R-1;
+        self.zIndex_cont = GetMidY(R) + 30 - 1;
         $P[id] = self;  //在植物池中注册
         NewEle(`${id}_Shadow`, 'div', self.getShadow(self), {className: 'Shadow'}, ele);  //绘制植物影子
         NewImg(0, `images/Props/Rifter/${isTyped!==false?isTyped:(1 + Math.round(Math.random()*3))}${oS.DKind ? '' : 'dark'}.png`, 'clip:rect(auto, 80px, auto, auto);', ele);
@@ -5108,7 +5101,7 @@ oRifter = InheritO(oObstacle, {  //冰窟
         self.BirthStyle(self, id, ele, {
             left: pixelLeft + "px",
             top: pixelTop + "px",
-            zIndex: self.zIndex,
+            zIndex: self.zIndex_cont,
         });
         oGd.add(self, `${R}_${C}_${self.PKind}`);  //在场景注册
         oGd.$Rifter[R + "_" + C] = true;
@@ -5175,6 +5168,7 @@ oRifterAnimate = InheritO(oObstacle, {  //冰窟
         self.pixelRight = pixelLeft + self.width;
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self);  //默认植物底部相对距离=pt+植物身高
+        self.zIndex_cont = self.zIndex + GetMidY(R) + 30;
         self.zIndex += 3 * R-1;
         $P[id] = self;  //在植物池中注册
         NewEle(`${id}_Shadow`, 'div', self.getShadow(self), {className: 'Shadow'}, ele);  //绘制植物影子
@@ -5188,7 +5182,7 @@ oRifterAnimate = InheritO(oObstacle, {  //冰窟
         self.BirthStyle(self, id, ele, {
             left: pixelLeft + "px",
             top: pixelTop + "px",
-            zIndex: self.zIndex,
+            zIndex: self.zIndex_cont,
         });
         if((self.Pepper&&oGd.$[`${R}_${C}_3`])||oGd.$Crater[R + '_' + C]||(oGd.$[`${R}_${C}_1`]&&(!oGd.$[`${R}_${C}_1`].isPlant))){
             self.GoDie  = true;
@@ -5306,15 +5300,15 @@ oGoUpIce = InheritO(oSummonZombieObs, {
             "opacity": "0"
         }, dd);
     },
-    BirthStyle(c, e, b, a) {
+    BirthStyle(self, e, b, a) {
         let d = b.childNodes[1];
         d.src = this.PicArr[0];
         d.style.clip = "rect(0,auto,81px,0)";
         d.style.height = "81px";
         EditEle(b, {
             id: e,
-            'data-jng-constructor': c.EName
-        }, a, EDPZ);
+            'data-jng-constructor': self.EName
+        }, a, oZombieLayerManager.$Containers[self.R]);
     },
     SetBrightness: _ => {},
     MoveZombie: function(id, zombie) {
@@ -5410,7 +5404,6 @@ oGoDown = InheritO(oStoneFlower, {
     TriggerCheck(zombie) {
         if(zombie.FangXiang !== 'GoDown'&&this.IfTurnPossible(zombie)) {
             zombie.ChkActs = zombie.GoDown;
-            $User.LowPerformanceMode === false && zombie.FangXiang !== 'GoDown' && (EDPZ_Spare2.insertBefore(zombie.Ele, EDPZ_Spare2.children[0]),  zombie.Wrap = 'dPZ_Spare2');
             zombie.FangXiang = 'GoDown';
         }
     },
@@ -5432,7 +5425,6 @@ oGoUp = InheritO(oGoDown, {
     TriggerCheck(zombie) {
         if(zombie.FangXiang !== 'GoUp'&&this.IfTurnPossible(zombie)) {
             zombie.ChkActs = zombie.GoUp;
-            $User.LowPerformanceMode === false && zombie.FangXiang !== 'GoUp' && (EDPZ_Spare1.append(zombie.Ele),  zombie.Wrap = 'dPZ_Spare1');
             zombie.FangXiang = 'GoUp';
         }
     },
@@ -5447,7 +5439,7 @@ oGoUpFixed = InheritO(oGoUp, {
 oGoUp2 = InheritO(oGoUp, {
     EName: "oGoUp2",
     TriggerCheck(zombie) {
-        if(zombie.FangXiang !== 'GoUp' && Math.random() < 0.5&&this.IfTurnPossible(zombie)) {
+        if(zombie.FangXiang !== 'GoUp' && Math.random() < 0.5 && this.IfTurnPossible(zombie)) {
             zombie.ChkActs = zombie.GoUp;
             zombie.FangXiang = 'GoUp';
         }
@@ -5493,93 +5485,6 @@ oGoRightFixed = InheritO(oGoRight, {
     CName: "僵尸向右走，适用于从左向右的僵尸",
     getTriggerRange(R, LX, RX) {
         return [[GetX(this.C)+30, GetX(this.C)+35, 0]]
-    },
-}),
-oChangeDirection = InheritO(oGoRight,{
-    EName: "oChangeDirection",
-    CName: "僵尸随机走",
-    PossibleDirections:["GoLeft"],
-    RecordZombies:{},
-    PKind:5,
-    CheckOnce:true,
-    liveTime:0,
-    /*Birth(X, Y, R, C, plantsArg) {  //植物初始化方法
-        let self = this;
-        self.PossibleDirections = self.PossibleDirections.slice(0);
-        self.RecordZombies = {};
-        return oGoRight.prototype.Birth.bind(self)(X,Y,R,C,plantsArg);
-    },*/
-    PrivateBirth: function(o) {
-        o.RecordZombies = {};
-    },
-    IfTurnPossible(zombie){
-        let self = this,val=self.RecordZombies[zombie.id];
-        if(val!==true){
-            if(!val){
-                self.RecordZombies[zombie.id]=Math.random();
-            }
-            return true;
-        }
-        return false;
-    },
-    getTriggerRange(R, LX, RX) {
-        return [[GetX(this.C)-50, GetX(this.C)-40, 0],[GetX(this.C)+30, GetX(this.C)+40, 1]]
-    },
-    TriggerCheck(zombie,triggerDirection) {
-        let self = this;
-        if((self.liveTime++)%2===0){
-            return;
-        }
-        let res = self.IfTurnPossible(zombie);
-        if(self.CheckOnce&&!res){
-            return;
-        }
-        let zombieForward = EditCompositeStyle({ele:zombie.EleBody, styleName:'transform',targetFunc:"rotateY"})==="180deg"?1:0;
-        if(triggerDirection!=zombieForward){
-            return;
-        }
-        let direction = self.PossibleDirections[Math.floor(self.RecordZombies[zombie.id]*self.PossibleDirections.length)];
-        //console.log(direction,self.RecordZombies[zombie.id]);
-        let order = {
-            "GoLeft":0,
-            "GoRight":1,
-            "GoUp":2,
-            "GoDown":3
-        };
-        let funs = [
-        ()=>{
-            zombie.ChkActs = zombie.GoLeft;
-            zombie.YiZengjia = 0;
-            zombie.FangXiang = 'GoLeft';  //完成标记
-            zombie.WalkDirection = 0;
-            zombie.EleBody['style']['transform'] = 'rotateY(0deg)';
-            zombie.EleBody['style']['transform-origin'] = `0px 0px`;
-        },
-        ()=>{
-            zombie.ChkActs = zombie.GoRight;
-            zombie.YiZengjia = 0;
-            zombie.FangXiang = 'GoRight';
-            zombie.WalkDirection = 1;
-            zombie.EleBody['style']['transform'] = 'rotateY(180deg)';  //切换方向
-            zombie.EleBody['style']['transform-origin'] = `${(zombie.beAttackedPointL+zombie.beAttackedPointR)/2}px 0px`;
-        },
-        ()=>{
-            zombie.ChkActs = zombie.GoUp;
-            $User.LowPerformanceMode === false && zombie.FangXiang !== 'GoUp' && (EDPZ_Spare1.append(zombie.Ele),  zombie.Wrap = 'dPZ_Spare1');
-            zombie.FangXiang = 'GoUp';
-        },
-        ()=>{
-            zombie.ChkActs = zombie.GoDown;
-            $User.LowPerformanceMode === false && zombie.FangXiang !== 'GoDown' && (EDPZ_Spare2.insertBefore(zombie.Ele, EDPZ_Spare2.children[0]),  zombie.Wrap = 'dPZ_Spare2');
-            zombie.FangXiang = 'GoDown';
-        }
-        ];
-        if(zombie.FangXiang !== direction) {
-            funs[order[direction]]();
-        }
-        if(self.CheckOnce){
-            self.RecordZombies[zombie.id]=true;
-        }
     },
 }),
 oVase = InheritO(oObstacle,{
@@ -5673,6 +5578,7 @@ oVase = InheritO(oObstacle,{
         self.pixelRight = pixelLeft + self.width;
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self);  //默认植物底部相对距离=pt+植物身高
+        self.zIndex_cont = self.zIndex + GetMidY(R) + 30;
         self.zIndex += 3 * R;
         self.PicArr = self.PicArr.map(pic => oDynamicPic.checkOriginalURL(pic) ? oDynamicPic.require(pic, null, true) : oURL.removeParam(pic, "useDynamicPic"));
         IsHttpEnvi && ele.addEventListener("DOMNodeRemoved", (event) => {
@@ -5692,7 +5598,7 @@ oVase = InheritO(oObstacle,{
         self.BirthStyle(self, id, ele, Object.assign({
             left: pixelLeft + "px",
             top: pixelTop + "px",
-            zIndex: self.zIndex,
+            zIndex: self.zIndex_cont,
         }, self.ImgStyle));
         self.EleBodyXRay = self.EleBody.cloneNode(false);
         self.EleBodyXRay.src = self.PicArr[3];
