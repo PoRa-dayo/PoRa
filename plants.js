@@ -239,7 +239,7 @@ oLawnCleaner = InheritO(CPlants, {
     beAttackedPointR: 60,
     WaterSplashGif: 3,
     PicArr: ["images/interface/LawnCleaner.png", "images/Card/LawnCleaner.webp?useDynamicPic=false", 'images/Plants/SporeShroom/Effect.webp', WaterSplashImg],
-    AudioArr: ["lawnmower", "Rifter_Summon1", "Rifter_Summon2"],
+    AudioArr: ["lawnmower"],
     NormalGif: 0,
     CardGif: 1,
     canEat: 0,
@@ -342,7 +342,6 @@ oLawnCleaner = InheritO(CPlants, {
                 oSym.addTask(10, () => {
                     let eff = NewImg(0, null, `width:160px;height:195px;top:${GetY(self.R)-170}px;left:${self.AttackedRX - 25}px;z-index:${3 * self.R + 1}`, EDPZ);
                     eff.src = oDynamicPic.require(WaterSplashImg,eff);
-                    oSym.addTask(50, () => {oAudioManager.playAudio("Rifter_Summon" + [1,2].random()).volume = 0.5;});
                     oSym.addTask(113, ClearChild, [eff]);
                     self.Die();
                 });
@@ -2105,20 +2104,27 @@ oTorchwood = InheritO(CPlants, {
         oS.HaveFog && oFog.update(R, C, 0, 0, 1);
     },
 }),
-oKiwibeastStrong = InheritO(CPlants, {
-    EName: "oKiwibeastStrong",
+oKiwibeast = InheritO(CPlants, {
+    EName: "oKiwibeast",
     CName: "猕猴桃",
-    width: 140,
-    height: 196,
+    width: 150,
+    height: 195,
     beAttackedPointL: 30,
     beAttackedPointR: 80,
     SunNum: 175,
-    HP: 2000,
+    HP: 1600,
     canEat: 1,
     coolTime: 30,
+    // 攻击检测间隔
     restTime: 110,
+    // 攻击动画播放间隔
+    attackTime: 79,
+    // 攻击力
     Attack: 40,
+    // 标记成长阶段
     HurtStatus: 0,
+    // 标记是否预备成长
+    isGoingToUpdate: false,
     AlmanacGif: 6,
     //猕猴桃第一阶段
     Idle0Gif: 2,
@@ -2143,61 +2149,58 @@ oKiwibeastStrong = InheritO(CPlants, {
         o.MinR = o.MaxR = o.R;
     },
     getHurt(objZ, AKind, point) {
-        let t = this;
+        let self = this;
         if(AKind%3) {  //致命性攻击
-            t.Die();
+            self.Die();
         } else {
-            let _HP = (t.HP -= point);
+            let _HP = (self.HP -= point);
             switch(true) {
-                case _HP < 1650 && t.HurtStatus < 1:
-                    t.UpDate();
-                    t.Attack = 50;
-                    t.restTime = 200;
-                    t.AttackEffect = (left, top) => oEffects.ImgSpriter({
-                        ele: NewEle(t.id+'_Effect', "div", `position:absolute;overflow:hidden;z-index:${this.zIndex + 2};height:65px;width:106px;left:${left+6}px;top:${top+146}px;background:url(images/Plants/Kiwibeast/Effect1.png) no-repeat;`, 0, EDPZ),
-                        styleProperty: 'X',
-                        changeValue: -106,
-                        frameNum: 3,
-                        interval: 9,
-                    });
-                break;
-                case _HP < 1000 && t.HurtStatus < 2:
-                    t.UpDate();
-                    t.Attack = 70;
-                    t.restTime = 240;
-                    t.AttackEffect = (left, top) => oEffects.ImgSpriter({
-                        ele: NewEle(t.id+'_Effect', "div", `position:absolute;overflow:hidden;z-index:${this.zIndex + 2};height:86px;width:183px;left:${left-22}px;top:${top+136}px;background:url(images/Plants/Kiwibeast/Effect2.png) no-repeat;`, 0, EDPZ),
-                        styleProperty: 'X',
-                        changeValue: -183,
-                        frameNum: 4,
-                        interval: 9,
-                    });
-                break;
-                case _HP < 0:
-                    t.Die();
-                break;
+                case _HP <= 1350 && self.HurtStatus < 1:
+                    self.isGoingToUpdate = true;
+                    ! self.isAttacking && self.Update();
+                    break;
+                case _HP <= 700 && self.HurtStatus < 2:
+                    self.isGoingToUpdate = true;
+                    ! self.isAttacking && self.Update();
+                    break;
+                case _HP <= 0:
+                    self.Die();
+                    break;
             }
         }
     },
-    UpDate() {
-        let self = this, id = self.id, HurtStatus = ++self.HurtStatus, ele = $(id).childNodes[1];
+    Update() {
+        let self = this;
+        let id = self.id;
+        let HurtStatus = ++self.HurtStatus;
+        let ele = $(id).childNodes[1];
         oAudioManager.playAudio(`KiwibeastGrow${HurtStatus}`);
         self.isAttacking = 0;
         ele.src = self.PicArr[self[`Grow${HurtStatus}Gif`]];
         //更新触发器
         Object.assign(self, self.GrowUpFun[HurtStatus]);
+        self.canTrigger = false;
         self.oTrigger && oT.delP(self);
-        self.InitTrigger(self, id, self.R, self.C, self.AttackedLX, self.AttackedRX);
+        self.isGoingToUpdate = false;
         //切图，重新触发攻击判定
-        oSym.addTask(100, _=>$P[id] && (ele.src = self.PicArr[self[`Idle${HurtStatus}Gif`]], self.cAttackCheck()));
+        oSym.addTask(50, _=> {
+            if ($P[id]) {
+                self.canTrigger = true;
+                ele.src = self.PicArr[self[`Idle${HurtStatus}Gif`]];
+                self.InitTrigger(self, id, self.R, self.C, self.AttackedLX, self.AttackedRX);
+            }
+        });
     },
     GrowUpFun: [
         //第二阶段
         {
+            Attack: 50,
+            restTime: 200,
+            attackTime: 91,
             getTriggerRange() {
                 let X = GetX(this.C),
-                MinX = this.MinX = X - 120,
-                MaxX = this.MaxX = X + 120;
+                MinX = this.MinX = X - 100,
+                MaxX = this.MaxX = X + 100;
                 return [[MinX, MaxX, 0]];
             },
             getTriggerR(R) {
@@ -2208,10 +2211,13 @@ oKiwibeastStrong = InheritO(CPlants, {
         },
         //第三阶段
         {
+            Attack: 70,
+            restTime: 200,
+            attackTime: 108,
             getTriggerRange() {
                 let X = GetX(this.C),
-                MinX = this.MinX = X - 200,
-                MaxX = this.MaxX = X + 200;
+                MinX = this.MinX = X - 160,
+                MaxX = this.MaxX = X + 160;
                 return [[MinX, MaxX, 0]];
             },
             getTriggerR(R) {
@@ -2230,101 +2236,94 @@ oKiwibeastStrong = InheritO(CPlants, {
     },
     getTriggerR: R=>[R, R],  //传递行返回触发器行上下限,返回格式是[下限，上限]
     NormalAttack() {
-        let o = this, MaxR = o.MaxR, MinX = o.MinX, MaxX = o.MaxX,
-        id = o.id, Attack = o.Attack, ele = $(id).childNodes[1],
-        canBounce = Math.random() > 0.92 && o.HurtStatus === 2;
-        oSym.addTask(130, _=>{
+        let self = this;
+        let MaxR = self.MaxR;
+        let MinX = self.MinX;
+        let MaxX = self.MaxX;
+        let id = self.id;
+        let Attack = self.Attack;
+        let ele = $(id).childNodes[1];
+        let canBounce = Math.random() > 0.92 && self.HurtStatus === 2;
+        let tempStatus = self.HurtStatus;
+        // 切换攻击动画
+        ele.src = self.PicArr[self[`Attack${self.HurtStatus}Gif`]];
+        // 执行攻击
+        self.isAttacking = true;
+        oSym.addTask(57, _=>{
             if($P[id]) {
                 oAudioManager.playAudio(`KiwibeastAttack`);
-                o.AttackEffect(o.pixelLeft, o.pixelTop);
-                for (let _R = o.MinR; _R <= MaxR; _R++) {  //遍历所有有效行,查询所有进入触发范围的僵尸并攻击
-                    oZ.getArZ(MinX, MaxX, _R).forEach(zombie=>
-                        zombie.Altitude < 2 && (zombie.getHit1(zombie, Attack), canBounce && !zombie.isPuppet && zombie.Bounce())
-                    );
+                //遍历所有有效行,查询所有进入触发范围的僵尸并攻击
+                for (let _R = self.MinR; _R <= MaxR; _R++) {  
+                    oZ.getArZ(MinX, MaxX, _R).forEach((zombie) => {
+                        if (zombie.Altitude < 2) {
+                            zombie.getHit1(zombie, Attack);
+                            canBounce && zombie.Bounce()
+                        }
+                    });
                 }
                 canBounce && oEffects.ScreenShake(4);
             }
         });
-        o.isAttacking = 2;
-        ele.src = o.PicArr[o[`Attack${o.HurtStatus}Gif`]];
-        oSym.addTask(o.restTime, _=>
-            $P[id] && o.isAttacking && (ele.src = o.PicArr[o[`Idle${o.HurtStatus}Gif`]], o.isAttacking = 0, o.cAttackCheck())
-        );
-    },
-    AttackEffect(left, top) {
-        oEffects.ImgSpriter({
-            ele: NewEle(this.id+'_Effect', "div", `position:absolute;overflow:hidden;z-index:${this.zIndex + 2};height:64px;width:118px;left:${left+8}px;top:${top+146}px;background:url(images/Plants/Kiwibeast/Effect0.png) no-repeat;`, 0, EDPZ),
-            styleProperty: 'X',
-            changeValue: -118,
-            frameNum: 5,
-            interval: 9,
+        // 切回待机动画或播放成长动画
+        oSym.addTask(self.attackTime, () => {
+            if (! $P[id]) return;
+            self.isAttacking = false;
+            if (self.isGoingToUpdate && self.HurtStatus === tempStatus) {
+                self.Update();
+            } 
+            else if (self.HurtStatus === tempStatus) {
+                ele.src = self.PicArr[self[`Idle${self.HurtStatus}Gif`]];
+            }
         });
     },
-    CheckLoop(zid) {
-        const self = this, id=self.id;
-        self.cAttackCheck = _=>$P[id] && self.AttackCheck1(zid);
-        $P[id] && self.NormalAttack();
+    CheckLoop(zid, direction) {  //开始攻击，并且循环检查攻击条件1,2
+        let self = this;
+        let pid = self.id;
+        let tempStatus = self.HurtStatus;
+        if($P[pid]) {
+            self.NormalAttack(zid);  //触发植物攻击，并传入触发者僵尸之id
+            oSym.addTask(self.restTime, () => {
+                if ($P[pid] && ! self.isGoingToUpdate && self.HurtStatus === tempStatus) {
+                    self.AttackCheck1(zid, direction);     
+                }
+            });
+        }
     }, 
 }),
-oKiwibeast = InheritO(oKiwibeastStrong,{
-    EName:"oKiwibeast",
-    HP:1600,
-    UpDate() {
-        let self = this, id = self.id, HurtStatus = ++self.HurtStatus, ele = $(id).childNodes[1];
-        oAudioManager.playAudio(`KiwibeastGrow${HurtStatus}`);
-        self.isAttacking = 0;
-        ele.src = self.PicArr[self[`Grow${HurtStatus}Gif`]];
-        //更新触发器
-        Object.assign(self, self.GrowUpFun[HurtStatus-1]);
-        self.oTrigger && oT.delP(self);
-        self.InitTrigger(self, id, self.R, self.C, self.AttackedLX, self.AttackedRX);
-        //切图，重新触发攻击判定
-        oSym.addTask(100, _=>$P[id] && (ele.src = self.PicArr[self[`Idle${HurtStatus}Gif`]], self.cAttackCheck()));
-    },
+oKiwibeastStrong = InheritO(oKiwibeast,{
+    EName:"oKiwibeastStrong",
+    HP: 2000,
     getHurt(objZ, AKind, point) {
-        let t = this;
+        let self = this;
         if(AKind%3) {  //致命性攻击
-            t.Die();
+            self.Die();
         } else {
-            let _HP = (t.HP -= point);
+            let _HP = (self.HP -= point);
             switch(true) {
-                case _HP < 1350 && t.HurtStatus < 1:
-                    t.UpDate();
-                    t.Attack = 50;
-                    t.restTime = 200;
-                    t.AttackEffect = (left, top) => oEffects.ImgSpriter({
-                        ele: NewEle(t.id+'_Effect', "div", `position:absolute;overflow:hidden;z-index:${this.zIndex + 2};height:65px;width:106px;left:${left+6}px;top:${top+146}px;background:url(images/Plants/Kiwibeast/Effect1.png) no-repeat;`, 0, EDPZ),
-                        styleProperty: 'X',
-                        changeValue: -106,
-                        frameNum: 3,
-                        interval: 9,
-                    });
-                break;
-                case _HP < 700 && t.HurtStatus < 2:
-                    t.UpDate();
-                    t.Attack = 70;
-                    t.restTime = 240;
-                    t.AttackEffect = (left, top) => oEffects.ImgSpriter({
-                        ele: NewEle(t.id+'_Effect', "div", `position:absolute;overflow:hidden;z-index:${this.zIndex + 2};height:86px;width:183px;left:${left-22}px;top:${top+136}px;background:url(images/Plants/Kiwibeast/Effect2.png) no-repeat;`, 0, EDPZ),
-                        styleProperty: 'X',
-                        changeValue: -183,
-                        frameNum: 4,
-                        interval: 9,
-                    });
-                break;
-                case _HP < 0:
-                    t.Die();
-                break;
+                case _HP <= 1650 && self.HurtStatus < 1:
+                    self.isGoingToUpdate = true;
+                    ! self.isAttacking && self.Update();
+                    break;
+                case _HP <= 1000 && self.HurtStatus < 2:
+                    self.isGoingToUpdate = true;
+                    ! self.isAttacking && self.Update();
+                    break;
+                case _HP <= 0:
+                    self.Die();
+                    break;
             }
         }
     },
     GrowUpFun: [
         //第二阶段
         {
+            Attack: 50,
+            restTime: 200,
+            attackTime: 91,
             getTriggerRange() {
                 let X = GetX(this.C),
-                MinX = this.MinX = X - 100,
-                MaxX = this.MaxX = X + 100;
+                MinX = this.MinX = X - 120,
+                MaxX = this.MaxX = X + 120;
                 return [[MinX, MaxX, 0]];
             },
             getTriggerR(R) {
@@ -2335,10 +2334,13 @@ oKiwibeast = InheritO(oKiwibeastStrong,{
         },
         //第三阶段
         {
+            Attack: 70,
+            restTime: 200,
+            attackTime: 108,
             getTriggerRange() {
                 let X = GetX(this.C),
-                MinX = this.MinX = X - 160,
-                MaxX = this.MaxX = X + 160;
+                MinX = this.MinX = X - 200,
+                MaxX = this.MaxX = X + 200;
                 return [[MinX, MaxX, 0]];
             },
             getTriggerR(R) {
@@ -4693,14 +4695,12 @@ oApple = InheritO(CPlants, {
     beAttackedPointL: 63,
     beAttackedPointR: 75,
     NormalGif: 1,
-    AudioArr: ["Rifter_Summon1", "Rifter_Summon2"],
     PicArr: ["images/Card/Apple.webp", "images/Plants/Apple/Apple.webp"],
     InitTrigger: function() {},
     PrivateBirth(self) {
         if (self.LivingArea === 2 && !oGd.$[self.R + '_' + self.C + '_0']) {
             const effect = NewImg(self.id + '_splash', null, `left:${GetX(self.C)-69}px;top:${GetY(self.R)-146}px;width:145px;height:176px;z-index:${self.R * 3 + 1}`, EDPZ);
             effect.src = oDynamicPic.require(WaterSplashImg,effect);
-            oSym.addTask(50, () => {oAudioManager.playAudio("Rifter_Summon" + [1,2].random()).volume = 0.5;});
             oSym.addTask(113, ClearChild, [effect]);
             self.Die();
             return;
