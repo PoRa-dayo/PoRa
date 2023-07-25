@@ -239,7 +239,7 @@ oLawnCleaner = InheritO(CPlants, {
     beAttackedPointR: 60,
     WaterSplashGif: 3,
     PicArr: ["images/interface/LawnCleaner.png", "images/Card/LawnCleaner.webp?useDynamicPic=false", 'images/Plants/SporeShroom/Effect.webp', WaterSplashImg],
-    AudioArr: ["lawnmower"],
+    AudioArr: ["lawnmower", "Rifter_Summon1", "Rifter_Summon2"],
     NormalGif: 0,
     CardGif: 1,
     canEat: 0,
@@ -342,6 +342,7 @@ oLawnCleaner = InheritO(CPlants, {
                 oSym.addTask(10, () => {
                     let eff = NewImg(0, null, `width:160px;height:195px;top:${GetY(self.R)-170}px;left:${self.AttackedRX - 25}px;z-index:${3 * self.R + 1}`, EDPZ);
                     eff.src = oDynamicPic.require(WaterSplashImg,eff);
+                    oSym.addTask(50, () => {oAudioManager.playAudio("Rifter_Summon" + [1,2].random()).volume = 0.5;});
                     oSym.addTask(113, ClearChild, [eff]);
                     self.Die();
                 });
@@ -1277,176 +1278,165 @@ oNutBowling = InheritO(CPlants, {
     PicArr: ["images/Card/WallNut.webp", "images/Plants/WallNut/0.webp", "images/Plants/WallNut/0.webp"],
     AudioArr: ["bowling", "bowlingimpact", "bowlingimpact2"],
     CanAttack: 1,
-    traditionalTypeCollide:false,//传统的碰撞模式，类似pvz1，不能像旅行那样连续撞很多下
+    traditionalTypeCollide: false, //传统的碰撞模式，类似pvz1，不能像旅行那样连续撞很多下
     InitTrigger() {},
     getHurt() {},
-    radius:64.5,//坚果平均半径
+    radius: 64.5, //坚果平均半径
     PrivateBirth(self) {
         oAudioManager.playAudio("bowling");
         let ele = $(self.id);
         let subEle = ele.childNodes[1];
-        let dir = 0;  //坚果的上下移动方向，0为不移动，1为向下，-1为向上
-        let minY = GetY1Y2(1)[0]+40;    //坚果可以运动到的上边界坐标
-        let maxY = GetY1Y2(oS.R)[1];   //坚果可以运动到的下边界坐标
-        let updateFrame = $User.LowPerformanceMode?10:6;//更新图片的时间
-        let nowFrame = 0;//当前运行时间
-        let nowDistance = 0;//坚果在这段运行时间内走了多少距离
-        let currentRad = 0;//当前坚果转了多少角度
+        let dir = 0; //坚果的上下移动方向，0为不移动，1为向下，-1为向上
+        let minY = GetY1Y2(1)[0] + 40; //坚果可以运动到的上边界坐标
+        let maxY = GetY1Y2(oS.R)[1]; //坚果可以运动到的下边界坐标
+        let updateFrame = $User.LowPerformanceMode ? 10 : 6; //更新图片的时间
+        let nowFrame = 0; //当前运行时间
+        let nowDistance = 0; //坚果在这段运行时间内走了多少距离
+        let currentRad = 0; //当前坚果转了多少角度
         let realHeight = 69;
         let realWidth = 60;
-        let drawingFrame = $User.LowPerformanceMode?4:2;//改变坚果位置的时间间隔
+        let drawingFrame = $User.LowPerformanceMode ? 4 : 2; //改变坚果位置的时间间隔
         let _save_drawingFrame = drawingFrame;
-        function changeDir(R){//改变坚果运行方向
-            switch(R) {
-                case oS.R:
-                    dir = -1;
-                    break;
-                case 1:
-                    dir = 1;
-                    break;
-                default:
-                    switch (dir) {
-                        case 1:
-                            dir = -1;
-                            break;
-                        case -1: 
-                            dir = 1;
-                            break;
-                        default:
-                            dir = Math.random() > 0.5 ? 1 : -1;
-                    }
-            }
-        }
+        const containers = oZombieLayerManager.$Containers;
         (function fun() {
             let R = self.R;
             let C = self.C;
-            let targZombie;
-            if(!$P[self.id]){
+            if (!$P[self.id]) {
                 return;
             }
-            if(self.CanAttack && (targZombie = oZ.getZ0(self.AttackedRX, R)) && targZombie.getCrushed(self)) {
+            let targZombie = oZ.getZ0(self.AttackedRX, R, (Z) => Z.beAttacked && ! Z.isGoingDie && Z.Altitude >= 1 && Z.Altitude <= 2);
+            if (self.CanAttack && targZombie && targZombie.getCrushed(self)) {
                 oAudioManager.playAudio(["bowlingimpact", "bowlingimpact2"].random());
-                switch(targZombie.Ornaments) {
-                    case 0:  //无防具僵尸
-                        if(targZombie.HP<900){
-                            if(!targZombie.isNotStaticed()){
+                switch (targZombie.Ornaments) {
+                    case 0: //无防具僵尸
+                        if (targZombie.HP < 900) {
+                            if (!targZombie.isNotStaticed()) {
                                 targZombie.freeStaticEffect(targZombie, "All");
                             }
                             targZombie.NormalDie();
-                        }else{
-                            targZombie.getHit0(targZombie,900,0);
+                        } else {
+                            targZombie.getHit0(targZombie, 900, 0);
                         }
                         break;
-                    case 1:  //I类防具僵尸，如路障铁桶橄榄球
+                    case 1: //I类防具僵尸，如路障铁桶橄榄球
                         targZombie.getHit0(targZombie, Math.min(targZombie.OrnHP || targZombie.HP, 900), 0);
                         break;
-                    default:  //II类防具僵尸，如读报
+                    default: //II类防具僵尸，如读报
                         targZombie.CheckOrnHP(targZombie, targZombie.id, targZombie.OrnHP, 400, targZombie.PicArr, 0, 0, 0);
                 }
                 self.CanAttack = 0;
                 //下面计算坚果的上下移动方向
-                changeDir(R);
+                dir = oNutBowling.changeDir(R, dir);
             } else {
-                let flag = false;  //用于标记坚果的坐标位置是否发生变化
+                let flag = false; //用于标记坚果的坐标位置是否发生变化
                 //处理保龄球超越上下边界的情况
-                switch(dir) {
-                    case 1:  //向下运动
+                switch (dir) {
+                    case 1: //向下运动
                         self.pixelBottom + 2 > maxY && (dir = -1);
                         break;
-                    case -1:   //向上运动
+                    case -1: //向上运动
                         self.pixelBottom - 2 < minY && (dir = 1);
                         break;
                 }
-                if(self.AttackedLX > oS.W) {
+                if (self.AttackedLX > oS.W) {
                     self.Die();
                 } else {
                     self.AttackedLX += 2;
                     self.AttackedRX += 2;
-                    let curR = 0,bottomR = 0;
-                    if(self.traditionalTypeCollide){
-                        if(dir===1){
-                            curR = Math.Clamp(GetR((self.pixelTop + dir * 2)+20),1,oS.R);   //计算坚果处在行, 20是一个魔法数字，代表坚果的实际高度
+                    let curR = 0,
+                        bottomR = 0;
+                    if (self.traditionalTypeCollide) {
+                        if (dir === 1) {
+                            curR = Math.Clamp(GetR((self.pixelTop + dir * 2) + 20), 1, oS.R); //计算坚果处在行, 20是一个魔法数字，代表坚果的实际高度
                             bottomR = GetR(self.pixelBottom += dir * 2);
-                        }else{
-                            bottomR = curR = GetR(self.pixelBottom += dir * 2);   //计算坚果处在行
+                        } else {
+                            bottomR = curR = GetR(self.pixelBottom += dir * 2); //计算坚果处在行
                         }
-                    }else{
-                        if(dir===1){
-                            curR = Math.Clamp(GetR((self.pixelBottom + dir * 2)-10),1,oS.R);
+                    } else {
+                        if (dir === 1) {
+                            curR = Math.Clamp(GetR((self.pixelBottom + dir * 2) - 10), 1, oS.R);
                             bottomR = GetR(self.pixelBottom += dir * 2);
-                        }else{
-                            bottomR = curR = GetR(self.pixelBottom += dir * 2);   //计算坚果处在行
+                        } else {
+                            bottomR = curR = GetR(self.pixelBottom += dir * 2); //计算坚果处在行
                         }
                     }
-                    let curC = GetC(self.pixelRight += 2);   //计算坚果处在列
+                    let curC = GetC(self.pixelRight += 2); //计算坚果处在列
+                    let deltaTop = dir * 2;
                     self.pixelLeft += 2;
-                    self.pixelTop += dir * 2;
+                    self.pixelTop += deltaTop;
                     self.zIndex = 3 * bottomR;
-                    if(drawingFrame--==0){
+                    self.zIndex_cont += deltaTop;
+                    if (drawingFrame-- == 0) {
                         SetStyle(ele, {
-                            left: (self.pixelLeft) + "px",
-                            top: (self.pixelTop) + "px",
-                            zIndex: (self.zIndex),
+                            left: self.pixelLeft + "px",
+                            top: self.pixelTop + "px",
+                            zIndex: self.zIndex_cont,
                         });
-                        drawingFrame=_save_drawingFrame;
+                        drawingFrame = _save_drawingFrame;
                     }
-                    if(dir*(curR-R) > 0){
+                    if (dir * (curR - R) > 0) {
                         self.R = curR;
                         flag = true;
                         !self.CanAttack && (self.CanAttack = 1);
+                        containers[curR].append(ele);
                     }
                     curC !== C && (
                         self.C = curC,
                         flag = true
                     );
-                    if(flag>0){
+                    if (flag) {
                         let id = curR + "_" + curC + "_1";
                         let obj = oGd.$[`${R}_${C}_1`];
-                        if(obj===self){//这个R和C是老的R和C
-                            oGd.del({ R, C, PKind: 1 });
+                        if (obj === self) { //这个R和C是老的R和C
+                            oGd.del({
+                                R,
+                                C,
+                                PKind: 1
+                            });
                         }
-                        obj =  oGd.$[`${curR}_${C}_1`]
-                        if(self.CanAttack&&obj&&!obj.isPlant&&obj.Stature>-1&&(obj?.pixelRight??-Infinity)>self.pixelLeft&&(obj?.pixelRight??Infinity)<self.pixelLeft+self.width/2){//上一个格子如果也可以擦边撞到那就顺带撞一下
-                            if(self.CanAttack){
-                                obj.Die("JNG_TICKET_Sculpture");
-                            }
-                        }
-                        if(obj = oGd.$[id]){
-                            if(!obj.isPlant&&obj.Stature>-1){//如果撞到了障碍物，且障碍物的高度和普通植物一样就转向
-                                if(self.CanAttack){
-                                    changeDir(curR);
-                                    obj.Die("JNG_TICKET_Sculpture");
-                                    self.CanAttack = 0;
-                                }
-                            }else{
-                                obj.Die("JNG_TICKET_Sculpture");
-                            }
-                        }
-                        if(!oGd.$[id]){
+                        dir = self.HitGdObjectHook(self, dir, R, C, curR, curC);
+                        if (!oGd.$[id]) {
                             oGd.add(self, id);
                         }
-                    }                 
+                    }
                 }
             }
-            nowDistance+=2;//如果不等于0就是斜着走，距离是根二倍
+            nowDistance += 2; //如果不等于0就是斜着走，距离是根二倍
             //更新图片的旋转角
-            if((nowFrame++)>=updateFrame){
-                //console.log(subEle);
-                currentRad += nowDistance/self.radius*2;
-                EditCompositeStyle({ele:subEle, delFuncs:["rotate","translateY"], addFuncs:[
-                    ["translateY",`${(Math.Lerp(realHeight,realWidth,(Math.cos(currentRad*2)+1)/2)-realHeight)/2}px`],
-                    ["rotate",`${currentRad}rad`],
-                ], option:2});
+            if ((nowFrame++) >= updateFrame) {
+                currentRad += nowDistance / self.radius * 2;
+                EditCompositeStyle({
+                    ele: subEle,
+                    delFuncs: ["rotate", "translateY"],
+                    addFuncs: [
+                        ["translateY", `${(Math.Lerp(realHeight,realWidth,(Math.cos(currentRad*2)+1)/2)-realHeight)/2}px`],
+                        ["rotate", `${currentRad}rad`],
+                    ],
+                    option: 2
+                });
                 nowDistance = nowFrame = 0;
             }
             oSym.addTask(1, fun);
         })();
     },
+    // 该接口供关卡中自定义坚果墙撞类植物障碍物（例如罐子）的接口
+    // 该接口调用后要求返回坚果撞完后的方向
+    HitGdObjectHook(self, dir, R, C, curR, curC) {
+        return dir;
+    },
     Die(ticket) {
         const list = new Set(['JNG_TICKET_Sculpture']);
-        if(!list.has(ticket)) {  //只有接收到特定标示才【不会!!!!!】死亡
+        if (!list.has(ticket)) { //只有接收到特定标示才【不会!!!!!】死亡
             CPlants.prototype.Die.call(this);
         }
+    },
+}, {
+    changeDir(R, dir) {
+        let dirMap = {
+            [oS.R]: -1,
+            1: 1
+        };
+        return dirMap[R] ?? (dir === 1 ? -1 : (dir === -1 ? 1 : (Math.random() > 0.5 ? 1 : -1)));
     },
 }),
 oNutBowlingPay = InheritO(oNutBowling, {
@@ -3038,22 +3028,19 @@ oMelonPult = InheritO(oCabbage, {
     beAttackedPointR: 60,
     SunNum: 300,
     AttackGif: 4,
-    Attack:80,
     coolTime:5,
+    Attack: 80,
     AudioArr: ["CabbageAttack1", "CabbageAttack2","melonimpact1","melonimpact2"],
     PicArr: (function() {
         var b="images/Plants/MelonPult/",arr=[];
         for(let i = 1;i<=7;i++){
             arr.push(b+"piece"+i+".webp?useDynamicPic=false");
         }
-        return ["images/Card/MelonPult.webp", b + "0.webp", b + "static.webp", b + "Bullet.webp?useDynamicPic=false", b + "attack.webp"].concat(arr)
+        return ["images/Card/MelonPult.webp", b + "0.webp", b + "static.webp", b + "bullet.webp?useDynamicPic=false", b + "attack.webp"].concat(arr)
     })(),
     Tooltip: "向敌人抛出带有溅射的西瓜瓣",
     Story: `戴夫时不时会进入他自家的花园，抱走一个西瓜放进冰箱冰镇后准备大快口福。但有时他会不小心拿到了西瓜投手还长在藤蔓上的生瓜蛋子。“非常抱歉，我并不是有意给你生瓜蛋子的。”西瓜投手对着持刀过来的戴夫瑟瑟发抖，“毕竟我的头也是瓜蛋子，我的子弹也是瓜蛋子，挺难区分哪个是熟的……”
 这就是为什么西瓜投手再没有投过一个完整的西瓜。`,
-    PrivateBirth(a) {
-        a.BulletEle = NewImg(0, a.PicArr[3], "left:" + (a.pixelLeft + 50) + "px;top:" + (a.pixelTop + 10) + "px;width:40px;visibility:hidden;z-index:" + (a.zIndex + 2));
-    },
     getShadow: self => `left:${self.width*0.5-48}px;top:${self.height-22}px;`,
     CheckLoop(zid, direction) {
         let self = this;
@@ -3063,67 +3050,6 @@ oMelonPult = InheritO(oCabbage, {
             oSym.addTask(270+Math.random()*10-5, _ => {$P[pid]&&self.AttackCheck1(zid, direction)});
         }
     },
-    HitZombie(zombieTarget,self,x2,zY,realX,realY){
-        if($Z[zombieTarget.id]){
-            zombieTarget.getHit2(zombieTarget, self.Attack);
-        }
-        oAudioManager.playAudio(self.AudioArr.slice(2,4).random());
-        for(let i = Math.max(1,self.R-1);i<=Math.min(self.R+1,5);i++){
-            for(let zombie of oZ.getArZ(x2 - 50, x2 + 70, i)) {
-                if(zombie!=zombieTarget){
-                    let attack = self.Attack;
-                    if(zombie.isPuppet){
-                        attack+=60;
-                    }
-                    zombie.getHit2(zombie,(zombie.isPuppet?Math.floor(attack/1.5):Math.floor(attack/3)));
-                }
-            }
-        }
-        let obj = [];
-        let C = GetC(zombieTarget.ZX),R = self.R;
-        for(let i = 0;i<Math.round(5+Math.random()*4);i++){
-            let vy = 0.5-Math.random()*3;
-            let ay = 0.2;
-            let vx = Math.random()*2-1;
-            let rotate = (Math.random()*0.25)*(vx>0?1:-1);
-            let alpha = Math.random()*0.8+1;
-            let baseY = 50;
-            let dy = baseY+Math.random()*18-9;
-            let ly = GetY(self.R)-30-(zY-20)+(dy-baseY);
-            obj.push({
-                src:self.PicArr[Math.floor(Math.random()*7)+5],rotate:Math.random()*360,x:50+Math.random()*18-9,y:dy,width:Math.round(18+(Math.random()*6-2)),height:Math.round(18+(Math.random()*6-2)),move(){
-                    let self = this;
-                    self.x+=vx;
-                    self.y+=vy;
-                    vy+=ay;
-                    self.y = Math.min(ly,self.y);
-                    if(self.y==ly){
-                        if(oGd.$GdType[R][C]!=2){
-                            vy=-vy/3;
-                            rotate/=1.2;
-                        }else{
-                            alpha-=0.1;
-                        }
-                    }
-                    self.rotate+=rotate;
-                    self.alpha=Math.max(0,Math.min(alpha,1));
-                    alpha-=0.05;
-                }
-            });
-        }
-        oEffects.Particle({
-            height:200,
-            width:100,
-            wrap:FightingScene,
-            style:`left:${-115+realX+70}px;top:${realY-20}px;z-index:${self.zIndex+2}`,
-            canvasFunction(canvas){
-                oSym.addTask(45,_=>{
-                    oEffects.fadeOut(canvas,0.25/oSym.NowSpeed,ClearChild);
-                });
-            },
-            objects:obj,
-        });
-    },
     AttackAnim(ele,self){
         ele.childNodes[1].src = self.PicArr[self.AttackGif];
     },
@@ -3132,47 +3058,12 @@ oMelonPult = InheritO(oCabbage, {
         let ele = $(self.id);
         let zombieTarget = oZ.getRangeLeftZ(self.pixelLeft + self.beAttackedPointR, oS.W, self.R, true);
         if(!zombieTarget) return;
-        let bullet = EditEle(self.BulletEle.cloneNode(), {id: "CB" + Math.random()}, 0, EDPZ);
         self.AttackAnim(ele,self);
-        oSym.addTask(124, _ => $P[self.id] && (ele.childNodes[1].src = self.PicArr[self.NormalGif]));
         oSym.addTask(43, _ => {
             oAudioManager.playAudio(self.AudioArr.slice(0,2).random());
-            SetVisible(bullet);
-            let x = self.pixelLeft + 30;  //子弹横坐标
-            let y = self.pixelTop;  //子弹纵坐标
-            //子弹宽高
-            let width = 10;
-            let height = 20;
-            let gravity = 0.2;  //重力加速度，定值
-            let vy = -10;  //竖直方向速度，初速度为定值
-            let zomRelativePos = zombieTarget.HeadTargetPosition[zombieTarget.isAttacking]?zombieTarget.HeadTargetPosition[zombieTarget.isAttacking]:zombieTarget.HeadTargetPosition[0];//僵尸和僵尸头部坐标
-            let zY = Number.parseInt(zombieTarget.Ele.style.top)+zombieTarget.DivingDepth+zomRelativePos.y-height;//僵尸绝对纵坐标
-            let zX = Number.parseInt(zombieTarget.Ele.style.left)+zomRelativePos.x-width;//投出时僵尸横坐标
-            let zSpeed = !zombieTarget.isAttacking * zombieTarget.Speed * zombieTarget.DeltaDirectionSpeed[zombieTarget.FangXiang];
-            let [s,vx] = self.get_S_Vx([x,y],[zX,zY],vy,gravity,zSpeed);//获取距离和水平速度
-            let x2 = x + s;  //落点坐标
-            let dt = 2;//更新时间
-            let defAngle = Math.floor(Math.random()*20-10);
-            let rotSpd  = Math.floor(Math.random()*6+3);
-            let bulletShadow = NewEle(`${self.id}_B_${Math.random()}_Shadow`, 'div', `opacity:0.5;background-size:29px;background-repeat: no-repeat;width:29px;left:${x}px;top:${self.pixelTop+self.height-10}px;`, {className: 'Shadow'}, EDPZ);
-            (function drawFrame() {
-                vy += gravity*dt;  //竖直方向的速度受重力加速度影响
-                bullet.style.left = (x += vx*dt) + 'px';
-                bulletShadow.style.left = x + 'px';
-                bullet.style.top = (y += vy*dt) + 'px';
-                bullet.style.transform = `rotate(${defAngle+=rotSpd*dt}deg)`;
-                if(!$Z[zombieTarget.id]){//僵尸死亡的时候改变下落坐标
-                    zY = GetY(self.R)-70;
-                }
-                if((x>=x2&&y>=zY&&vy>0)||s<40){//僵尸距离太小的情况
-                    ClearChild(bullet);
-                    self.HitZombie(zombieTarget,self,x2,zY,x,y-vy*dt);
-                    ClearChild(bulletShadow);//影子消失
-                    return;
-                }
-                oSym.addTask(dt, drawFrame);
-            })();
+            CustomBullet(oMelonBullet,null,self.pixelLeft+50,self.pixelTop+10,self.R,null,null,zombieTarget,self.Attack);
         });
+        oSym.addTask(124, _ => $P[self.id] && (ele.childNodes[1].src = self.PicArr[self.NormalGif]));
     },
 }),
 //实验室
@@ -4398,7 +4289,7 @@ oSquash=InheritO(oStoneFlower,{
                         top:tarTop-oriY+"px",
                     });
                     oZ.getArZ(checkX-45, checkX+45, R).forEach(z=>{
-                        z.getHit2(z,1800);
+                        z.getHit2(z,Math.round(500/z.ResistInsta));
                     });
                     oAudioManager.playAudio(self.AudioArr[Math.floor(Math.random()*(self.AudioArr.length-self.HmmAudioNum))+self.HmmAudioNum]);
                     if(oGd.$GdType[R][C]!=2){
@@ -4593,7 +4484,7 @@ oBatStaff = InheritO(oKiwibeast, {
             let ArrZ=oZ.getArZ(leftborder,rightborder,row);
             for (var zom of ArrZ) {
                 let half=Math.round((zom.HP-zom.BreakPoint)/2);
-                if (!zom.isPuppet && !zom.Boss) {
+                if (!zom.isPuppet && zom.ResistInsta<1) {
                     if (zom.HP-half>=zom.BreakPoint+1) zom.HP-=half;
                 }
             }
@@ -4631,7 +4522,7 @@ oBatStaff = InheritO(oKiwibeast, {
                 o.AttackEffect(o.pixelLeft, o.pixelTop);
                 for (let _R = o.MinR; _R <= MaxR; _R++) {  //遍历所有有效行,查询所有进入触发范围的僵尸并攻击
                     oZ.getArZ(MinX, MaxX, _R).forEach(zombie=>{
-                        if (!zombie.isPuppet && !zombie.Boss) {
+                        if (!zombie.isPuppet && zombie.ResistInsta<1) {
                             zombie.getVertigo(zombie, o.Attack, 0);
                             oAudioManager.playAudio("Artichoke_Attack");
                         }
@@ -4802,12 +4693,14 @@ oApple = InheritO(CPlants, {
     beAttackedPointL: 63,
     beAttackedPointR: 75,
     NormalGif: 1,
+    AudioArr: ["Rifter_Summon1", "Rifter_Summon2"],
     PicArr: ["images/Card/Apple.webp", "images/Plants/Apple/Apple.webp"],
     InitTrigger: function() {},
     PrivateBirth(self) {
         if (self.LivingArea === 2 && !oGd.$[self.R + '_' + self.C + '_0']) {
             const effect = NewImg(self.id + '_splash', null, `left:${GetX(self.C)-69}px;top:${GetY(self.R)-146}px;width:145px;height:176px;z-index:${self.R * 3 + 1}`, EDPZ);
             effect.src = oDynamicPic.require(WaterSplashImg,effect);
+            oSym.addTask(50, () => {oAudioManager.playAudio("Rifter_Summon" + [1,2].random()).volume = 0.5;});
             oSym.addTask(113, ClearChild, [effect]);
             self.Die();
             return;
@@ -4939,15 +4832,16 @@ oSummonZombieObs = InheritO(CPlants, {
     getShadow: ()=>'display:none',
     AudioArr: ["zombieobs"],
     PicArr: ["images/Props/MarshOrgan/SummonZombieObstacle.webp?useDynamicPic=false"],
-    BirthStyle(self, e, b, a) {
-        let d = b.childNodes[1];
-        d.src = this.PicArr[0];
-        d.style.clip = "rect(0,auto,76px,0)";
-        d.style.height = "156px";
-        EditEle(b, {
-            id: e,
+    BirthStyle(self, id, wrap, styles) {
+        let ele = wrap.childNodes[1];
+        ele.src = this.PicArr[0];
+        ele.style.clip = "rect(0,auto,76px,0)";
+        ele.style.height = "156px";
+        styles.zIndex = this.zIndex = this.zIndex_cont = 0;
+        EditEle(wrap, {
+            id,
             'data-jng-constructor': self.EName
-        }, a, oZombieLayerManager.$Containers[self.R]);
+        }, styles, EDPZ);
     },
     PrivateBirth: function(o) {
         o.ArZ = {};  //在实例上创建僵尸列表
@@ -5087,8 +4981,6 @@ oRifter = InheritO(oObstacle, {  //冰窟
         self.pixelRight = pixelLeft + self.width;
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self);  //默认植物底部相对距离=pt+植物身高
-        self.zIndex += 3 * R-1;
-        self.zIndex_cont = GetMidY(R) + 30 - 1;
         $P[id] = self;  //在植物池中注册
         NewEle(`${id}_Shadow`, 'div', self.getShadow(self), {className: 'Shadow'}, ele);  //绘制植物影子
         NewImg(0, `images/Props/Rifter/${isTyped!==false?isTyped:(1 + Math.round(Math.random()*3))}${oS.DKind ? '' : 'dark'}.png`, 'clip:rect(auto, 80px, auto, auto);', ele);
@@ -5101,7 +4993,6 @@ oRifter = InheritO(oObstacle, {  //冰窟
         self.BirthStyle(self, id, ele, {
             left: pixelLeft + "px",
             top: pixelTop + "px",
-            zIndex: self.zIndex_cont,
         });
         oGd.add(self, `${R}_${C}_${self.PKind}`);  //在场景注册
         oGd.$Rifter[R + "_" + C] = true;
@@ -5116,6 +5007,10 @@ oRifter = InheritO(oObstacle, {  //冰窟
         };
         oS.isStartGame===1 ? callback() : addEventListenerRecord('jng-event-startgame', callback);
         return self;
+    },
+    BirthStyle(self, id, ele, style) {
+        style.zIndex = self.zIndex = self.zIndex_cont = 0;
+        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ);
     },
     PrivateBirth({id}) {
         let img = $(id).children[1];
@@ -5168,8 +5063,6 @@ oRifterAnimate = InheritO(oObstacle, {  //冰窟
         self.pixelRight = pixelLeft + self.width;
         self.pixelTop = pixelTop;
         self.pixelBottom = pixelTop + self.GetDBottom(self);  //默认植物底部相对距离=pt+植物身高
-        self.zIndex_cont = self.zIndex + GetMidY(R) + 30;
-        self.zIndex += 3 * R-1;
         $P[id] = self;  //在植物池中注册
         NewEle(`${id}_Shadow`, 'div', self.getShadow(self), {className: 'Shadow'}, ele);  //绘制植物影子
         NewImg(0, `images/Props/Rifter/${self.iceType=1 + Math.round(Math.random()*3)}${oS.DKind ? '' : 'dark'}.png`, 'opacity:0.6;left:-80px;clip:rect(auto, 160px, auto, 80px);', ele);
@@ -5182,7 +5075,6 @@ oRifterAnimate = InheritO(oObstacle, {  //冰窟
         self.BirthStyle(self, id, ele, {
             left: pixelLeft + "px",
             top: pixelTop + "px",
-            zIndex: self.zIndex_cont,
         });
         if((self.Pepper&&oGd.$[`${R}_${C}_3`])||oGd.$Crater[R + '_' + C]||(oGd.$[`${R}_${C}_1`]&&(!oGd.$[`${R}_${C}_1`].isPlant))){
             self.GoDie  = true;
@@ -5199,6 +5091,10 @@ oRifterAnimate = InheritO(oObstacle, {  //冰窟
         };
         oS.isStartGame===1 ? callback() : addEventListenerRecord('jng-event-startgame', callback);
         return self;
+    },
+    BirthStyle(self, id, ele, style) {
+        style.zIndex = self.zIndex = self.zIndex_cont = 0;
+        EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, EDPZ);
     },
     audioTimes:[0,376,376,295,188,206,206,271,222],
     PrivateBirth({id}) {
@@ -5220,13 +5116,13 @@ oRifterAnimate = InheritO(oObstacle, {  //冰窟
                         Stage(1);
                     }else{
                         let obj = self,hasP;
-                        let effect = NewImg(`${obj.id}_Frozen`, obj.PicArr[obj.EffectGif], `position:absolute;z-index:${obj.zIndex + 2};width:198px;height:113px;left:${obj.pixelLeft-65}px;top:${obj.pixelTop}px;`, EDPZ);
+                        let effect = NewImg(`${obj.id}_Frozen`, obj.PicArr[obj.EffectGif], `position:absolute;z-index:${obj.R * 3 + 2};width:198px;height:113px;left:${obj.pixelLeft-65}px;top:${obj.pixelTop}px;`, EDPZ);
                         oSym.addTask(50, ClearChild, [effect]);
                         if((hasP=oGd.$[`${self.R}_${self.C}_1`])){
                             oAudioManager.playAudio(`Rifter_Summon1`);
                             if(oGd.$[`${self.R}_${self.C}_1`].EName!="oBegonia"){
                                 oEffects.ImgSpriter({
-                                    ele: NewEle(`${obj.id}_Drop`, "div", `position:absolute;overflow:hidden;z-index:${obj.zIndex + 2};width:150px;height:184px;left:${obj.pixelLeft-30}px;top:${obj.pixelTop-60}px;transform:scale(1.3);background:url(images/Props/Rifter/Drop_Water.png) no-repeat`, 0, EDPZ),
+                                    ele: NewEle(`${obj.id}_Drop`, "div", `position:absolute;overflow:hidden;z-index:${obj.R * 3 + 2};width:150px;height:184px;left:${obj.pixelLeft-30}px;top:${obj.pixelTop-60}px;transform:scale(1.3);background:url(images/Props/Rifter/Drop_Water.png) no-repeat`, 0, EDPZ),
                                     styleProperty: 'X',
                                     changeValue: -150,
                                     frameNum: 37,
@@ -5283,7 +5179,6 @@ oGoUpIce = InheritO(oSummonZombieObs, {
     CantGo: 1,
     height: 80,
     width: 80,
-    First: 0,
     UserBirth: 0,
     EleBody: null,
     NormalGif: 0,
@@ -5300,15 +5195,16 @@ oGoUpIce = InheritO(oSummonZombieObs, {
             "opacity": "0"
         }, dd);
     },
-    BirthStyle(self, e, b, a) {
-        let d = b.childNodes[1];
-        d.src = this.PicArr[0];
-        d.style.clip = "rect(0,auto,81px,0)";
-        d.style.height = "81px";
-        EditEle(b, {
-            id: e,
+    BirthStyle(self, id, wrap, styles) {
+        let ele = wrap.childNodes[1];
+        ele.src = this.PicArr[0];
+        ele.style.clip = "rect(0,auto,81px,0)";
+        ele.style.height = "81px";
+        styles.zIndex = this.zIndex = this.zIndex_cont = 0;
+        EditEle(wrap, {
+            id,
             'data-jng-constructor': self.EName
-        }, a, oZombieLayerManager.$Containers[self.R]);
+        }, styles, EDPZ);
     },
     SetBrightness: _ => {},
     MoveZombie: function(id, zombie) {
@@ -5320,18 +5216,25 @@ oGoUpIce = InheritO(oSummonZombieObs, {
             o = this;
         if (zombie.R != o.CantGo && zombie.AKind != 2 && oGd.$Crater[o.R + '_' + o.C] != 1) {
             oAudioManager.playAudio("IceButtonTouch");
-            let dom_ = zombie.Ele;
-            let value = o.MoveZombie(id, zombie);
-            zombie.pixelTop = GetY(zombie.R) - zombie.height + zombie.GetDY();
-            o.First && (dom_.style.cssText += `z-index:${zombie.zIndex = 3*value + 1};`);
-            oEffects.Animate(o.EleBody2, {
+            const zombieDOM = zombie.Ele;
+            const selfBody = o.EleBody2;
+            let newR = o.MoveZombie(id, zombie);
+            let newTop = zombie.pixelTop = GetY(newR) - zombie.height + zombie.GetDY();
+            let newIndex = newTop + zombie.height;
+            // 播放地砖自身的动画
+            oEffects.Animate(selfBody, {
                 opacity: 1,
             }, 0.2 / oSym.NowSpeed);
-            oEffects.Animate(dom_, {
+            // 移动僵尸
+            oZombieLayerManager.$Containers[newR].append(zombieDOM);
+            oEffects.Animate(zombieDOM, {
                 top: `${zombie.pixelTop}px`,
+                zIndex: newIndex,
             }, 0.4 / oSym.NowSpeed, 'ease', _ => {
-                dom_.style.cssText += `top:${zombie.pixelTop}px;z-index:${zombie.zIndex = 3*value + 1};`;
-                oEffects.Animate(o.EleBody2, {
+                zombie.pixelTop = newTop;
+                zombie.zIndex = 3 * newR + 1;
+                zombie.zIndex_cont = newIndex;
+                oEffects.Animate(selfBody, {
                     opacity: 0,
                 }, 0.2 / oSym.NowSpeed);
             });
@@ -5352,7 +5255,6 @@ oGoDownIce = InheritO(oGoUpIce, {
     CName : "向下浮冰",
     Tooltip : "向下浮冰，僵尸向下",
     CantGo:5,
-    First:1,
     height:80,
     PicArr:["images/Props/GoIce/4.webp?useDynamicPic=false","images/Props/GoIce/3.webp?useDynamicPic=false"],
     MoveZombie:function(id,zombie){
@@ -5366,7 +5268,6 @@ oRandomIce = InheritO(oGoUpIce, {
     Tooltip:"随便走",
     Type:1,//0向上，1向下
     CantGo:1,
-    First:0,
     UseBirth:1,
     height:100,
     PicArr:["images/Props/GoIce/5.webp?useDynamicPic=false","images/Props/GoIce/6.webp?useDynamicPic=false"],
