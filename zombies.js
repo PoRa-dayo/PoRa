@@ -99,7 +99,8 @@ var CZombies = NewO({
                     if (self.DivingDepth > 0 && self.Altitude != 3) {
                         self.SetWater(0, R, C, oldGdType);
                         // 一旦出水，僵尸不再受到水道规则约束
-                        self.ChkActs = self[self.FangXiang];
+                        self.ChkActs = self.__proto__.ChkActs;
+                        // 把僵尸从图层实时调整名单中删除 
                         oS.observeZombieLayer && oZombieLayerManager.delZombie(self);
                     }else{
                         canChangeType=false;
@@ -149,6 +150,8 @@ var CZombies = NewO({
             self.DivingDepth = depth;
             // 僵尸潜入水中的情况
             if (depth > 0) {
+                // 考虑到从外部调用SetWater的情况，还是手工设置一下僵尸的LivingArea
+                self.LivingArea = 2;
                 self.Ele.dataset.tmp_Altitude = self.Altitude;
                 toSetWaterStyle && self.setWaterStyle_middleWare();
                 if (useAnim) {
@@ -176,7 +179,10 @@ var CZombies = NewO({
                     let msg = await self.sinkIntoWaterAnim(self, depth, oldDepth, height);
                     if (msg) {
                         return callback_outWater();
-                    } else {
+                    } 
+                    // 如果浮出水面的动画被中断（例如僵尸死亡或者被弹起）
+                    // 则立即恢复僵尸原本的状态
+                    else {
                         self.DivingDepth = oldDepth;
                         self.LivingArea = oldGdType;
                         self.useSinkIntoWaterEffect(self, oldDepth);
@@ -227,7 +233,7 @@ var CZombies = NewO({
                     // 这个根号是实现先快后慢的效果   ↓
                     let delta = Math.sqrt(npx / 50) * (newDepth - oldDepth) + oldDepth;
                     // 如果发现僵尸被弹起或被取消注册，则立即放弃操作并使僵尸复原
-                    if (self.isFloating || !$Z[id]) {
+                    if (self.isFloating || self.HP <= 0) {
                         return resolve(false);
                     }
                     self.useSinkIntoWaterEffect(self, delta);
@@ -611,9 +617,9 @@ var CZombies = NewO({
             o.R:行;o.pixelTop:顶部Y坐标;o.X:左边X坐标（相对于FightingScene）;o.ZX:确定僵尸位置的点X坐标，通常是AttackedLX
             o.AttackedLX,o.AttackedRX:僵尸左右受攻击点判定坐标;o.beAttackedPointL,o.beAttackedPointR:僵尸左右受攻击点判定坐标距离o.X的偏移距离，受攻击点判定坐标即可根据o.X和偏移距离计算得出
             */
-            let len = 0,
-                o = this,
-                ArR = [];
+            let len = 0;
+            let o = this;
+            let ArR = [];
             pro.ZX = pro.AttackedLX = AppearX;
             pro.X = pro.ZX - pro.beAttackedPointL;
             pro.AttackedRX = pro.X + pro.beAttackedPointR;
@@ -682,9 +688,9 @@ var CZombies = NewO({
         },
         //特殊诞生事件，传递自定义的坐标，比如从坟墓出生
         CustomBirth(R, C, delayT, clipH) {
-            const self = this,
-                bottomY = GetY(R) + self.GetDY(), //僵尸脚部坐标=当前行下边缘坐标+（-自定义向上偏移）
-                pixelTop = bottomY - self.height, //僵尸图像顶端坐标=僵尸脚部坐标-僵尸图片高度
+            const self = this;
+            const bottomY = GetY(R) + self.GetDY(); //僵尸脚部坐标=当前行下边缘坐标+（-自定义向上偏移）
+            const pixelTop = bottomY - self.height, //僵尸图像顶端坐标=僵尸脚部坐标-僵尸图片高度
                 id = self.id = "Z_" + Math.random(),
                 beAttackedPointL = self.beAttackedPointL,
                 beAttackedPointR = self.beAttackedPointR;
@@ -1989,6 +1995,8 @@ oBalloonZombie = InheritO(OrnNoneZombies, {
     CardStars: 1,
     getShadow: self => `left:${self.beAttackedPointL - 20}px;top:${self.height-30}px;`,
     HeadTargetPosition: [{x: 67,y: 186}],
+    // 从水里冒出来的气球僵尸不用调整EleBody的top值
+    extraDivingDepth: -oWaterPath.defaultDepth,
     getCharredCSS(self, R, C) {
         return self.isPrivateFlying ? {
             left: 6,
@@ -2026,7 +2034,14 @@ oBalloonZombie = InheritO(OrnNoneZombies, {
         OrnNoneZombies.prototype.BirthCallBack(self);
     },
     PrivateDie(self) {
-        self.LivingArea === 2 && self.SetWater(oWaterPath.defaultDepth, null, null, null, false);
+        const proto = CZombies.prototype;
+        if (self.LivingArea === 2) {
+            self.extraDivingDepth = 0;
+            self.setWaterStyle_middleWare = proto.setWaterStyle_middleWare;
+            self.setWaterStyle = proto.setWaterStyle;
+            self.useSinkIntoWaterEffect = proto.useSinkIntoWaterEffect;
+            self.SetWater(oWaterPath.defaultDepth, null, null, null, false);
+        }
     },
     GoingDieHead(id, PicArr, self) {
         return CZombies.prototype.GoingDieHeadNew(id, PicArr, self, {
@@ -2109,7 +2124,8 @@ oBalloonZombie = InheritO(OrnNoneZombies, {
         const R = self.R;
         const C = GetC(Math.floor(self.ZX) - (self.beAttackedPointR - self.beAttackedPointL) / 2 * (self.WalkDirection * 2 - 1));
         const isInWater = oGd.$GdType[R][C] === 2;
-        let targetTop = oGd.$WaterDepth[R][C] + self.extraDivingDepth;
+        let targetTop = 
+            oGd.$WaterDepth[R][C] + (self.extraDivingDepth = CZombies.prototype.extraDivingDepth);
         eleBody.src = self.PicArr[self.JumpGif];
         self.isAttacking = 2;
         self.isFloating = false;
@@ -5071,9 +5087,13 @@ oThiefZombie = InheritO(OrnNoneZombies, {
         let top = self.pixelTop = GetY(R) + self.GetDY() - self.height; //计算僵尸顶部坐标
         let zIndex = self.zIndex = 3 * R + 1;
         self.zIndex_cont = Math.round(self.pixelTop + self.height);
-        self.ZX = self.AttackedLX = (GetX(C) - 20) - (self.beAttackedPointR - self.beAttackedPointL) * 0.5;
-        self.X = self.ZX - self.beAttackedPointL;
-        self.AttackedRX = self.X + self.beAttackedPointR;
+        // 计算僵尸水平坐标
+        let AttackedLX = self.AttackedLX = (GetX(C) - 20) - (self.beAttackedPointR - self.beAttackedPointL) * 0.5;
+        self.AttackedLX = AttackedLX;  // 左攻击点
+        self.X = AttackedLX - self.beAttackedPointL;  // 贴图坐标
+        self.AttackedRX = self.X + self.beAttackedPointR; // 右攻击点
+        // 因为盗贼僵尸是向右跑的，所以ZX应当以AttackedRX为准
+        self.ZX = self.AttackedRX;
         if (self.delayT = delayT) {
             self.getStatic({
                 time: Infinity,
@@ -5085,7 +5105,7 @@ oThiefZombie = InheritO(OrnNoneZombies, {
         }
         return self.getHTML(id, self.X, top, self.zIndex_cont, "none", "auto", self.GetDTop, self.PicArr[self.NormalGif]);
     },
-    Birth(json = {}) { //唤醒僵尸，注册$Z和oZ
+    Birth(json = {}, isCustomizedBirth = false) { //唤醒僵尸，注册$Z和oZ
         let self = this;
         if (!json.dont_set_original_value) { //不设置原始数据，例如OAttack,OSpeed之类，否则默认备份OAttack,OSpeed
             self.OAttack = self.Attack;
@@ -5107,12 +5127,12 @@ oThiefZombie = InheritO(OrnNoneZombies, {
                 setTimeout(self.RemoveDynamicPic.bind(self), 1);
             }
         });
-        self.BirthCallBack(self);
+        self.BirthCallBack(self, isCustomizedBirth);
     },
     CustomBirth(R, C, delayT, clipH) {
         return this.prepareBirth(delayT, R, C);
     },
-    BirthCallBack(self) {
+    BirthCallBack(self, isCustomizedBirth) {
         let delayT = self.delayT;
         let id = self.id;
         let ele = self.Ele = $(id);
@@ -5121,38 +5141,47 @@ oThiefZombie = InheritO(OrnNoneZombies, {
         if (delayT) {
             oSym.addTask(delayT, () => {
                 self.freeStaticEffect(self, "SetBody");
-                $Z[id] && oSym.Timer && callback();
+                $Z[id] && oSym.Timer && self.privateBirthCallBack(self, ele, isCustomizedBirth);
             });
         } else {
-            callback();
+            self.privateBirthCallBack(self, ele, isCustomizedBirth);
         }
-        function callback() {
-            oAudioManager.playAudio("ThiefZombie");
-            self.EleBody.src = self.PicArr[self.Drop1Gif];
-            SetBlock(ele);
-            // 不加这句切换动图时会出现神秘闪烁：Drop2Gif突然重新播放，再立即切到NormalGif
-            new Image().src = self.PicArr[self.NormalGif];
-            // 检测叶子保护伞
-            self.checkUmbrella(self.originalC, 19.9);
-            oSym.addTask(20, function() {
-                if (!$Z[id]) return;
-                self.isFloating = 0;
-                self.EleBody.src = self.PicArr[self.Drop2Gif];
-                oSym.addTask(116, function() {
-                    if (!$Z[id]) return;
-                    let [R, C] = [self.R, self.originalC];
-                    self.isAttacking = 0;
-                    self.beAttacked = 1;
-                    self.Altitude = 1;
-                    self.HP = self.oHP;
-                    self.EleBody.src = self.PicArr[self.NormalGif];
-                    self.CrushDie = CZombies.prototype.CrushDie;
-                    if (oGd.$GdType[R][C] === 2) {
-                        self.SetWater(oGd.$WaterDepth[R][C], null, null, null, false);
-                    }
-                });
+    },
+    privateBirthCallBack(self, ele, isCustomizedBirth) {
+        let [R, C] = [self.R, self.originalC];
+        let isInWater = oGd.$GdType[R][C] === 2;
+        let eleBody = self.EleBody;
+        let targetTop = oGd.$WaterDepth[R][C] + self.extraDivingDepth;
+        oAudioManager.playAudio("ThiefZombie");
+        self.EleBody.src = self.PicArr[self.Drop1Gif];
+        SetBlock(ele);
+        // 不加这句切换动图时会出现神秘闪烁：Drop2Gif突然重新播放，再立即切到NormalGif
+        new Image().src = self.PicArr[self.NormalGif];
+        // 检测叶子保护伞
+        self.checkUmbrella(self.originalC, 19.9);
+        oSym.addTask(20, function() {
+            if (self.HP <= 0) return;
+            self.isFloating = 0;
+            self.EleBody.src = self.PicArr[self.Drop2Gif];
+            oSym.addTask(116, function() {
+                if (self.HP <= 0) return;
+                self.isAttacking = 0;
+                self.beAttacked = 1;
+                self.Altitude = 1;
+                self.HP = self.oHP;
+                self.EleBody.src = self.PicArr[self.NormalGif];
+                self.CrushDie = CZombies.prototype.CrushDie;
             });
-        }
+            if (isInWater && !isCustomizedBirth) {
+                oEffects.Animate(eleBody, {
+                    top: targetTop + 'px',
+                    clip: `rect(0px, auto, ${self.height - targetTop}px, 0px)`,
+                }, 1, 'linear');
+                self.setWaterStyle_middleWare();
+                self.useSinkIntoWaterEffect(self, targetTop);
+                self.SetWater(targetTop, R, C, null, false, false);
+            }
+        });
     },
     checkUmbrella(targetC, delayT) {
         const self = this;
@@ -5169,7 +5198,7 @@ oThiefZombie = InheritO(OrnNoneZombies, {
     DieByUmbrella(self) {
         delete $Z[self.id];
         oEffects.Animate(self.EleBody, {
-            top: - self.height - self.pixelTop,
+            top: - self.height - self.pixelTop + 'px',
         }, 0.4, "ease-in", self.DisappearDie.bind(self));
     },
     JudgeAttack(stepRatio=1) {
@@ -5272,7 +5301,8 @@ oThiefZombie = InheritO(OrnNoneZombies, {
         self.EleBody.src = self.PicArr[self.StealGif];
         let [R, C] = [r ? r : self.R, c ? c : GetC(self.ZX)];
         const data = oGd.$;
-        let val = -99999;
+        let val = -Infinity;
+        let selectPKind = self.ForcePKind;
         let selectIndex = `${R}_${C}_${self.ForcePKind}`;
         if (self.ForcePKind === -1) {
             for (let i = 0; i <= PKindUpperLimit; i++) {
@@ -5281,11 +5311,13 @@ oThiefZombie = InheritO(OrnNoneZombies, {
                     continue;
                 }
                 let obj = data[index];
-                let plantValue = (obj.Attack ? obj.Attack * 180 : 180) * obj.HP * obj.SunNum * (obj.C / 5 + 1) *
-                    (obj.CanSpawnSun ? 15 : 1);
-                if (plantValue > val) {
+                let plantValue = (obj.Attack ? obj.Attack * 180 : 180) * obj.HP * obj.SunNum * (obj.C / 5 + 1) * (obj.CanSpawnSun ? 15 : 1);
+                // 如果盗贼僵尸当前锁定的是花盆类植物，且上面有其他植物
+                // 则一定不偷花盆，换作偷其他植物
+                if (plantValue > val || selectPKind === 0) {
                     val = plantValue;
                     selectIndex = index;
+                    selectPKind = i;
                 }
             }
         }
@@ -7354,7 +7386,7 @@ oBeetleCarZombieSP = InheritO(oBeetleCarZombie, {
     Release(self, speed) {
         const id = self.id;
         const X = self.X;
-        self.changingX += 1; //unlike normal beetle car, changingX does not depend on distance moved
+        self.changingX += 1; //every time this function is called, changingX gets increased
         if (self.changingX >= 80 && self.skilltime < 3 && speed < 3) { //once changingX reaches 80 and the boss isn't fully charging, activate skill and reset changingX
             self.isReleasing = 1;
             self.changingX = 0;
@@ -7459,8 +7491,7 @@ oGargantuarSP = InheritO(oGargantuar, {
     CName: "市郊矮人",
     CardStars: 5,
     HP: 10000,
-    changingX: 0, //similar to oBeetleCarZombie's changingX
-    alivetime: 0, //the longer this enemy is alive, the higher this value is
+    changingX: 0,
     height: 330,
     getShadow: _ => "left:220px;top:295px;transform:scale(1.5);",
     getFreezeCSS: _ => 'left:220px;top:308px;',
@@ -7541,7 +7572,6 @@ oGargantuarSP = InheritO(oGargantuar, {
     GoLeft(o, R, arR, i, stepRatio = 1) { //向左走
         let Speed = o.getRealSpeed(o, stepRatio);
         let hookKey = 1;
-        o.alivetime++;
         if (o.isNotStaticed()) { //如果僵尸没有处于冰冻或者等待出场状态
             //未临死，未攻击，进行攻击判断
             !o.isAttacking && !o.isGoingDie && o.JudgeAttack(stepRatio);
@@ -7569,7 +7599,6 @@ oGargantuarSP = InheritO(oGargantuar, {
         let Speed;
         let rV = 1;
         let id = o.id;
-        o.alivetime++;
         if (o.isNotStaticed()) {
             //未临死，未攻击，进行攻击判断
             !o.isGoingDie && !o.isAttacking && o.JudgeAttack(stepRatio);
@@ -7594,7 +7623,6 @@ oGargantuarSP = InheritO(oGargantuar, {
         let rV = 1;
         let newR = o.R + 1;
         let id = o.id;
-        o.alivetime++;
         if (o.isNotStaticed()) {
             !o.isGoingDie && !o.isAttacking && o.JudgeAttack(stepRatio);
             if (!o.isAttacking) {
@@ -7621,7 +7649,6 @@ oGargantuarSP = InheritO(oGargantuar, {
         let rV = 1;
         let newR = o.R - 1;
         let id = o.id;
-        o.alivetime++;
         if (o.isNotStaticed()) {
             !o.isGoingDie && !o.isAttacking && o.JudgeAttack(stepRatio);
             if (!o.isAttacking) {
@@ -7754,13 +7781,13 @@ oGargantuarSP = InheritO(oGargantuar, {
                                     arrz = arrz.concat(oZ.getArZ(leftBorder, rightBorder, floorR));
                                 } while (floorR++ < ceilingR);
 
-                                for (let i = 1; i <= 3+(self.alivetime<800 ? 0 : Math.floor(self.alivetime/800)); i++) { //gives hit shields to 3 random zombies in range
+                                for (let i = 1; i <= 3; i++) { //gives hit shields to 3 random zombies in range
                                     let success = 0;
                                     while (success < 1 && arrz) {
                                         let rand = Math.floor(Math.random() * arrz.length),
                                             zombie = arrz[rand];
                                         if (!zombie) break;
-                                        if (!zombie.isPuppet && zombie.ShieldHP == 0 && zombie.EName != "oGargantuarSP") {
+                                        if (!zombie.isPuppet && zombie.EName != "oGargantuarSP") {
                                             zombie.getShield(zombie, 10);
                                             success++;
                                         }
@@ -7792,14 +7819,11 @@ oGargantuarSP = InheritO(oGargantuar, {
                             }
                             oGd.killAll(R, C, 'JNG_TICKET_Gargantuar');
                             let time = 0;
-                            let summonarr = [oZombie, oSkatingZombie, oImp, oSadakoZombie, oBalloonZombie];
-                            if (self.alivetime >= 900) {summonarr = [oConeheadZombie, oNewspaperZombie, oCigarZombie, oSculptorZombie, oMembraneZombie]}
-                            else if (self.alivetime >= 1600) {summonarr = [oBucketheadZombie, oPushIceImp, oStrollZombie, oCaskZombie, oMakeRifterZombie]}
                             for (let row = (R == 1 ? R : R - 1); row <= (R == oS.R ? R : R + 1); row++) {
                                 let col = [C - 1, C, C + 1].shuffle();
                                 for (let i = 0; i < 2; i++) {
                                     if ((Math.random() > 0.5 || row == R + 1) && time < (C>3?4:2)) {
-                                        let z = PlaceZombie(summonarr.random(), row, col[i]);
+                                        let z = PlaceZombie([oZombie, oSkatingZombie, oImp, oSadakoZombie, oBalloonZombie].random(), row, col[i]);
                                         z.ShieldHP += 5;
                                         time++;
                                     }
@@ -8144,26 +8168,11 @@ oJalapenoZombie = InheritO(oZombie, {
     ChkCell_GdType(self) {
         let R = self.R;
         let C = GetC(self.ZX - (self.beAttackedPointR - self.beAttackedPointL) / 2 * (self.WalkDirection * 2 - 1));
-        if ($Z[self.id] && !self.isGoingDie && !self.isAttacking && self.canBoom && C <= 6) {
+        if (self.HP > 0 && !self.isGoingDie && !self.isAttacking && self.canBoom && C <= 6) {
             self.Boom(self, R);
             return;
         }
-        let gdType = oGd.$GdType[R][C];
-        let oldGdType = self.LivingArea;
-        if (oldGdType != gdType) {
-            self.LivingArea = gdType;
-            if (gdType == 1 || gdType == 3) {
-                if (oldGdType == 2 && self.Altitude != 3) {
-                    self.SetWater(0, R, C, oldGdType);
-                    // 一旦出水，僵尸不再受到水道规则约束
-                    self.ChkActs = self[self.FangXiang];
-                }
-            } else if (gdType == 2) {
-                if (oldGdType !== 2 && self.Altitude != 3) {
-                    self.SetWater(oGd.$WaterDepth[R][C] + self.extraDivingDepth, R, C, oldGdType);
-                }
-            }
-        }
+        return CZombies.prototype.ChkCell_GdType.call(self, self);
     },
     GoingDieHead() {},
     getSlow(self, keepTime = 1000) {
