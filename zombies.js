@@ -7354,7 +7354,7 @@ oBeetleCarZombieSP = InheritO(oBeetleCarZombie, {
     Release(self, speed) {
         const id = self.id;
         const X = self.X;
-        self.changingX += 1; //every time this function is called, changingX gets increased
+        self.changingX += 1; //unlike normal beetle car, changingX does not depend on distance moved
         if (self.changingX >= 80 && self.skilltime < 3 && speed < 3) { //once changingX reaches 80 and the boss isn't fully charging, activate skill and reset changingX
             self.isReleasing = 1;
             self.changingX = 0;
@@ -7459,7 +7459,8 @@ oGargantuarSP = InheritO(oGargantuar, {
     CName: "市郊矮人",
     CardStars: 5,
     HP: 10000,
-    changingX: 0,
+    changingX: 0, //similar to oBeetleCarZombie's changingX
+    alivetime: 0, //the longer this enemy is alive, the higher this value is
     height: 330,
     getShadow: _ => "left:220px;top:295px;transform:scale(1.5);",
     getFreezeCSS: _ => 'left:220px;top:308px;',
@@ -7540,6 +7541,7 @@ oGargantuarSP = InheritO(oGargantuar, {
     GoLeft(o, R, arR, i, stepRatio = 1) { //向左走
         let Speed = o.getRealSpeed(o, stepRatio);
         let hookKey = 1;
+        o.alivetime++;
         if (o.isNotStaticed()) { //如果僵尸没有处于冰冻或者等待出场状态
             //未临死，未攻击，进行攻击判断
             !o.isAttacking && !o.isGoingDie && o.JudgeAttack(stepRatio);
@@ -7567,6 +7569,7 @@ oGargantuarSP = InheritO(oGargantuar, {
         let Speed;
         let rV = 1;
         let id = o.id;
+        o.alivetime++;
         if (o.isNotStaticed()) {
             //未临死，未攻击，进行攻击判断
             !o.isGoingDie && !o.isAttacking && o.JudgeAttack(stepRatio);
@@ -7591,6 +7594,7 @@ oGargantuarSP = InheritO(oGargantuar, {
         let rV = 1;
         let newR = o.R + 1;
         let id = o.id;
+        o.alivetime++;
         if (o.isNotStaticed()) {
             !o.isGoingDie && !o.isAttacking && o.JudgeAttack(stepRatio);
             if (!o.isAttacking) {
@@ -7617,6 +7621,7 @@ oGargantuarSP = InheritO(oGargantuar, {
         let rV = 1;
         let newR = o.R - 1;
         let id = o.id;
+        o.alivetime++;
         if (o.isNotStaticed()) {
             !o.isGoingDie && !o.isAttacking && o.JudgeAttack(stepRatio);
             if (!o.isAttacking) {
@@ -7749,13 +7754,13 @@ oGargantuarSP = InheritO(oGargantuar, {
                                     arrz = arrz.concat(oZ.getArZ(leftBorder, rightBorder, floorR));
                                 } while (floorR++ < ceilingR);
 
-                                for (let i = 1; i <= 3; i++) { //gives hit shields to 3 random zombies in range
+                                for (let i = 1; i <= 3+(self.alivetime<800 ? 0 : Math.floor(self.alivetime/800)); i++) { //gives hit shields to 3 random zombies in range
                                     let success = 0;
                                     while (success < 1 && arrz) {
                                         let rand = Math.floor(Math.random() * arrz.length),
                                             zombie = arrz[rand];
                                         if (!zombie) break;
-                                        if (!zombie.isPuppet && zombie.EName != "oGargantuarSP") {
+                                        if (!zombie.isPuppet && zombie.ShieldHP == 0 && zombie.EName != "oGargantuarSP") {
                                             zombie.getShield(zombie, 10);
                                             success++;
                                         }
@@ -7787,11 +7792,14 @@ oGargantuarSP = InheritO(oGargantuar, {
                             }
                             oGd.killAll(R, C, 'JNG_TICKET_Gargantuar');
                             let time = 0;
+                            let summonarr = [oZombie, oSkatingZombie, oImp, oSadakoZombie, oBalloonZombie];
+                            if (self.alivetime >= 900) {summonarr = [oConeheadZombie, oNewspaperZombie, oCigarZombie, oSculptorZombie, oMembraneZombie]}
+                            else if (self.alivetime >= 1600) {summonarr = [oBucketheadZombie, oPushIceImp, oStrollZombie, oCaskZombie, oMakeRifterZombie]}
                             for (let row = (R == 1 ? R : R - 1); row <= (R == oS.R ? R : R + 1); row++) {
                                 let col = [C - 1, C, C + 1].shuffle();
                                 for (let i = 0; i < 2; i++) {
                                     if ((Math.random() > 0.5 || row == R + 1) && time < (C>3?4:2)) {
-                                        let z = PlaceZombie([oZombie, oSkatingZombie, oImp, oSadakoZombie, oBalloonZombie].random(), row, col[i]);
+                                        let z = PlaceZombie(summonarr.random(), row, col[i]);
                                         z.ShieldHP += 5;
                                         time++;
                                     }
