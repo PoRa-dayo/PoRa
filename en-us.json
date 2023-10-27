@@ -1,4 +1,4 @@
-{
+{window['$__language_Array__']={
     "cfafff8da65228975bf3f639be3d3280": "Cheat menu temporarily unavailable",
     "8e222991d9296670a856ba12f5eefa9b": "(ﾟ⊿ﾟ)ﾂ",
     "64103ecb1c6c1fbac876150db2afca5c": "An error has occured!",
@@ -2772,7 +2772,7 @@
     "df984d1c59e8a2df47a7cda07cac0e2e": "Help you behind the scenes, huh...",
     "efe14fca6dfc6ca22c609d4c1a640e36": "【Stopped listening to Character_Zomboss' conversation】But he only does\nthings in the dark, and even instructs others to do things...",
     "0c545fc08a0787fed958819504c9ad4a": "Tch, I'll pull him out of that private program one day...",
-    "65f0d8cd70517b635206f194b554dc26": "Then, everything here... all those... immature... stupid pricks... who betrayed\nme... harassed me... I'll...",
+    "65f0d8cd70517b635206f194b554dc26": "Then, everything here... all those... immature... stupid pricks... who\nbetrayed me... harassed me... I'll...",
     "b894277917b59aa657f4155dce1217f0": "...Burn them to ashes...",
     "4822ccff721b3594a6595c683e4beebe": "Place the plant to the left of the bowling line!",
     "c71886de19234833cf53c8b979ca2ff5": "可是为什么……到底为什么……",
@@ -6139,4 +6139,4 @@
     "daa7d9379764bf90225413cd4f6edd8d": "Level uploaded successfully!",
     "e67e3620f0a00f7d6df7b591d15055ea": "The level has already been uploaded, or there is an identical level on the cloud.",
     "aa593d1ef99a40ac4bb8a9e67711ac45": "Back"
-}
+};};
