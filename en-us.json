@@ -1,4 +1,4 @@
-{window['$__language_Array__']={
+{
     "cfafff8da65228975bf3f639be3d3280": "Cheat menu temporarily unavailable",
     "8e222991d9296670a856ba12f5eefa9b": "(ﾟ⊿ﾟ)ﾂ",
     "64103ecb1c6c1fbac876150db2afca5c": "An error has occured!",
@@ -6139,4 +6139,4 @@
     "daa7d9379764bf90225413cd4f6edd8d": "Level uploaded successfully!",
     "e67e3620f0a00f7d6df7b591d15055ea": "The level has already been uploaded, or there is an identical level on the cloud.",
     "aa593d1ef99a40ac4bb8a9e67711ac45": "Back"
-};};
+}
