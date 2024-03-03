@@ -1641,7 +1641,7 @@
     "37e17b26eba28010a979cdbddac5b865": "Speed Tile",
     "31a64cd72910e47ecd50010c3c6bd37b": "Speeds up the zombie temporarily when stepped on.",
     "8f2c5f4c43d23b54e507afb6b7fe9e7c": "Waterway flow tile",
-    "677a2fdd0a32b1fc2544d2dcb3559dfa": "Generate a water flow from itself to other waterway tiles (not including waterway flow tiles) connected to it. Zombies will follow water flows as long as they never step out of water in the playable area.",
+    "677a2fdd0a32b1fc2544d2dcb3559dfa": "Generate a water flow from itself to other waterway tiles (not including waterway flow tiles) connected to it. Zombies will follow water flows as long as they never step out of water.",
     "db5ed0a32b4302046ff936c101246ac9": "Waterway tile",
     "97c118a73b0629c259085dcd46cc4580": "Does not have water flows initially. Diverts water flows received to other waterway tiles (not including waterway flow tiles) connected to it. When two water flows meet, keep the stronger one, and keep both if they are of the same strength.",
     "ae2922b6eb0ea0e15cf1fdc090543007": "Are you sure you want to quit? Your unsaved progress will be lost.",
@@ -4529,7 +4529,7 @@
     "a494d8a08d5c77b9a8f7144d53f5f1f4": "Nostalgic Mirage Day 3",
     "fca9791d403c7e1c2781c3bef199adb7": "Nostalgic Mirage Day 4",
     "d19fd430a5b1bb440f466128b7fb6e76": "Nostalgic Mirage Day 5",
-    "36ffb495286ac9b4169c968fee4b172b": "Zombies will follow water flows as long as they never step out of water in the playable area",
+    "36ffb495286ac9b4169c968fee4b172b": "Zombies will follow water flows as long as they never step out of water",
     "7523f9f89139fbfc44ca164fd969723d": "Nostalgic Mirage Day 6",
     "e263bc03129bfdac8688f7c3bfcc48b2": "Unlocked",
     "5acc190b232383fe411b3f4456c5bca6": [
