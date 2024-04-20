@@ -1623,9 +1623,9 @@
     "fe6b6ab5044b5bf6996d479e6cc7ad13": "Crystal",
     "1bafa5bf6bd5a2507742a46953abde76": "A blocker that occasionally steals collected sun.",
     "f2c14a2d8b61f8a77cd61ef75f189ebf": "Tombstone",
-    "cd47a3fc0fc64e722a45fa5ccca70226": [
-        "Can only be removed by certain means. May give out rewards when destroyed. (",
-        " to switch types)"
+    "41fd8839f61407ad02397210e3f5fd06": [
+        "墓碑仅能在夜间被放置。只能通过特定方式移除。摧毁后可能会奖励。（",
+        "切换类型）"
     ],
     "cebfc81d06cd9ec1326129ef537777e8": "Long press",
     "083a85b04669fcca2fb05a765732baf7": "Right-click",
