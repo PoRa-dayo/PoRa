@@ -62,10 +62,10 @@
     "e7b5645a2042b79228b11d9404632058": "Please bring at least one plant.",
     "e50ac3832f109d7c0b4e6ed1167259e3": "Are you sure you want to bring Imitater only? It is not going to work at all.",
     "3704695fb154c4e95e674e48ce44fc7e": "Are you sure you don't want to bring any sun producers?",
-    "1a33ec9bc02f3966d66afe0b198c9b68": "您没有带任何对付「门神僵尸」的植物。您确定吗？",
+    "1a33ec9bc02f3966d66afe0b198c9b68": "You haven't brought any counters against 「Spirit Guardian Zombie」. Continue?",
     "60f4d5ce5a7d1c085bcb9bf3ea0f270b": "<br><span style=\"color:#F00\">Recharging...</span>",
     "265c95596108d197ad7452b4b2b3ff82": "<br><span style=\"color:#F00\">Not enough sun!</span>",
-    "4638c497b2082819f5f562dac08462e0": "请把坚果放在分界线左侧！",
+    "4638c497b2082819f5f562dac08462e0": "Place the plant to the left of the bowling line!",
     "b111bd4e7d0cfef528a39240f66972ba": "Ready...",
     "51b864cd94837d49493573d3c15a1450": "Set...",
     "c130f856ce35cdff29aaa7fe1d010126": "PLANT!",
@@ -95,7 +95,7 @@
     "c0f32f891a96f21fce8af8b4556f5836": "Generating 2,147,483,647 lines of dialogues...",
     "39e48d7169def8d11f6bfab216eb7455": "Star",
     "d28efa2f99e9c27571354eccb0991caf": "Stars are the symbol of success. Go ahead and collect more stars!",
-    "a36de212235eee1f019cd1ad13dd88a8": "请把坚果放在分界线左侧！",
+    "a36de212235eee1f019cd1ad13dd88a8": "Place the plant to the left of the bowling line!",
     "e52c5a8bf3b02da9f3f513bdefdce2fe": "Ready...",
     "dac2d84680165b0590c2472202a19292": "Set...",
     "b187d88983c4a474437d1fe596920a89": "PLANT!",
@@ -352,8 +352,8 @@
     "8cf099779ba73823602ceaf1dc177e23": "Bamboom will explode in a 3x3 area once the zombies get close!<br>Enhancement: cooldown reduced.",
     "0d7bb50f38c2dfa54e005684cdf1370b": "Cooldown Reduction - Doom-shroom",
     "cb5714db8ab023486dd1bb318a3a3bb4": "Destroys everything in a large area.<br/>Enhancement: cooldown reduced.",
-    "63a161b7ea47547f4d676341ee69930d": "Range Expanded - 毁灭菇",
-    "aef7d970368f8c8fc523b60b5e49ee27": "可以对僵尸造成大规模打击, 但冷却时间却很长<br>优化：Range expanded.",
+    "63a161b7ea47547f4d676341ee69930d": "Range Expanded - Doom-shroom",
+    "aef7d970368f8c8fc523b60b5e49ee27": "Destroys everything in a large area.<br/>Enhancement: range expanded.",
     "9b45f134edb63efc637ec3abf58b162e": "None",
     "13298db74528db611d95e1f3b3d6980b": "Slow",
     "4276eb927f002813d8b5b1fb62d62a49": "None",
@@ -1610,8 +1610,8 @@
     "67f1f93fd13aaf606eb5e689acbca0dc": "If a zombie consumes the flowers, instantly fail the level.",
     "349d9418fff143badf37a58af175cda0": "Mold colonies",
     "2d7f29f184c7df621dd774b613d3848d": "Cannot be planted on.",
-    "f72de6b1f6fbd6de09b898df066cc917": "荆棘玫瑰",
-    "5017af3e03e0dfb290da0f929cb48c93": "向临近一行之前方与本行之后方发射尖刺，尖刺可以至多攻击三个目标，种于攻击类植物之上则继承其攻击力与血量， 种在墓碑之上时尖刺可以侵蚀目标，且会随着墓碑在一段时间后消失。",
+    "f72de6b1f6fbd6de09b898df066cc917": "Prickly Rose",
+    "5017af3e03e0dfb290da0f929cb48c93": "Fires piercing thorns above, below and behind her that can hit up to 3 targets. Plant on plants to inherit their attack and HP. Plant on tombstones to erode targets but disappear after some time.",
     "93c63b591a01ed55dbd2d05a0f1196df": "Fruit basket",
     "134d9352a513cf28a4b2f51945e59fc0": "An indestructible blocker that blocks all straight-shot projectiles.",
     "94ef0a1d6af3f6429a39c8c6463c4b0a": "Endangered tile",
@@ -1625,7 +1625,7 @@
     "f2c14a2d8b61f8a77cd61ef75f189ebf": "Tombstone",
     "cd47a3fc0fc64e722a45fa5ccca70226": [
         "Can only be removed by certain means. May give out rewards when destroyed. (",
-        " to switch type)"
+        " to switch types)"
     ],
     "cebfc81d06cd9ec1326129ef537777e8": "Long press",
     "083a85b04669fcca2fb05a765732baf7": "Right-click",
@@ -1638,10 +1638,10 @@
         "Speeds up (green) or stops (red) the zombies' advance. A new traffic light on the same tile will replace the old one. (",
         " to switch colors)"
     ],
-    "b5c9b533b8dc63f738a34a3136445724": "传送门",
+    "b5c9b533b8dc63f738a34a3136445724": "Portal",
     "6d14c288b25bd2ad9064f544a58bd356": [
-        "将沿直线发射的子弹与进入其中的僵尸传送到同色的其他传送门。（",
-        "切换颜色）"
+        "Teleports straight-shot projectiles and zombies that approach it to another portal of the same color. (",
+        " to switch colors)"
     ],
     "dfd9c773ac7b8666c7909c08eefb82e0": "Upward slider tile",
     "3a606fead6422b3577d02a6874a64208": "Moves the zombie upwards when stepped on.",
@@ -1731,8 +1731,8 @@
     "3608b0f9213c84152c6e1eafc09a067c": "Back",
     "c1fefba6f57382fcb5a8cd62df56b9c6": "Long press for more info.",
     "e6c59fb83cdddb4d927a41776a470261": [
-        "保龄球线<br>限制坚果保龄球类植物只有可能性放置在线的左边。点击保龄球线来移动它。",
-        "保龄球线来去掉保龄球线。"
+        "Bowling Line<br>Prevents placement of bowling plants to the right of the line. Click the line to move it. ",
+        " the line to remove it."
     ],
     "0d7ca8fbba64553c062c1c256ded3b89": "Edit",
     "e2b15a18c7cf93595f7eb4a31d289084": "Delete",
@@ -1800,8 +1800,8 @@
     "8420b34edc124d377e994c9110857a29": "Zombie waves in Escalation™ are not completely filled in!",
     "6fcfd4861e1f393febe6945e4ec16deb": "Waterway",
     "6c5257673e0f11be07086630e05a524e": "Waterway flow",
-    "57a757f142ae435257449d926af7f33a": "危险区域I",
-    "a653d729e51b0be21328a23d1557f7d6": "你感觉敌人好像正变得更强……",
+    "57a757f142ae435257449d926af7f33a": "Danger Zone I",
+    "a653d729e51b0be21328a23d1557f7d6": "You feel as if the enemies are getting stronger...",
     "144354511806b8a52b9a05ea2ae44737": "Danger Zone V",
     "e86c683e94466f5b35a24b59e6774980": "Danmaku Fantasy - Night 1",
     "c5bbb8a626cd66ff334de3def0d106e6": "Aha! There's glimmering light in the distance! It must be...",
@@ -2333,7 +2333,7 @@
         ": "
     ],
     "a74bcd48f2889938256b0f54806bfd08": "Befrozenia's Holiday",
-    "e2e9da92b73932fd02b612eca8224e50": "浓雾弃都第十八夜-镜像",
+    "e2e9da92b73932fd02b612eca8224e50": "Foggy City Day 18 - Mirror",
     "79d09143250270a10af6a790de906a83": "你以为这就完了吗？我们僵尸可是要使出浑身解数的。",
     "9e58048d373c12e3257f4299b81e6b51": "就让你观摩观摩更多超现代科技吧！",
     "84ab795ee623bb7975e1201ef05f62eb": "这回，我把这些死物像僵尸一样‘死而复生’啦！",
