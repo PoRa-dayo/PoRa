@@ -33,9 +33,9 @@
         "! \nIt will affect the normal operation of the game, please take a screenshot in time and send it to github or our Discord!"
     ],
     "9c48e8d1a39356efd727b573c1366063": "：",
-    "0be5b12d7ca822a584ace850ac38bbbf": "<div style=\"padding-top:30px;\"></div>\n                <div id=\"InLvltextLeft\">僵尸：</div>\n                <div id=\"InLvlzombie\"></div>\n                <div id=\"InLvltextLeft\">小心：</div>\n                <div id=\"InLvlwarnings\"></div>",
-    "84bc42f4d5472e84aeab2f03d42ee601": "做好一切准备。没错，一切。",
-    "4fd245fec59b250507e1bbe25ae3d18a": "没有什么值得注意的~",
+    "0be5b12d7ca822a584ace850ac38bbbf": "<div style=\"padding-top:30px;\"></div>\n                <div id=\"InLvltextLeft\">Zombies:</div>\n                <div id=\"InLvlzombie\"></div>\n                <div id=\"InLvltextLeft\">Caution:</div>\n                <div id=\"InLvlwarnings\"></div>",
+    "84bc42f4d5472e84aeab2f03d42ee601": "Prepare for everything. Yes, everything.",
+    "4fd245fec59b250507e1bbe25ae3d18a": "Nothing noteworthy.",
     "f427b60d5ebbc9803e4280ad3fd6d0d2": "Carrying this plant in your deck will increase the difficulty, are you sure?",
     "96922b1b075633116839cab7596bdabc": [
         "<br>Cooldown: ",
@@ -58,7 +58,7 @@
         "th Seed Slot for non-Mirror Adventure levels?"
     ],
     "578667165588428bbf3bd5758bf8ebfd": "You don't have enough coins!",
-    "6182f0bb94ce7fd43827e8920181f572": "波",
+    "6182f0bb94ce7fd43827e8920181f572": " waves",
     "63fbe4bbbfd0cc3b0e4398d70da46d74": [
         "Are you sure you don't want to use ",
         "? The level will be harder without it."
@@ -3429,7 +3429,7 @@
     "68d40f0cfbfa7c9f8be4a84a65db7428": "Daytime again... Though I sense that the game's space here is starting to get\nunstable too.",
     "27a593120cd34a448133f9f0879d18b2": "And all those crystals! This seems like a perfect job for my newest plant,\nMugfrost!",
     "3115312111bcdd0500825c0f3df837a0": "When he's attacked, he'll transform into a freezing ball that can pierce multiple\nenemies!",
-    "981676a5530aee6243d8daff856938a2": "受到损伤时，艾蒿会发射一颗会被传送的直线穿透子弹，以递减的攻击力对每个目标造成伤害！输入兑换码#AnyMethodToSaveMeAfterJobleaves获取百分之七十五的优惠！",
+    "981676a5530aee6243d8daff856938a2": "Though the ball's damage gets decreased each time it hits something. Whoo,\nenergy exchange mechanics.",
     "fe9efdfc46b521e155f3d98f795d66a3": "It's a ball going straight forward, but that'd mean...",
     "1c17a3c9bfd85444afa0b0b2bfc7fe56": "Yup, it's gonna go right into those portals. Get ready for some portal madness,\nneighbor.",
     "6077f7262812805cfe7e2f17857e1499": "I'll find a way to stabilize the game's space. Now try out the new plant and help\nus defeat those zombies.",
@@ -6521,7 +6521,7 @@
     "b42840a21e03a770e61e1c384411ec0d": "VIEW ZOMBIES",
     "5dfd65322ae1dbab19c22cd5ce1b1825": "Back",
     "d292663d214af95b390e5dca0fa01ab9": "Language",
-    "f1a5d18296ce1998138e6026f24c7b20": "<center style=\"position:relative;color:white;font-size:1.1em;padding-top:20px;height:70px;width:100%;\">\n                            想保存你的进度吗？尝试从“用户”菜单导出进度！\n                            </center>",
+    "f1a5d18296ce1998138e6026f24c7b20": "<center style=\"position:relative;color:white;font-size:1.1em;padding-top:20px;height:70px;width:100%;\">\n                            Wanna save your progress? Try exporting a save file in the User menu!\n                            </center>",
     "b8555c6ee61705540102fe3427b87d1f": "简体中文",
     "c70648ef0c69ba5084beccb3d7d609aa": "Detecting skill issue...",
     "7c4c4c5e56d10b3e0e3a07c785d418bb": "At last,",
