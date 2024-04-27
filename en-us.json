@@ -1,4 +1,4 @@
-{
+{window.$__language_Array__={
     "cfafff8da65228975bf3f639be3d3280": "Cheat menu temporarily unavailable",
     "8e222991d9296670a856ba12f5eefa9b": "(ﾟ⊿ﾟ)ﾂ",
     "64103ecb1c6c1fbac876150db2afca5c": "An error has occured!",
@@ -574,7 +574,9 @@
     "8423448020dd683c025954caff91bb40": "Released: 7/2021",
     "2f63b862c7933782f2f7a670270163e0": "If you've never played another version of PvZ, or would like to learn about the origin of the plot for this game, please click <OK> to enter the newbie tutorial.",
     "7d75b164a920f3e902c061e32acf944d": "Current speed: ",
-    "3d5549d329d228f17c5ad841754f3ccd": "低性能模式：关闭部分可能导致游戏延迟的效果与动画。请依照个人电脑性能调节。\n        <br /><br />\n        动画异步：分别播放动画。建议开启。\n        <br /><br />\n        时间强同步：游戏内时刻将更贴近现实时间。建议开启。将此选项关闭会严重影响游戏表现。",
+    "eb147ba3a1397a8fc6f2d19c69ab7d0e": "低性能模式：关闭部分可能导致游戏延迟的效果与动画。请依照个人电脑性能调节。",
+    "2e75c9fcf42121a6d351dfbd8762a2d9": "动画异步：分别播放动画。建议开启。",
+    "54d6b501d4acfb1ef7e853da9b2b39f8": "时间强同步：游戏内时刻将更贴近现实时间。建议开启。将此选项关闭会严重影响游戏表现。",
     "8c3b05e35ca32cf23bfa287255664dbc": "Adventure",
     "47d50ddcbd3adfa1a02a8cbdb8fafedb": "Extras",
     "c77d979bd21b306808b22121c0225c1d": "Events",
