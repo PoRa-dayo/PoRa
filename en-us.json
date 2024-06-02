@@ -99,6 +99,9 @@
     "38ec56cabcb703dc74c6da5306abb571": [
         "[PVZTR] Exitlevel Data Exception:"
     ],
+    "20d9f9bf1450c211723866b2a60e3c2e": [
+        "解锁成就："
+    ],
     "c082fbf0144e3c77e4a2f1b161665949": "Selling internet connection...",
     "25b4de023ff2d905f815991fde0e0691": "Growing Aipois...",
     "c0f32f891a96f21fce8af8b4556f5836": "Generating 2,147,483,647 lines of dialogues...",
@@ -127,11 +130,6 @@
     "858dbf0cea0e0686840a29026c56066c": "镜像植物会超过边界！",
     "baa25d8226a71758ff776b90e392a913": "镜像植物不可被种植！",
     "e1dd50be3e215a42bb7bfe3c49cd93e6": "Lawn mower",
-    "1301b8875023d78b1618a53b92b6b63a": "Unlocked",
-    "5f243cc5b7ed5e8048ea5c3990f441d4": [
-        "Achievement ",
-        ": "
-    ],
     "09f054e52a21c4cfd475adaf099421f8": "Smooth Criminal",
     "fb9d0cd3e2885104295d0c6e32f95bc7": "Brain",
     "71e212bbe74be7502a79eef92474f38a": "Gadget - Fluorescent Lamp",
@@ -1560,6 +1558,8 @@
     "ed6dce16dbea4303367c871d46255d82": "Complete Nostalgic Mirage Night 20 without destroying any grave",
     "0c469e46f2010843aefc87c78bea9d94": "Advanced Achievement: It's Raining Thieves",
     "0b842691216bfdd263c4726896f84e90": "Complete Nostalgic Mirage Day 6 without using Umbrella Leaf",
+    "2b79d417015fcc539544adb824200320": "高级成就：棋逢敌手",
+    "7e60d953bbc1c2fd4bb2b36d575afe7b": "在决斗模式中存活到时间耗尽",
     "aaa755edf5471c14369d63d082e58282": "Hidden Achievement: The Ultimate Clicker",
     "e55643e8596b7a092e1821dd9ae0884b": "Hidden Achievement: The Broken Black Mirror",
     "822282be6ba3c1258190b8ea28f8415c": "Normal Achievement: Stars!",
@@ -1574,11 +1574,16 @@
     "8f3c7c1b64fb408d2389f9d4762b1efa": "As he flew into the mower, it was the sound of a striker.",
     "8a11263b84a8cc89ec622226ce0d06be": "Strange Achievement: Unending Hunger",
     "9d7e82f940fa94de455ed76bddb71cdc": "How do you like them apples?",
+    "67a5cbd7c44c52c245eb8eac0daf2285": "奇怪成就：岸边路畔",
+    "610c27e8a0506a11f4157d0ca30f03d1": "直到死前都在凝视VI的美丽",
+    "ffc502862e4e7d35be5dca3f9a1eca2e": "奇怪成就：十野之苹",
+    "db0e7b0f62d610768abb8c46a384fcee": "从某个盒子中获取10个天堂之果",
     "3c1f7ca9c3ddc0f7160f67eb2a9ece53": "To unlock: ",
     "85bf8c534ff48d3e11b1682c4e16bbae": "? ? ?",
     "017d14191959dddb38cc466fb79d7efe": "Credits",
     "2ee444aed1c4bcd39f0287cd5901492f": "Daily Level",
     "f8d62a07f9386439a2a142b1e5cbf686": "Achievements",
+    "63d4e1b98d7d73071860179bb87adfb9": "十野之苹",
     "8381a1115c1cda762fec560f899746b8": "Skill Tournament",
     "97fea73a300c6a2e8bbc612ec3acc1a7": "Battle",
     "9542967aabea4cc22682bdedc04e4cbe": "Duel",
@@ -2008,6 +2013,7 @@
     "35b600f8fbfd7ed55946ae5b72d506bd": "Keep it in mind just in case some stuff here is making the fight 'lag'.",
     "ad00ba8a9e75fbb3ada53dbd62ced88b": "How do I know this? Because I'M CRAAAAZY!!!",
     "5b393511c5f5f74b5b98b5e076e96dfe": "Birds' Forest Night 6 - Mirror",
+    "af73a003a7a5fbc7c64eeb8107f56087": "岸边路畔",
     "898791412585f5f2fed1fe9a4ae5e2d3": "Birds' Forest Day 7",
     "8793bfcd38434f4b1a4117913ba119d2": "Try planting more Sunflowers!",
     "9773b2e52c1fb6f1078e3d9d3f72b919": "Birds' Forest Night 7 - Mirror",
@@ -2360,11 +2366,6 @@
     "9830f8dbb1d9587df9a98910c20ed811": "Oh, nothing much really. It's just that he agreed to show us whatever he'd been\nthrough if me and my neighbor could beat his challenge.",
     "05b4f9208d929ba8b0398fc5275b592a": "So... you want to help him too?",
     "58675c98969c91b52160d2b47546fd5b": "You don't want him to... spend more time on the game, or stay here forever?",
-    "e7ac5cbd946a6986cb699249ac190ad1": "Unlocked",
-    "dd23d9d1475d4011e596fa1893b52cbe": [
-        "Achievement ",
-        ": "
-    ],
     "a74bcd48f2889938256b0f54806bfd08": "Befrozenia's Holiday",
     "e2e9da92b73932fd02b612eca8224e50": "Foggy City Night 18 - Mirror",
     "2e04827d4a600c0524889648c00cf213": "Mwhahaha! Now I have control over the weather!",
@@ -4586,11 +4587,6 @@
     "c6f5e4969093c2a33bc061eaa00c4962": "Place zombies to the right of the line!",
     "40edb3c2c1d031240b098d1368ea32fd": "Nostalgic Mirage Day 2",
     "44a6098c7777dd69d56dcd4c81b65d7f": "Nostalgic Mirage Night 20",
-    "1ae4fd98cd967c269f5af9e40b45ce6d": "Unlocked",
-    "02e5bcfaee2c5a7441dbc556c1aa69cb": [
-        "Achievement ",
-        ": "
-    ],
     "30a57f6d7ee5344c4ab07dbc6b4add02": "Graveyard for the Half-Blinds",
     "bfca5226f7e140f51c947429955b24e8": "Rainbow Conical Flask",
     "b034f163903b7e480fde5deb0ee7ca30": "All laboratory plants are permanently unlocked! The seven-colored light it emits guides your way ahead.",
@@ -4599,11 +4595,6 @@
     "d19fd430a5b1bb440f466128b7fb6e76": "Nostalgic Mirage Day 5",
     "36ffb495286ac9b4169c968fee4b172b": "Zombies will follow water flows as long as they never step out of water",
     "7523f9f89139fbfc44ca164fd969723d": "Nostalgic Mirage Day 6",
-    "e263bc03129bfdac8688f7c3bfcc48b2": "Unlocked",
-    "5acc190b232383fe411b3f4456c5bca6": [
-        "Achievement ",
-        ": "
-    ],
     "d4d3648cf522bdcd0c579d7ee353c9bb": "It's Raining Thieves",
     "4a8e9ce19a7b91fe36c5b5a693f4576f": "Nostalgic Mirage Day 7",
     "cc7cd2552ed2136920d411199fe5c398": "Nostalgic Mirage Night 8",
@@ -5976,7 +5967,8 @@
     "fc5ed5a2f051d48458c0d3f40ce91cee": "You feel as if your enemies aren't as they seem...",
     "4d57eb184fe3471787d5200d3234a203": "Crystals can occasionally steal collected sun!",
     "51e3a13febd53f804621d8932491dca2": "Opponent disconnected!",
-    "66135c6c84cdc849ef5bb46584480e51": "TIEBREAKER!",
+    "8bc3a732f2731c3a6789ef0e8de1ea94": "棋逢敌手",
+    "0f4b4b013da31826a63951cdacf6ff03": "胜利的是……!",
     "e39d922aad2c0a67a2ee07aa695604df": "You lose!",
     "44bfa7c87d72162851d3768a7b35e498": [
         "<br>Cooldown: ",
@@ -6042,6 +6034,7 @@
     "61f87ec5430d75e6f36e10b51b923b04": "Sender's ID",
     "8132bc41d76ccf9f871f275bdfa95e43": "Failed to connect to specified ID.",
     "23b1dcac6476bebd08fd1281c1a421a2": "Waiting for the opponent...",
+    "a9bfe80bf10c2d25d3d1e47eeddaaf2c": "游戏窗口被隐藏，正在取消对战……",
     "8c14afb4c0023efd737c48da98fba016": "Birds' Forest Autumn Day 1 - Liqiu",
     "b78aa81388227311ff3c4d802ef8a908": "Hey neighbor, how was the ride in my car?",
     "f1ac625727876b272fd21f18ae783551": "This feels weird.",
