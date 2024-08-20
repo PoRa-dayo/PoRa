@@ -49,7 +49,9 @@ Dave: Eh, guess I'll just go look for tacos. There's gotta be some around here s
 Arbiter: Hello, the mortal behind that screen. This is The Arbiter speaking.
 Arbiter: Yes, as a divine being, I am aware of this world being a 'video game'.
 Arbiter: You can think of us divine beings as this game's developers, or you can say, 'true administrators'.
-Arbiter: Let's just say I might have misjudged you as a companion of Dave.
+Arbiter: How was the game? Fun? Exciting? Surely it's enough to convince you that...
+Arbiter: 'JAVASCRIPT IS A GAME ENGINE.'
+Arbiter: Ahem, let's just say I might have misjudged you as a companion of Dave.
 Arbiter: That Dave... To me, he is nothing but an irresponsible pot-wearing moron.
 Arbiter: He ignored the game's main story, and just tried to find every loophole possible to create his own stupid world.
 Arbiter: I am not sure how you even managed to befriend him... But you,
@@ -86,7 +88,9 @@ Arbiter: Then, if you can return here, I will give you the best gift you could e
 Arbiter: Hello, the mortal behind that screen. This is The Arbiter speaking.
 Arbiter: Yes, as a divine being, I am aware of this world being a 'video game'.
 Arbiter: You can think of us divine beings as this game's developers, or you can say, 'true administrators'.
-Arbiter: Let's just say I might have misjudged you as a companion of Dave.
+Arbiter: How was the game? Fun? Exciting? Surely it's enough to convince you that...
+Arbiter: 'JAVASCRIPT IS A GAME ENGINE.'
+Arbiter: Ahem, let's just say I might have misjudged you as a companion of Dave.
 Arbiter: That Dave... To me, he is nothing but an irresponsible pot-wearing moron.
 Arbiter: I am not sure how you even managed to befriend him... But you,
 Arbiter: You are the chosen one.
