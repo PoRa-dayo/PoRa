@@ -1,36 +1,36 @@
 {
-    "cfafff8da65228975bf3f639be3d3280": "Cheat menu temporarily unavailable",
+    "cfafff8da65228975bf3f639be3d3280": "修改器暂不可以使用",
     "8e222991d9296670a856ba12f5eefa9b": "(ﾟ⊿ﾟ)ﾂ",
-    "64103ecb1c6c1fbac876150db2afca5c": "An error has occured!",
-    "90426c22a158b619f5fde27c231b8838": "Can't move...",
-    "6fda2ecfe120101f140a5b623972145b": "...hhh!",
-    "34eebfdb889ebeb61e5fc23c239687da": "I'm stuck QwQ...",
-    "c1d472397ba368f5beea58c4b4874ed9": "Code error in eval",
-    "820b5c316de818295e43c50ecb01b171": "Numeric variable or parameter outside its valid range error",
-    "afcf8f11df3c6360450b84548c757af3": "Invalid variable referenced error",
-    "43e9cfbdcae29fffc8753311a77123cc": "Code syntax error",
-    "00d1e9f9dde684124e454cfa7f9b72ac": "Misuse of function or object error",
-    "10accfbd6b8298337e4c57d304ce1c1f": "Incorrect encodeURI or decodeURI parameters",
-    "8e0819f10229404c52db53a2e8a599b1": "Too many recursive functions or case branches error",
+    "64103ecb1c6c1fbac876150db2afca5c": "发生了一点意外！",
+    "90426c22a158b619f5fde27c231b8838": "唔唔动不了了……",
+    "6fda2ecfe120101f140a5b623972145b": "……嘤嘤嘤！！",
+    "34eebfdb889ebeb61e5fc23c239687da": "唔姆被困住了qwq……",
+    "c1d472397ba368f5beea58c4b4874ed9": "eval中代码错误",
+    "820b5c316de818295e43c50ecb01b171": "数值变量或参数超出其有效范围的错误",
+    "afcf8f11df3c6360450b84548c757af3": "引用了无效的变量的错误",
+    "43e9cfbdcae29fffc8753311a77123cc": "代码语法错误",
+    "00d1e9f9dde684124e454cfa7f9b72ac": "使用一些函数或者其它东西的方法不对的错误",
+    "10accfbd6b8298337e4c57d304ce1c1f": "encodeURI或者decodeURI参数不对的错误",
+    "8e0819f10229404c52db53a2e8a599b1": "递归函数或case分支太多的错误",
     "917f7189fa92f9382fd7e5f0f08804e1": [
-        "Loading error - The network might be not smooth or the filename in the code is wrong",
-        "Error! If this still occurs after refreshing the game multiple times, please report to our programmers!"
+        "网络不畅或代码内文件名有误导致加载",
+        "出错了！如果刷新多次依然出现，请反馈给程序员小姐姐！"
     ],
     "9901b087634472c6c9e40719026a4a98": [
-        "Version",
-        " Appear in ",
-        "! Please take a screenshot in time to report bugs to our Discord server! Error content: "
+        "版本",
+        " 出现在 ",
+        "！请及时截图并双击加群反馈游戏的bug！错误内容："
     ],
-    "260f66abc4a61321161b9a3414600646": "Error",
+    "260f66abc4a61321161b9a3414600646": "错误",
     "198ebf6b62917c64a7e570c5e572b318": [
-        "Loading",
-        "Error!",
-        ", the server might be lagging or the filename in the code is wrong QwQ, remember to refresh the game every once in a while. If you still encounter problems, please report the issues to our programmers~"
+        "加载",
+        "出错了！",
+        "，可能是由于服务器卡顿或者文件名大小写不对导致的呢qwq，如果长时间停留在一个地方别忘了刷新哦，如果刷新多次依然不行，请反馈给程序员小姐姐w~"
     ],
     "1e6c6f98c994b29e9fe38a138ca39bd5": [
-        " appeared! Named ",
-        " error at ",
-        "! \nIt will affect the normal operation of the game, please take a screenshot in time and send it to github or our Discord!"
+        " 现身了！ 名为 ",
+        " 的错误就躲在 ",
+        "！\n它会对游戏正常运行有影响，请及时截图反馈至github或者粉丝群！\n双击就可以加群啦！"
     ],
     "9c48e8d1a39356efd727b573c1366063": "：",
     "271d7acccbcecf0a80b13238e51134ed": "Zombies: ",
@@ -1670,6 +1670,7 @@
     "6b5f89e25986a6fbc8bd6011589eba78": "Prickly Rose (Image)",
     "0b2e5baf1ffcef934850b1a4402e96c3": "An image of Prickly Rose. During the level, if the image is deployed on a plantable tile, Prickly Rose will appear.",
     "e2bdc93c13c3f39b400db828bb7b6968": "All plants",
+    "217ef9b502b0df93f1860dfec266aff4": "给所有被吃掉的植物添加自定义分数。",
     "4e19a0fc6a942f5275ea8d0db990b572": "Volcanic vent",
     "1abb898613ebb7cb92f818abf02d6eaf": "Continuously damages surrounding plants.",
     "93c63b591a01ed55dbd2d05a0f1196df": "Fruit basket",
@@ -1759,7 +1760,6 @@
     "218e3bc8f88efdc3479754a5fbd53db7": "Zombies",
     "c7a716d1546c97bc9f85e81217b24f28": "Mission: Defeat all zombies and don't let any reach your house!",
     "912bb3cfb06243b5663a63ca7fce4ba3": "Mission: Eat all brains before running out of zombies and sun!",
-    "c01ee4aaf040062f87b6a34ef23f45f2": "OK",
     "cdcd57c9f0db9a4f0d50bddaa8fb4e1d": "Terrains",
     "6051e17f43847da4605347bcaf78207a": [
         "<br>Cooldown: ",
@@ -5694,6 +5694,7 @@
     "8416b93c85c55d0408b2c42fe7dbb9da": "And I think it's important to tell you what these numbers mean.",
     "aef2a69b5d6ea77dc4ca696f45c688dc": "Aurora Icefield Day 21 - Mirror",
     "0cc2f426fabd83c7dc2039f19520b9d2": "Each use of certain plants will make the level harder.",
+    "bcab28bcae9d3517d315871f790a6203": "……！",
     "c57b45cfc45a72dea2e843fa17ca09bd": "You feel as if your enemies aren't as they seem...",
     "e03e915ce89c69689b281257e06459c6": "May 3rd",
     "936e9f15664d18ea2c32af842bbbc032": "Oh right, about that final result... I caught a bit of data related to it.",
@@ -5975,6 +5976,7 @@
     "01ff716332c26e23f231d2e4f912a3f0": "Until my life is finally over.",
     "6acacd61e45b349a1d31070c82565cba": "Aurora Icefield Day 25 - Mirror",
     "395f6fac7fa00603e45b55cb6b74f5aa": "Each use of certain plants will make the level harder. Watch out for Magical Icicle Zombies that can target endangered plants! Gadgets are disabled.",
+    "c6124680fb10b9677eb5294b1216ec94": "……！",
     "ae0b5ab3bf052e19f324e4c089d75247": "You feel as if your enemies aren't as they seem...",
     "f2d36d613cda09b08c043f6c1f7bddff": "Hm, it seems like the so-called “game protagonist” is sitting on the side of the\ncar.",
     "3c1027478acaaf8dd74745c1e59f5a33": "But how should I ask for the way out without disturbing him...",
