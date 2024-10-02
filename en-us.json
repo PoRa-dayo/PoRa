@@ -1928,7 +1928,7 @@
     "74980dbc800ccaad2aa8e75a97157ef3": "- Please type the full Name of the content. (e.g. [\"Laboratory - Impale Cress\",1])",
     "07e3a492cc1a88539d09c87bc694a606": "Possible contents (Format is [\"Name\",Number],[\"Name\",Number] ...):",
     "e565a8973dd2d63f6b3d3b719193aa33": "Vase type (The last option only spawns the contents without the vases, used for spawning objects randomly, and does not work in Vasebreaker mode):",
-    "de0d68ef4b97c48ff10339c09d8db0c7": "编辑死灵术的设置",
+    "de0d68ef4b97c48ff10339c09d8db0c7": "Edit Necromancy Settings",
     "4f141ccfaa43b5c9362d8dda748a09c3": "Select zombies to add to the zombie list.",
     "15d35da7ae14882bf888684a5c755f7e": "List of zombies that can be summoned when Necromancy occurs. (Format is \"Name\",\"Name\" ...)",
     "356b5d28fd259feedad108fc9aa3d0c3": "\n(Not available for local users)",
