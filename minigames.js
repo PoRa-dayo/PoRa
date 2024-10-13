@@ -219,7 +219,7 @@ var oMiniGames = {
                         oGd.$GdType[R][C] === 2 ? "plant_water" : `plant${Math.floor(1+Math.random()*2)}`
                     );
                     new plant().Birth(X, Y, R, C, data);
-                    if (!oS.IZombie) {
+                    if (!proto.Obj) {
                         const effectElement = $("imgGrowSoil");
                         effectElement.src = GrowSoilImg;
                         SetStyle(effectElement, {
@@ -516,7 +516,7 @@ var oMiniGames = {
                         oGd.$GdType[R][C] === 2 ? "plant_water" : `plant${Math.floor(1+Math.random()*2)}`
                     );
                     new plant().Birth(X, Y, R, C, data);
-                    if (!oS.IZombie) {
+                    if (!proto.Obj) {
                         const effectElement = $("imgGrowSoil");
                         effectElement.src = GrowSoilImg;
                         SetStyle(effectElement, {
@@ -1054,7 +1054,7 @@ var oMiniGames = {
                             card.NoNeedToMonitor = true;
                         }
                     } 
-                    if (!oS.IZombie) {
+                    if (!proto.Obj) {
                         // 显示泥土动画
                         const effectElement = $("imgGrowSoil");
                         effectElement.src = GrowSoilImg;
@@ -2553,7 +2553,7 @@ var oMiniGames = {
             self.publicImg[`${img.src}_${saveWH.width}_${saveWH.height}_${rgb}`]=imgCanvas;
             return imgCanvas;
         },
-        RotatePaint(pic,x,y,width,height,rotate=[1,0],alpha=1,mirror=1){
+        RotatePaint(pic,x,y,width,height,rotate=0,alpha=1,mirror=1){
             let self = this;
             let dist = [Math.round((x+width/2)*self.screenRatio),Math.round((y+height/2)*self.screenRatio)];
             let ctx = self.ctx;
@@ -2564,8 +2564,8 @@ var oMiniGames = {
             /*ctx.translate(dist[0], dist[1]); // 将画布偏移到物体中心
             ctx.rotate(rotate); // 旋转角度
             ctx.translate(-dist[0], -dist[1]);// 将画布偏移回来*/
-            ctx.setTransform(rotate[0], rotate[1], -rotate[1], rotate[0], dist[0], dist[1]);
-            //ctx.rotate(rotate);
+            ctx.setTransform(1, 0, 0, 1, dist[0], dist[1]);
+            ctx.rotate(rotate);
             ctx.drawImage(pic,Math.round(-width/2*self.screenRatio), Math.round(-height/2*self.screenRatio), Math.round(width*self.screenRatio), Math.round(height*self.screenRatio));
             if(alpha!=1){
                 ctx.globalAlpha = 1;
@@ -2762,8 +2762,6 @@ var oMiniGames = {
                 liveTime:0,
                 _task_index:0,
                 picAngle:0,
-                _lastAngle:null,
-                _savedCosSin:null,
                 task:[],
                 Birth(data={}){            
                     /*
@@ -2859,15 +2857,11 @@ var oMiniGames = {
                 },
                 paint:function(){
                     let self = this;
-                    if(self._lastAngle!==self.picAngle){
-                        self._lastAngle=self.picAngle;
-                        self._savedCosSin = [Math.cos((self.picAngle)),Math.sin((self.picAngle))];
-                    }
                     if(self.x!==NaN&&self.y!==NaN){
                         if(!$User.LowPerformanceMode&&self.liveTime<self.FadeTime){
-                            oMiniGames.oStg.RotatePaint(self.img,self.x+self.width/2*(self.FadeTime-self.liveTime)/self.FadeTime,self.y+self.height/2*(self.FadeTime-self.liveTime)/self.FadeTime,self.width/self.FadeTime*self.liveTime,self.height/self.FadeTime*self.liveTime,self._savedCosSin,self.liveTime/self.FadeTime);
+                            oMiniGames.oStg.RotatePaint(self.img,self.x+self.width/2*(self.FadeTime-self.liveTime)/self.FadeTime,self.y+self.height/2*(self.FadeTime-self.liveTime)/self.FadeTime,self.width/self.FadeTime*self.liveTime,self.height/self.FadeTime*self.liveTime,self.picAngle,self.liveTime/self.FadeTime);
                         }else{
-                            oMiniGames.oStg.RotatePaint(self.img,self.x,self.y,self.width,self.height,self._savedCosSin);
+                            oMiniGames.oStg.RotatePaint(self.img,self.x,self.y,self.width,self.height,self.picAngle);
                         }
                     }
                 },
