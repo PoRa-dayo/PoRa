@@ -2899,8 +2899,16 @@ const oAudioManager = {
     refreshTicket() {
         this.__ticket__ = '' + Math.random();
     },
-    getSourceSrc(url){
-        return /\.\mp3$/.test(url) ? url : `audio/${url}.mp3`;
+    getSourceSrc(url) {
+        // 检查是否已经有文件扩展名
+        if (!/\.[^.]+$/.test(url)) {
+            url += '.mp3';
+        }
+        // 检查是否包含斜杠，如果没有则默认添加 audio/
+        if (!/[\/\\]/.test(url)) {
+            url = `audio/${url}`;
+        }
+        return url;
     },
     //获取原始表的dom
     getDom(source, type) {
@@ -3026,7 +3034,8 @@ const oAudioManager = {
             }
         }
     },
-    playAudio(source, loop = false, volume = 1, playbackRate = 1) {
+    //forcePlayIfFull:即使在可播放源满的时候也强制播放
+    playAudio(source, loop = false, volume = 1, playbackRate = 1, forcePlayIfFull=false) {
         if (oS.Silence || oS.AudioSilence || $User.AudioEffectVolumePercent == 0) return -1;
         const self = oAudioManager;
         const myMap = self.resourceAudioMap;
@@ -3133,7 +3142,7 @@ const oAudioManager = {
         }
         let audio = null;
         //如果已有缓存记录，则直接克隆音频节点并播放
-        if (record && record.dom && (!oSym.Timer || Math.abs(record.lastPlayingTime - oSym.Now) > 20)) {//必须在一段时间后才能开始播放
+        if (record && record.dom && (!oSym.Timer || Math.abs(record.lastPlayingTime - oSym.Now) > (forcePlayIfFull?0:20))) {//必须在一段时间后才能开始播放
             let stackEmpty = record.idleInstances.isEmpty();
             //console.log(record.dom.src,stackEmpty);
             if (record.num < self.maxSyncPlayBackNum && stackEmpty) {
@@ -3150,7 +3159,8 @@ const oAudioManager = {
                 //说明：自es6以来set实际的行为是会保留元素的插入顺序。这意味着当迭代一个Set时，元素会按照它们被添加到Set中的顺序出现。
                 const first_audio = record.busyInstances.keys().next().value;
                 if (first_audio) {
-                    if((IsHowling && (first_audio.seek() >= record.shortestTimeBusyMediaCanPlayback || first_audio.seek() == 0)) || (!IsHowling && first_audio.currentTime >=record.shortestTimeBusyMediaCanPlayback)){//如果已播放
+                    let shortestTime = forcePlayIfFull?0:record.shortestTimeBusyMediaCanPlayback;
+                    if((IsHowling && (first_audio.seek() >= shortestTime || first_audio.seek() == 0)) || (!IsHowling && first_audio.currentTime >= shortestTime)){//如果已播放
                         self.__stopAudio__(first_audio,false);//让音频回到栈中
                         audio = record.idleInstances.pop();//从栈中弹出音频
                         playMedia(audio);
