@@ -11,133 +11,296 @@ const GrowSoilImg = "images/interface/GrowSoil.webp";
 const WaterShadowImg = `images/Zombies/WaterShadow.webp`;
 const WaterSplashImg =  `images/Zombies/Drop_Water.webp`;
 /* 江南自定义事件注册 */
-const EVENT_STARTGAME = new Event("jng-event-startgame"),
-EVENT_ENDGAME = new Event("jng-event-endgame");
+const EVENT_STARTGAME = new Event("jng-event-startgame");
+const EVENT_ENDGAME = new Event("jng-event-endgame");
+const EVENT_EXITGAME = new Event("jng-event-exitgame");
 /* API */
 let $User = {
-    NowStep: 1,  //oSym里的时间跨度，默认是1，值为1-5加速1-5倍
-    TimeStep: 10,  //oSym里的计时间隔，默认是10；值为20,10,5，分别是减速一半，原速，加速一倍
-    AutoSun: Number(localStorage['JNG_TR_AUTOSUN']) || 0,  //是否自动拾取阳光
-    Tag: localStorage.tag ? localStorage.tag : "local",//用户标识
-    Name: localStorage.name ? localStorage.name : "local",//用户名
-    LowPerformanceMode: false,  //是否开启低性能模式
-    Async_GIFS_Animate: true,  //是否启用blob动画
+    // oSym里的时间跨度，默认是1，值为1-5加速1-5倍
+    NowStep: 1,
+    // oSym里的计时间隔，默认是10；值为20,10,5，分别是减速一半，原速，加速一倍
+    TimeStep: 10, 
+    // 是否自动拾取阳光
+    AutoSun: Number(localStorage['JNG_TR_AUTOSUN']) || false,
+    // 用户标识
+    Tag: localStorage.tag ? localStorage.tag : "local", 
+    // 用户名
+    Name: localStorage.name ? localStorage.name : "local", 
+    // 是否开启低性能模式
+    LowPerformanceMode: false, 
+    // 是否启用blob动画
+    Async_GIFS_Animate: true, 
     Coins: 0,
-    Achievement: localStorage.JNG_TR_Achievement?JSON.parse(localStorage.JNG_TR_Achievement):{},  //记录用户获得成就
-    DrawBlood: localStorage.JNG_TR_DrawBlood ? JSON.parse(localStorage.JNG_TR_DrawBlood) : false,//是否画血
-    TaskForceTimeSync: localStorage.JNG_TR_TaskForceTimeSync ? JSON.parse(localStorage.JNG_TR_TaskForceTimeSync) : false,//是否时间同步
-    OpenDynamicDifficulty:navigator.language?.includes("zh")??false,//是否开启动态难度
-    IS_PLOT_OPEN:localStorage.JNG_TR_IS_PLOT_OPEN ? JSON.parse(localStorage.JNG_TR_IS_PLOT_OPEN) : true,//是否开启剧情
+    // 记录用户获得成就
+    Achievement: localStorage.JNG_TR_Achievement ? JSON.parse(localStorage.JNG_TR_Achievement) : {}, 
+    // 是否启用坚果包扎术
+    enabledWallNutFirstAid: isNullish(localStorage.JNG_TR_WallNutFirstAid) ? false : true,
+    // 阳光铲
+    enabledSunShovel: !isNullish(localStorage.JNG_TR_SunShovel) && localStorage.JNG_TR_EnabledItems && JSON.parse(localStorage.JNG_TR_EnabledItems).SunShovel === 1 ? true : false,
+    // 强化初始阳光
+    enabledMoreStartingSun: !isNullish(localStorage.JNG_TR_MoreStartingSun) && localStorage.JNG_TR_EnabledItems && JSON.parse(localStorage.JNG_TR_EnabledItems).MoreStartingSun === 1 ? true : false,
+    // 池塘清洁车
+    enabledPoolCleaner: isNullish(localStorage.JNG_TR_PoolCleaner) ? false : true,
+    // 战术丢车
+    enabledMowerLaunch: isNullish(localStorage.JNG_TR_MowerLaunch) ? false : true,
+    // 宝马雕车
+    enabledValuableMowers: isNullish(localStorage.JNG_TR_ValuableMowers) ? false : true,
+    // 是否画血
+    DrawBlood: localStorage.JNG_TR_DrawBlood ? JSON.parse(localStorage.JNG_TR_DrawBlood) : false, 
+    //显示键盘快捷键
+    ShowShortcuts: localStorage.JNG_TR_ShowShortcuts ? JSON.parse(localStorage.JNG_TR_ShowShortcuts) : false, 
+    // 是否时间同步
+    TaskForceTimeSync: localStorage.JNG_TR_TaskForceTimeSync ? JSON.parse(localStorage.JNG_TR_TaskForceTimeSync) : true,
+    // 是否开启动态难度	
+    OpenDynamicDifficulty: navigator.language?.includes("zh") ?? false, 
+    // 是否开启剧情
+    IS_PLOT_OPEN: localStorage.JNG_TR_IS_PLOT_OPEN ? JSON.parse(localStorage.JNG_TR_IS_PLOT_OPEN) : (!IsDevEnvi), 
+    // 游戏音效音量百分比，默认100%
+    AudioEffectVolumePercent: localStorage.JNG_TR_AudioPercent ? Number.parseFloat(localStorage.JNG_TR_AudioPercent) : 1,
+    // 游戏bgm音量百分比，默认100%
+    MusicVolumePercent: localStorage.JNG_TR_MusicPercent ? Number.parseFloat(localStorage.JNG_TR_MusicPercent) : 1,
     _tmpARCARD: {},
-},
-oSym = {
+};
+class __oSymTaskPool__ {
+    constructor() {
+        this.taskPool = [];
+    }
+    get(T, f, taskIndex, ar) {
+        let taskObject = this.taskPool.pop() ?? {};
+        taskObject.T = T;
+        taskObject.f = f;
+        taskObject.taskIndex = taskIndex;
+        taskObject.ar = ar;
+        return taskObject;
+    }
+    recycle(taskObject) {
+        delete taskObject.f;
+        delete taskObject.ar;
+        this.taskPool.push(taskObject);
+        return taskObject;
+    }
+};
+const oSym = {
+    ZMonitorRefresh: 100,
+    BuMonitorRefresh: 10,
     Init(callback, arg = []) { //在每次关卡文件load的时候初始化
         const self = this;
-        self.Now = 0;    //系统时间
-        self.Timer = null;   //系统时间定时器
+        self.Rewrite(self);
+        self.Now = 0; //系统时间
+        self.Timer = null; //系统时间定时器
         self.TQ = [];
         self.TQSet = new Set();
-        self.NowStep = 1;  //oSym里的时间跨度，默认是1，值为1-5加速1-5倍
-        self.TimeStep = 10;  //oSym里的真实定时器计时间隔，默认是10，值为20,10,5，分别是减速一半，原速，加速一倍
-        self.changed = Infinity;//是否改写了数组（保存的是最短的delayT）
-        self.taskNum = 0;//数组任务个数
-        self.taskTotal = 0;//目前是创建的第几个事件，目的是在排序的时候可以判断事件先后
+        self.NowStep = 1; //oSym里的时间跨度，默认是1，值为1-5加速1-5倍
+        self.TimeStep = 10; //oSym里的真实定时器计时间隔，默认是10，值为20,10,5，分别是减速一半，原速，加速一倍
+        self.changed = Infinity; //是否改写了数组（保存的是最短的delayT）
+        self.taskNum = 0; //数组任务个数
+        self.taskTotal = 0; //目前是创建的第几个事件，目的是在排序的时候可以判断事件先后
         self.NowSpeed = 1;
-        if($User.NowSpeed){
-            CSpeed($User.NowSpeed,false);
+        self.__IncreasedTime__ = null; //你在addTask里设置addTask需要拿现在的时间和理论上调用addTask的时间做差，减去你调用的偏差的时间。
+        self.__pool__ = self.__pool ?? new __oSymTaskPool__();
+        if ($User.NowSpeed) {
+            CSpeed($User.NowSpeed, false);
         }
         self.addTask(0, callback, arg);
-        self.Start();  //启动系统进程
+        self.Start(); //启动系统进程
     },
-    Start() {
-        const self = this;
-        if(self.Timer === null) {
-            let task,now,step=self.NowStep,lastTime=Date.now(),curTime;
-            const TimeSync = $User.TaskForceTimeSync,timeStep = self.TimeStep;
-            const stack = self.TQSet;
-            const process = () => {
-                if(TimeSync){
-                    curTime=Date.now();
-                    step=self.NowStep+Math.max((curTime-lastTime)/timeStep-self.NowStep,0);
-                    lastTime=curTime;
-                }
-                now = self.Now+=step;
-                if((self.changed-=step)<1){
-                    self.Resort(self);
-                }
-                for(let i = self.taskNum-1;i>=-1;--i){
-                    task = self.TQ[i];
-                    if(i===-1||now<task.T){
-                        self.taskNum=i+1;
-                        break;
-                    }
-                    try {
-                        task.f(...task.ar);
-                        task.T=-Infinity;
-                    } catch(err) {
-                        console.error(err);
-                    }
-                }
-                stack.forEach(task => {
-                    if(now >= task.T) {
-                        try {
-                            task.f(...task.ar);
-                        } catch(err) {
-                            console.error(err);
+    CalcTimePassed(d) { //提供一个通用的方法计算应该经过了多少时间
+        return Math.min(d, 100); //最多只能经过100ms，防止一下子过大的突变
+    },
+    //用重写的方式，避免每次执行的时候都要判断
+    Rewrite(self) {
+        if (!$User.TaskForceTimeSync) {
+            self.Start = () => {
+                if (self.Timer === null) {
+                    let task, now, step = self.NowStep,
+                        lastTime = Date.now(),
+                        curTime, TQ = self.TQ;
+                    const timeStep = self.TimeStep;
+                    const stack = self.TQSet;
+                    const pool = self.__pool__;
+                    const process = () => {
+                        now = self.Now += step;
+                        if ((self.changed -= step) < 1) {
+                            self.Resort(self);
                         }
-                        stack.delete(task);
-                    }
-                });
+                        for (let i = self.taskNum - 1; i >= -1; --i) {
+                            task = TQ[i];
+                            if (i === -1 || now < task.T) {
+                                self.taskNum = i + 1;
+                                break;
+                            }
+                            if (task.T === -Infinity) {
+                                if(IsDevEnvi===true){
+                                    console.warn("[PvZTR] -Infinity Task", Object.assign({}, task));
+                                }
+                                continue;
+                            }
+                            try {
+                                task.f(...task.ar);
+                                task.T = -Infinity;
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        }
+                        stack.forEach(task => {
+                            if (now >= task.T) {
+                                try {
+                                    task.f(...task.ar);
+                                } catch (err) {
+                                    console.error(err);
+                                }
+                                stack.delete(pool.recycle(task));
+                            }
+                        });
+                    };
+                    self.Timer = setInterval(process, self.TimeStep);
+                }
             };
-            self.Timer = setInterval(process, self.TimeStep);
+            self.addTask = (delayT = 0, callback, arg = [], useSet = false) => {
+                //因为游戏中的1相当于浏览器真实计时的10ms，所以传入的delayT（毫秒）要除以10
+                const self = this;
+                /*const task = {
+                    T: self.Now + delayT, //执行时间（自定义的oSym时间）
+                    f: callback, //执行函数  
+                    taskIndex: self.taskTotal++,
+                    ar: arg, //参数的数组形式，用于执行函数传递参数
+                };*/
+                const task = self.__pool__.get(self.Now + delayT, callback, self.taskTotal++, arg);
+                if (delayT < 15 || useSet) { //如果反复写入，则使用集合
+                    self.TQSet.add(task);
+                } else { //如果为长时间冷却的，则使用数组
+                    self.TQ.push(task);
+                    self.changed = Math.min(self.changed, delayT);
+                }
+                return task;
+            };
+        } 
+        else {
+            self.Start = () => {
+                if (self.Timer === null) {
+                    let task, now, step,
+                        lastTime = Date.now(),
+                        curTime, TQ = self.TQ;
+                    const stack = self.TQSet;
+                    const pool = self.__pool__;
+                    const process = () => {
+                        //时间强同步
+                        curTime = Date.now();
+                        step = Math.max(self.CalcTimePassed(curTime - lastTime) * self.NowSpeed / 10, 0);
+                        lastTime = curTime;
+                        //时间强同步 End
+                        now = self.Now += step;
+                        if ((self.changed -= step) < 1) {
+                            self.Resort(self);
+                        }
+                        for (let i = self.taskNum - 1; i >= -1; --i) {
+                            task = TQ[i];
+                            if (i === -1 || now < task.T) {
+                                self.taskNum = i + 1;
+                                break;
+                            }
+                            if (task.T === -Infinity) {
+                                if(IsDevEnvi===true){
+                                    console.warn("[PvZTR] -Infinity Task", Object.assign({}, task));
+                                }
+                                continue;
+                            }
+                            try {
+                                //时间强同步
+                                self.__IncreasedTime__ = task.T - self.Now;
+                                //时间强同步 End
+                                task.f(...task.ar);
+                                task.T = -Infinity;
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        }
+                        stack.forEach(task => {
+                            if (now >= task.T) {
+                                try {
+                                    //时间强同步
+                                    self.__IncreasedTime__ = task.T - self.Now;
+                                    //时间强同步 End
+                                    task.f(...task.ar);
+                                } catch (err) {
+                                    console.error(err);
+                                }
+                                stack.delete(pool.recycle(task));
+                            }
+                        });
+                        //时间强同步
+                        self.__IncreasedTime__ = null;
+                        //时间强同步 End
+                    };
+                    let loopid = self.Timer = Math.random();
+                    requestAnimationFrame(function loop() {
+                        if (self.Timer !== loopid) {
+                            return;
+                        }
+                        process();
+                        requestAnimationFrame(loop);
+                    });
+                }
+            };
+            self.addTask = (delayT = 0, callback, arg = [], useSet = false) => {
+                //因为游戏中的1相当于浏览器真实计时的10ms，所以传入的delayT（毫秒）要除以10
+                const self = this;
+                delayT += self.__IncreasedTime__ ?? 0;
+                const task = self.__pool__.get(self.Now + delayT, callback, self.taskTotal++, arg);
+                if (delayT < 15 || useSet) { //如果反复写入，则使用集合
+                    self.TQSet.add(task);
+                } else { //如果为长时间冷却的，则使用数组
+                    self.TQ.push(task);
+                    self.changed = Math.min(self.changed, delayT);
+                }
+                return task;
+            };
         }
     },
-    Resort(self){
-        self.changed=Infinity;
-        self.TQ.sort((a,b)=>{
-            return b.T-a.T||b.taskIndex-a.taskIndex;//按时间从大到小排，如果相等则按task的先后排序
+    Resort(self) {
+        const TQ = self.TQ;
+        const pool = self.__pool__;
+        self.changed = Infinity;
+        TQ.sort((a, b) => {
+            return b.T - a.T || b.taskIndex - a.taskIndex; //按时间从大到小排，如果相等则按task的先后排序
         });
-        self.taskNum=self.TQ.length;
-        while(--self.taskNum){
-            if(self.TQ[self.taskNum].T!==-Infinity){
+        self.taskNum = TQ.length;
+        while (self.taskNum--) {
+            if (TQ[self.taskNum].T !== -Infinity) {
                 break;
             }
-            self.TQ.pop();
+            pool.recycle(TQ.pop());
         }
         self.taskNum++;
     },
-    addTask(delayT=0, callback, arg = [], useSet=false) {
-        //因为游戏中的1相当于浏览器真实计时的10ms，所以传入的delayT（毫秒）要除以10
-        const self = this;
-        const task = {
-            T: self.Now + delayT,  //执行时间（自定义的oSym时间）
-            f: callback,  //执行函数  
-            taskIndex:self.taskTotal++,
-            ar: arg,  //参数的数组形式，用于执行函数传递参数
-        };
-        if(delayT<11||useSet){//如果反复写入，则使用集合
-            self.TQSet.add(task);
-        }else{//如果为长时间冷却的，则使用数组
-            self.TQ.push(task);
-            self.changed=Math.min(self.changed,delayT);
+    removeTask(task) {
+        if (!(this.TQSet.delete(task))) {
+            task.T = -Infinity;
         }
-        return task;
     },
-    Stop() {  //中止系统进程
+    Stop() { //中止系统进程
         clearInterval(oSym.Timer);
         oSym.Timer = null;
     },
     Clear() {
-        this.TQ.length=0;
+        this.TQ.length = 0;
         this.TQSet.clear();
-        this.taskNum=0;
-        this.taskTotal=0;
+        this.taskNum = 0;
+        this.taskTotal = 0;
     },
-},
-LevelConfig = {  //关卡默认配置
+    Sleep(keepTime) {
+        return new Promise(resolve => oSym.addTask(keepTime, resolve));
+    },
+};
+const LevelConfig = {  //关卡默认配置
     config: {
         'Tutorial': {
             backgroundMask: 'BgMask-Tutorial',
+            SummonZombieArea:[undefined,undefined,150],
+            LoadAccess(callback) {
+                oAudioManager.playAudio('Bgm_Tutorial_Noise', 1);
+                oSym.addTask(90, callback);
+            },
         },
         'Forest': {
             backgroundImage: 'images/interface/Forest.webp',
@@ -145,12 +308,18 @@ LevelConfig = {  //关卡默认配置
             AllowUserCard:true,
             DynamicDifficulty:true,
             CoinRatio:1,
+            SummonZombieArea:[undefined,160,100,370],
         },
         'Forestjx': {
             backgroundImage: 'images/interface/ForestJx.webp',
             backgroundMask: 'BgMask-Forest',
             AllowUserCard:true,
             CoinRatio:1.5,
+            SummonZombieArea:[undefined,160,100,370],
+            LoadAccess(callback) {
+                oAudioManager.playAudio('Bgm_Marsh_Noise', 1,0.5);
+                oSym.addTask(90, callback);
+            },
         },
         'Marsh': {
             backgroundImage: 'images/interface/Marsh.webp',
@@ -162,12 +331,20 @@ LevelConfig = {  //关卡默认配置
             AllowUserCard:true,
             CoinRatio:1,
             SpawnLevelLimit:0.6,
+            LoadAccess(callback) {
+                oAudioManager.playAudio('Bgm_Marsh_Noise', 1,0.5);
+                oSym.addTask(90, callback);
+            },
         },
         'Marshjx': {
             backgroundImage: 'images/interface/MarshJx.webp',
             backgroundMask: 'BgMask-Marsh',
             AllowUserCard:true,
-            CoinRatio:1.5,
+            CoinRatio:2,
+            LoadAccess(callback) {
+                oAudioManager.playAudio('Bgm_Marsh_Noise_JX', 1);
+                oSym.addTask(90, callback);
+            },
         },
         'Polar': {
             backgroundMask: 'BgMask-Polar',
@@ -212,10 +389,17 @@ LevelConfig = {  //关卡默认配置
             SummonZombieArea:[70,190,240,370],
             ZombieRandomSpeed:0,
             AllowUserCard:true,
-            CoinRatio:1.5,
+            CoinRatio:2.5,
         },
         'Industry': {
-            PicArr: [`images/interface/Industry.webp`],
+            PicArr: (function() {
+                let arr = ["images/interface/Industry.webp"];
+                for (let i=0; i<4; i++) {
+                    arr.push("images/interface/haze" + i + ".png");
+                    arr.push("images/interface/fog" + i + ".png");
+                }
+                return arr;
+            })(),
             backgroundImage: `images/interface/Industry.webp`,
             LoadMusic: `Bgm_Industry_Ready`,
             AllowUserCard:true,
@@ -224,26 +408,30 @@ LevelConfig = {  //关卡默认配置
                 return (oS.Lvl.replace(/[^0-9]/ig,"")<21)?`Bgm_Industry_Fight`:`Bgm_Industry_Fight_2`
             },
             LoadAccess(callback) {
+                oAudioManager.playAudio('Bgm_Industry_Noise',1);
                 oSym.addTask(90, callback);
+            },
+            get DynamicDifficulty(){
+                return (oS.Lvl.replace(/[^0-9]/ig,"")<19)?true:false;
             },
             CoinRatio:1.5,
             SummonZombieArea:[undefined,undefined,150],
         },
         'Industryjx': {
-            PicArr: [`images/interface/Industry.webp`],
-            backgroundImage: `images/interface/Industry.webp`,
+            PicArr: [`images/interface/Industryjx.webp`],
+            backgroundImage: `images/interface/Industryjx.webp`,
             LoadMusic: `Bgm_Industry_Ready_JX`,
-            backgroundMask: "BgMask-Industry",
+            backgroundMask: "BgMask-IndustryJX",
             AllowUserCard:true,
             DKind:0,
             get StartGameMusic(){
                 return `Bgm_Industry_Fight_JX`;
             },
             LoadAccess(callback) {
-                
+                oAudioManager.playAudio('Bgm_Industry_Noise_JX',1);
                 oSym.addTask(90, callback);
             },
-            CoinRatio:1.7,
+            CoinRatio:2.5,
             SummonZombieArea:[undefined,undefined,150],
         },
         'Mirage': {
@@ -259,6 +447,7 @@ LevelConfig = {  //关卡默认配置
                 return `images/interface/Mirage${oS.DKind ? '' : '_Night'}.webp`;
             },
             LoadAccess(callback) {
+                oAudioManager.playAudio('Bgm_Mirage_Noise',1);
                 oSym.addTask(90, callback);
             },
             CoinRatio:2,
@@ -273,15 +462,18 @@ LevelConfig = {  //关卡默认配置
             LoadMusic: "Fuben_Autumn_Ready",
             AllowUserCard:true,
             StartGameMusic: "Fuben_Autumn_Fight",
+            SummonZombieArea:[undefined,160,100,370],
         },  
         'SeasonW': {
             backgroundImage: 'images/interface/Fuben_Winter.webp',
+            backgroundMask: 'BgMask-Polar',
             LoadMusic: "Fuben_Winter_Ready",
             StartGameMusic: "Fuben_Winter_Fight",
             SunNum: 200,
-            CoinRatio:1.2,
+            CoinRatio:1.5,
             DKind: 0,
             AllowUserCard:true,
+            SummonZombieArea:[70,180,240,370],
         },  
     },
     query() {
@@ -294,31 +486,36 @@ LevelConfig = {  //关卡默认配置
 },
 oS = {
     //静态数据，不会因为关卡以及游戏进程而改变，无需Init只在页面最初定义一次
-    W: 900,
+    W: 1067,
+    GroundW:900,
+    EDAllScrollLeft:0,
+    GroundPictureWidth:1400,
+    FightingSceneLeft:115,
     H: 600,
     C: 9,
     LawnMowerX: 70,
     Lvl: 0,
+    Silence: Number.parseFloat(localStorage.JNG_TR_AudioPercent) === 0,
     DefaultStartGame() {  //默认开始游戏初始化代码
-        oAudioManager.playMusic(oS.StartGameMusic);
+        if (oS.StartGameMusic) oAudioManager.playMusic(oS.StartGameMusic);
         SetVisible($("tdShovel"), $("dFlagMeter"), $("dTop"));
         oS.ControlFlagmeter && oFlagContent.init({ fullValue: oP.FlagNum-1, curValue: 0 });  //显示进度条
         oS.InitLawnMover(); //剪草机
         PrepareGrowPlants(_ => {
             oP.Monitor();  //开启全局僵尸调度
             BeginCool();  //冷却
-            AutoProduceSun(50);  //掉落阳光
+            oS.DKind && !oS.IZombie && AutoProduceSun(50);  //掉落阳光
             oSym.addTask(1500, _=>{
                 oP.AddZombiesFlag();  //启动僵尸出场
                 oS.ControlFlagmeter && oFlagContent.show();
             });
         })
     },
-    DefaultFlagToEnd() {
+    DefaultFlagToEnd(gotoLevelString=null) {
         ShowWinItem(NewImg("imgSF", "images/interface/Clearance_reward.png", "left:535px;top:200px;width:116px;height:119px;", EDAll, {
             onclick: e=>oS.Lvl.indexOf('jx') < 0 ? 
-                GetNewProp(e.target, 'Clearance_reward', '星星', '星星是闯关成功的象征。加油搜集更多星星吧！', NextLevel(), "30%", "43%") :
-                GetWin(e.target, Exitlevel(oS.Lvl, 1))
+                GetNewProp(e.target, 'Clearance_reward', '星星', '星星是闯关成功的象征。加油搜集更多星星吧！', gotoLevelString??NextLevel(), "30%", "387px") :
+                GetWin(e.target, gotoLevelString??Exitlevel(oS.Lvl, 1))
         }));
     },
     GlobalVariables: {},  //储存重写前的暴露在window上的函数
@@ -364,9 +561,11 @@ oS = {
             MusicArr: [],
             VideoArr: [],
             Coord: 1,
+            DeltaY: 100, //height of each tile, 100 for 5 lanes, 88 for 6 lanes
             LF: [0, 1, 1, 1, 1, 1],
             ZF: null,
             PName: [],
+            LoadingPName: [],
             ZName: [],
             SunNum:150,
             backgroundImage: null,      //重置场景参数，以防延续上一关的场景
@@ -381,11 +580,20 @@ oS = {
             AllowUserCard: false,   //是否允许用户携带自己获得的卡片
             SortCardType:1,//排序卡的方式，1是全部排序，0是只排序用户获得卡片，-1是不排序
             StaticCard: 1,      //控制卡的个数是否是固定的。0表示源源不断的随机给卡，每个卡用一次
+            ScoreConditionNotMet: false, //in certain WinWithScore levels, score is used as an objective instead of a win condition, and this will be set to true at the start of the level. When you get enough score, this is set to false. If toWin is triggered but ScoreConditionNotMet is true, trigger toOver(2) instead
             DynamicDifficulty: false,//是否开启动态难度
             ZombieRandomSpeed: 0.15,//僵尸速度是否随机（表示僵尸的最大正负速度）
             ControlFlagmeter: true,  //是否授权底层自动控制关卡进度条
             CanSelectCard: true,  //是否允许玩家自由选卡，默认值为允许
-            DKind: 1,  //控制白天或黑夜：1表示白天，0表示黑夜
+            DKind: 1,  //控制白天或黑夜：1表示白天，0表示黑夜 (Note: oS.DKind is mostly to control natural sun drop. Some levels without a nighttime background still have oS.DKind = 0 (Last Stand). Use GetTrueDKind() to check day/night based on background)
+            BowlingLimitC: Infinity,
+            BonusWarnings: [], //warnings to manually add to the warning system in case the automatic system didn't recognize all the warnings
+            EDAllScrollLeft:0,
+            NoFinalWave: false, //if true then don't show the FINAL WAVE warning when it's the final wave
+            UpsideDown: false,
+            DisableUpgrades: false, //disable upgrades such as Sun Shovel, Sun Headstart, etc.
+            PlantOrder: 1, //record the planting order for zombies that use this targeting mechanism, like Necromancer Zombie
+            coolSpeed: 0.5, //multiplier for plant cards' cooldown speed (e.g. oStopwatch), 0.5 is default
             LoadAccess: null,
             /* 供函数内部调用的配置如下 */
             PicNum: 0,
@@ -394,7 +602,12 @@ oS = {
             Chose: 0,  //鼠标状态：0——无特殊状态，1——种植植物，-1——拖动铲子
             isStartGame: 0,  //关卡是否在进行,0未开始游戏，1开始游戏，2关卡结束
             CoinRatio: 0,
+            MaxManualLawnCleaner: 1, // 玩家允许手动触发的小推车数量,当小推车手动触发时,该项会递减
             ChoseCard: "",  //选择的卡片ID
+            TempChoseCard: -1, //navigate through plant card list with E, R shortcut key (for services.js)
+            TempChoseProp: -1, //navigate through prop list with C shortcut key (for services.js)
+            RestartType: null,
+            //oS.RestartType: "Survival" if it's a survival level but the checkpoint is not yet reached (when retrying the level the player will start over from the first challenge of the level). "SurvivalCheckpoint" if it's a survival level but the checkpoint is reached (when retrying the player will start from the last checkpoint). All checkpoint progress will be lost if the player quits a Survival level. This property only affects the quit/restart prompt in services.js, you still have to manually change the oS.Lvl yourself. (example: Polar29jx and Industry24jx survival level series)
             MPID: "",  //鼠标所在植物的ID
             CardsType: {},
             SpawnLevelLimit:0,//生成下一波所需要的僵尸等级比例
@@ -402,6 +615,10 @@ oS = {
             changeDKindConfig: {},
             TombConfig: null,
             __BalancedPlant__:false,//测试功能，平衡植物，目前已经替换完成，这个选项保留在这，如还有需要进行植物大改计划，开启即可
+            // 是否开启僵尸图层自动调整功能，该功能适用于围歼战或水道关卡
+            observeZombieLayer: false,  
+            // 每次进入关卡都会有一个独一无二的token，可以利用其判断关卡是否退出或者重新开始
+            LvlToken: '' + Math.random(), 
         };
         //记录挂载在oS上的变量，以便调用SelectModal时将其清除
         self.SelfVariables = new Set(Object.keys(rewrite_oS_Json).concat(Object.keys(DefaultProperties)));
@@ -418,7 +635,7 @@ oS = {
         //oS.ZF如无配置的话默认与oS.LF一致
         ! self.ZF && (self.ZF = self.LF);
         //播放LoadMusic，并加载其他音频
-        self.LoadMusic && oAudioManager.playMusic(self.LoadMusic);
+        self.LoadMusic && self.warmStart && oAudioManager.playMusic(self.LoadMusic);
         self.MusicArr = (oS.StartGameMusic ? [oS.StartGameMusic] : []).concat(self.MusicArr);
         //处理普通关卡的选卡
         if (self.PName.length > 0 && self.StaticCard && self.CanSelectCard) {
@@ -456,16 +673,29 @@ oS = {
                     return (value_json[a.prototype.EName]??ori_value_json[a.prototype.EName])-(value_json[b.prototype.EName]??ori_value_json[b.prototype.EName]);
                 });
             }
-            //如果PName中卡牌数目超过10个，则一律设置为允许自由选卡
-            self.CanSelectCard = self.PName.length > 10;            
+            //If the number of cards in PName exceeds the number of card slots allowed, allow free selection
+            //If oS.Slots is not manually stated in the level file, in non-Mirror Adventure levels, the default number of card slots is 7 and can be purchased up to 10, and in other locations there will be 10 card slots
+            let chklvl = /Forest|Marsh|Polar|Industry|Mirage/.test(oS.Lvl) && !/jx|Bonus_level/.test(oS.Lvl);
+            self.CanSelectCard = self.PName.length > (oS.Slots || (chklvl ? JSON.parse(localStorage.JNG_TR_Slots || 7) : 10));
+            
         }
+        //check for plants that can only be used for a limited number of times
+        self.PName.forEach((targetPlant) => {
+            if (targetPlant.prototype.SpawnLimit) {
+                targetPlant.spawntimes = 0;
+                targetPlant.prototype.SpawnLimitReached = false;
+            }
+        });
         /* 重写oS对象上挂载的变量结束 */
         /* other开始 */
         oAudioManager.Init();
+        if(IsGaming(false)){//如果是关卡，则清理不常用的audios
+            oAudioManager.checkClearUnusedAudio();
+        }
         oP.FlagToMonitor = setting_oP_Json?.FlagToMonitor || new Object();
         oP.FlagToEnd = setting_oP_Json?.FlagToEnd || self.DefaultFlagToEnd;
         // 分离oS.PName与oS.LoadingPName，便于选卡中不出现的植物的加载
-        oS.LoadingPName = Array.from(oS.PName);  
+        oS.LoadingPName.push(...oS.PName);  
         oCoord[self.Coord]();  //初始化战斗场地
         oP.Init(setting_oP_Json);
         oT.Init(self.R);  //初始化植物触发器系统
@@ -475,13 +705,14 @@ oS = {
         oCoinContent.Init();    //初始化货币系统
         oTombstone.Init();
         self.LoadProgress();  //启动加载
+        oZombieLayerManager.init();
         /* other结束 */
     },
     LoadProgress() {
         oS.LoadingStage = "LoadingRes";
         let PicArr = oS.PicArr;
         let DynamicPicArr = oS.DynamicPicArr;
-        let AudioArr = oS.AudioArr;
+        let AudioArr = oS.AudioArr.concat(CZombies.prototype.AudioArr);
         /* 加载植物资源 */
         for (let plant of oS.LoadingPName) {
             let proto = plant.prototype;
@@ -494,12 +725,15 @@ oS = {
         const AppearX = GetX(11);
         const LF = oGd.$ZF;
         const MaxR = oS.R + 1;
-        for (let zombie of oS.ZName) {
+        const Zombies = Array.from(oS.ZName);
+        for (let zombie of Zombies) {
             let proto = zombie.prototype;
             proto.PicArr.forEach(pic => {
                 oDynamicPic.checkOriginalURL(pic) ? DynamicPicArr.push(pic) : PicArr.push(oURL.removeParam(pic, "useDynamicPic"));
             });
             proto.Init(AppearX, proto, LF, MaxR);
+            // 如果当前僵尸有绑定SubsidiaryZombies，则一并加入循环处理
+            if (!isNullish(proto.SubsidiaryZombies)) Zombies.push(...proto.SubsidiaryZombies);
         }
         /* 需要列入加载监控的promise如下： */
         oS.PicArr = PicArr.unique().filter(pic => pic && !/^data:image\/\w+;base64/.test(pic));
@@ -544,16 +778,17 @@ oS = {
         SetHidden($("dFlagMeterContent"), $('dFlagMeter'));
         //设置背景
         SetVisible($("tGround"));
-        $("tGround_Image").style.background = "url(" + _this.backgroundImage + ") no-repeat";
+        ! isNullish(_this.backgroundImage) && ($("tGround_Image").style.background = "url(" + _this.backgroundImage + ") no-repeat");
         _this.backgroundMask && FightingScene.classList.add(_this.backgroundMask);  //设置背景蒙版
         oS?.changeDKindConfig?.background_sky && 
                 ($("tGround_Sky").style.background = `url:(${oS.changeDKindConfig.background_sky})`);
+        DisplayZombie(..._this.SummonZombieArea);
         const callback = function(StartTime) {
             NewEle("imgGrowSoil", 'img', "visibility:hidden;z-index:50", null, FightingScene);
             NewEle("dTitle", "div", 0, 0, EDAll);
+            if ($User.enabledMoreStartingSun && $('dSunNum').style.visibility != 'hidden' && !oS.DisableUpgrades) oS.SunNum+=100;
             innerText(ESSunNum, _this.SunNum);
             oSelectCardGUI.Init();  //初始化选择卡片界面中
-            DisplayZombie(..._this.SummonZombieArea);
             if(oS.isScroll){
                 oSym.addTask(!StartTime ? 90 : StartTime, oS.ScrollScreen);
             }else{
@@ -566,49 +801,66 @@ oS = {
     },
     NoScroll(){
         SetVisible($("dMenu"));
-        oSelectCardGUI.selectSeveralCards(oS.PName);
         const CardList =$("dCardList");
-        EDAll.scrollLeft = 115;
-        CardList.style.left = `115px`;
-        oSym.addTask(30, LetsGO);
+        EDAll.scrollLeft =oS.EDAllScrollLeft;
+        CardList.style.left = `${oS.EDAllScrollLeft}px`;
+        oSelectCardGUI.selectSeveralCards(oS.PName);
+        oSym.addTask(90*oSym.NowSpeed, LetsGO);
     },
-    ScrollScreen(time=0,targetLeft=500) {  //向右滚动，显示僵尸出场和选择卡片
+    ScrollScreen(time = 0, targetLeft = (oS.GroundPictureWidth-oS.W)) { //向右滚动，显示僵尸出场和选择卡片
         let totalTime = 130;
-        if(time<totalTime) {
-            EDAll.scrollLeft = Math.floor(Math.Lerp(0,targetLeft,(Math.sin(time/totalTime*Math.PI-Math.PI/2)+1)/2));
-            oSym.Timer?loop():oSym.addTask(0,loop);
-            function loop(){
-                let nowTime = new Date();
-                requestAnimationFrame(()=>{
-                    oS.ScrollScreen(time+(new Date()-nowTime)/10*oSym.NowSpeed,targetLeft);
-                });
-            }
+        const CardList =$("dCardList");
+        
+        if (time < totalTime) {
+            EDAll.scrollLeft = Math.round(Math.Lerp(0, targetLeft, (Math.sin(time / totalTime * Math.PI - Math.PI / 2) + 1) / 2));
+            let nowTime = new Date();
+            requestAnimationFrame(() => {
+                oS.ScrollScreen(time + (new Date() - nowTime) / 10 * oSym.NowSpeed, targetLeft);
+                CardList.style.left = `${EDAll.scrollLeft}px`;
+            });
         } else {
             EDAll.scrollLeft = targetLeft;
+            CardList.style.left = `${targetLeft}px`;
             SetVisible($("dMenu"));
-            if(oS.CanSelectCard) {
-                oSelectCardGUI.show(_ => {
-                    if($User._tmpARCARD[oS.Lvl]){
-                        oSelectCardGUI.selectSeveralCards($User._tmpARCARD[oS.Lvl]);
-                    }
-                });
-                oPropSelectGUI.Init().show();
+            if (oS.CanSelectCard) {
+                //let mumDOM = NewEle("mum", "div", "position: absolute; width: 390px; height: 390px; left: 710px; top: 80px; background-image: url(images/interface/mum.webp);", {}, EDAll);
+                {
+                    //ClearChild(mumDOM);
+                    oSelectCardGUI.show(_ => {
+                        let tmpArCard = $User._tmpARCARD[oS.Lvl];
+                        if (tmpArCard) {
+                            let trueArCard = [];//上一次选过的卡，如果是不能选或者不推荐选的，那就不自动选
+                            for (let plant of tmpArCard){
+                                ![1,3].includes(oS.CardsType[plant.prototype.EName]) && trueArCard.push(plant);
+                            }
+                            oSelectCardGUI.selectSeveralCards(trueArCard);
+                        }
+                    });
+                    if (!oPropSelectGUI.rerender) oPropSelectGUI.Init();
+                    oPropSelectGUI.show();
+                    oPropSelectGUI.rerender = 0;
+                };
             } else {
                 oSelectCardGUI.selectSeveralCards(oS.PName);
-                oSym.addTask(200, oS.ScrollBack, [LetsGO]);
+                oSym.addTask(90*oSym.NowSpeed, oS.ScrollBack, [LetsGO]);
             }
         }
     },
     ScrollBack(callback) {  //界面往左滚动
         const CardList =$("dCardList");
+        const viewDOM = $("viewDOM");
         let oriScrollLeft = EDAll.scrollLeft;
-                                                                // ↓上面的totalTime
-        let totalTime = Math.round(Math.abs(115-oriScrollLeft)/500*130);//要乘以理论上的比例
+                                                                // ↓130是上面的totalTime
+        let totalTime = Math.round(Math.abs(oS.EDAllScrollLeft-oriScrollLeft)/500*130);//要乘以理论上的比例
         let time = 0;
         let dt = $User.LowPerformanceMode?4:2;
+        if (oS.CanSelectCard && viewDOM) {
+            viewDOM.style.left = `${-EDAll.scrollLeft}px`;
+            viewDOM.style.visibility = `hidden`;
+        }
         (function fun() {
-            if(time<totalTime&&oriScrollLeft!=115) {
-                let scrollLeft = Math.floor(Math.Lerp(oriScrollLeft,115,(Math.sin(time/totalTime*Math.PI-Math.PI/2)+1)/2));
+            if(time<totalTime&&oriScrollLeft!=oS.EDAllScrollLeft) {
+                let scrollLeft = Math.floor(Math.Lerp(oriScrollLeft,oS.EDAllScrollLeft,(Math.sin(time/totalTime*Math.PI-Math.PI/2)+1)/2));
                 EDAll.scrollLeft = scrollLeft;
                 CardList.style.left = `${scrollLeft}px`;
                 oSym.Timer?loop():oSym.addTask(0,loop);
@@ -620,8 +872,8 @@ oS = {
                     });
                 }
             } else {
-                EDAll.scrollLeft = 115;
-                CardList.style.left = `115px`;
+                EDAll.scrollLeft = oS.EDAllScrollLeft;
+                CardList.style.left = `${oS.EDAllScrollLeft}px`;
                 oSym.addTask(0, callback);
             }
         })();
@@ -630,15 +882,114 @@ oS = {
 oCoord = {
     ['1']() {
         //设定总行数
-        oS.R = 5;  
+        oS.R = 5; 
+        oS.DeltaY = 100;
         //根据鼠标坐标X范围确定中点X坐标和列C的数组，返回格式[X, C] 
         window.ChosePlantX = X => {
-            let C = GetC(X);
+            let C = GetC(X-oS.FightingSceneLeft+oS.EDAllScrollLeft);
             return [GetX(C), C];
         };
         //根据鼠标坐标Y范围确定中点Y坐标和列R的数组，返回格式[Y, R] 
         window.ChosePlantY = Y => {
-            let R = GetR(Y);
+            let R = GetR(Y, true);
+            return [GetY(R), R];
+        };
+        //根据横坐标X找列C
+        {
+            //let CList = $SSmlList([ - 50, 100, 140, 220, 295, 379, 460, 540, 625, 695, 775, 855, 935, 1031], [ - 2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+            let CList = $SSmlList([ - 50, 100, 140, 225, 305, 385, 465, 545, 625, 705, 785, 865, 935, 1031], [ - 2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+            window.GetC = X => {
+                let C = $SEqlSml(Math.floor(X)-CList[1], CList[0], CList[2]);
+                return C;
+            }
+        };
+        //根据纵坐标Y找行R
+        window.GetR = (Y, UpsideDownCounted = false) => {
+            if (oS.UpsideDown && UpsideDownCounted) Y -= 40;
+            let R = $SSml(Y, [86, 174, 270, 380, 470], [0, 1, 2, 3, 4, 5]);
+            if (oS.UpsideDown && UpsideDownCounted) R = oS.R - R;
+            return R;
+        }
+        //返回列C的格子水平方向中点X
+        window.GetX = (C) => {
+            let X = $SEql(C, {
+                "-2": -50,
+                "-1": 100,
+                0 : 140,
+                1 : 187,
+                2 : 267,
+                3 : 347,
+                4 : 427,
+                5 : 507,
+                6 : 587,
+                7 : 667,
+                8 : 747,
+                9 : 827,
+                10 : 865,
+                11 : 950,
+                12 : 1050,
+            });
+            return X;
+        }
+        // 返回行R的僵尸/植物底部坐标Y
+        window.GetY = (R, UpsideDownCounted = false) => {
+            let Y = [75, 175, 270, 380, 470, 575][R];
+            if (oS.UpsideDown && UpsideDownCounted) Y = oS.H - Y + oS.DeltaY;
+            return Y;
+        }
+		//根据行返回Y范围,杨桃、保龄球用
+        window.GetY1Y2 = R => $SEql(R, {
+            0: [0, 75],
+            1: [76, 175],
+            2: [176, 270],
+            3: [271, 380],
+            4: [381, 470],
+            5: [471, 575]
+        });
+        // 获取当前行的中点Y坐标
+        window.GetMidY = R => {
+            let [y1, y2] = window.GetY1Y2(R);
+            return Math.round((y1 + y2) / 2);
+        }
+        //获取僵尸恰好超过3/4点的格子，僵尸水道方向切换用
+        {
+            let CList = $SSmlList([ - 50, 100, 140, 197, 277, 357, 437, 517, 597, 677, 757, 837, 935, 1031], [ - 2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+            window.GetMidC = X => $SEqlSml(Math.floor(X)-CList[1], CList[0], CList[2]);
+        };
+        window.GetMidR = Y => $SSml(Y, [86, 162, 256, 362, 452, 560], [0, 1, 2, 3, 4, 5, 6]) - 1;
+		window.GetRoofDelta = () => {return 0;};
+        //生成小推车
+        !oS.InitLawnMover && (oS.InitLawnMover = _ => {
+            for(let R = 1; R < 6; R++) {
+                let WaterLane = false;
+                for (let C = 1; C <= oS.C; C++) {
+                    if (oGd.$GdType[R][C] === 2) {
+                        WaterLane = true;
+                        break;
+                    }
+                }
+                oSym.addTask(R*10, CustomSpecial, [($User.enabledPoolCleaner && WaterLane) ? oPoolCleaner : oLawnCleaner, R, -1]);
+            }
+        });
+        //迷雾
+        oS.HaveFog && oFog.init().firstRender();
+        // 初始化僵尸容器
+        oZombieLayerManager.initContainer();
+        oP.ConfigureDeltaTop();
+        //make sure that all rows beyond row 5 in oS.LF and oS.ZF are invalid
+        oS.LF = oS.LF.slice(0,6);
+        oS.ZF = oS.ZF.slice(0,6);
+    },
+    ['2'](){
+        oS.R = 6;
+        oS.DeltaY = 88;
+         window.ChosePlantX = X => {
+            let C = GetC(X-oS.FightingSceneLeft+oS.EDAllScrollLeft);
+            return [GetX(C), C];
+        };
+        //根据鼠标坐标Y范围确定中点Y坐标和列R的数组，返回格式[Y, R] 
+        window.ChosePlantY = Y => {
+            let R = GetR(Y, true);
             return [GetY(R), R];
         };
         //根据横坐标X找列C
@@ -648,7 +999,12 @@ oCoord = {
             window.GetC = X => $SEqlSml(Math.floor(X)-CList[1], CList[0], CList[2]);
         };
         //根据纵坐标Y找行R
-        window.GetR = Y => $SSml(Y, [86, 174, 270, 380, 470], [0, 1, 2, 3, 4, 5]);
+        window.GetR = (Y, UpsideDownCounted = false) => {
+            if (oS.UpsideDown && UpsideDownCounted) Y += 20;
+            let R = $SSml(Y, [85, 170, 263, 367, 439, 531], [0, 1, 2, 3, 4, 5, 6]);
+            if (oS.UpsideDown && UpsideDownCounted) R = oS.R - R;
+            return R;
+        };
         //返回列C的格子水平方向中点X
         window.GetX = C => $SEql(C, {
             "-2": -50,
@@ -667,78 +1023,179 @@ oCoord = {
             11 : 950,
             12 : 1050,
         });
-        //返回行R的格子竖直方向中点Y
-        //根据囧姨说明，这个应该是返回行R的僵尸/植物底部坐标Y
-        window.GetY = R => [75, 175, 270, 380, 470, 575][R];
-		//根据行返回Y范围,杨桃、保龄球用
-		window.GetY1Y2 = R => $SEql(R,{0:[0,75],1:[76,180],2:[181,280],3:[281,385],4:[386,475],5:[476,568]});
-        //获取僵尸恰好超过3/4点的格子，僵尸水道方向切换用
+        window.GetY = (R, UpsideDownCounted = false) => {
+            let Y = [75, 165, 253, 355, 430, 522, 587][R];
+            if (oS.UpsideDown && UpsideDownCounted) Y = oS.H - Y + 100;
+            return Y;
+        }
+        window.GetY1Y2 = (R) => $SEql(R, {
+            0 : [0, 85],
+            1 : [86, 170],
+            2 : [171, 263],
+            3 : [264, 367],
+            4 : [368, 439],
+            5 : [440, 531],
+            6 : [532, 600]
+        });
+		window.GetRoofDelta = () => {return 0;};
+        !oS.InitLawnMover && (oS.InitLawnMover = () => {
+            for(let R = 1; R < 7; R++) {
+                let WaterLane = false;
+                for (let C = 1; C <= oS.C; C++) {
+                    if (oGd.$GdType[R][C] === 2) {
+                        WaterLane = true;
+                        break;
+                    }
+                }
+                oSym.addTask(R*10, CustomSpecial, [($User.enabledPoolCleaner && WaterLane) ? oPoolCleaner : oLawnCleaner, R, -1]);
+            }
+        });
+        //迷雾
+        oS.HaveFog && oFog.init().firstRender();
+        // 初始化僵尸容器
+        oZombieLayerManager.initContainer();
+        oP.ConfigureDeltaTop();
+        //make sure that row 6 in oS.LF and oS.ZF is valid
+        if (!oS.LF[6]) oS.LF[6] = 1;
+        if (!oS.ZF[6]) oS.ZF[6] = 1;
+    },
+	['3']() {
+        oS.R = 5; 
+        oS.DeltaY = 88;
+        window.ChosePlantX = X => {
+            let C = GetC(X-oS.FightingSceneLeft+oS.EDAllScrollLeft);
+            return [GetX(C), C];
+        };
+        window.ChosePlantY = (Y, C=9) => {
+            let R = GetR(Y, true, C);
+            return [GetY(R, true, C), R];
+        };
+        {
+            let CList = $SSmlList([ - 50, 100, 140, 225, 305, 385, 465, 545, 625, 705, 785, 865, 935, 1031], [ - 2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+            window.GetC = X => {
+                let C = $SEqlSml(Math.floor(X)-CList[1], CList[0], CList[2]);
+                return C;
+            }
+        };
+        window.GetR = (Y, UpsideDownCounted = false, C=9) => {
+            if (oS.UpsideDown && UpsideDownCounted) Y -= 40;
+			let delta = C > 5 ? 0 : (6-C)*20;
+            let R = $SSml(Y, [89+delta, 171+delta, 258+delta, 339+delta, 423+delta], [0, 1, 2, 3, 4, 5]);
+            if (oS.UpsideDown && UpsideDownCounted) R = oS.R - R;
+            return R;
+        }
+        window.GetX = (C) => {
+            let X = $SEql(C, {
+                "-2": -50,
+                "-1": 100,
+                0 : 140,
+                1 : 187,
+                2 : 267,
+                3 : 347,
+                4 : 427,
+                5 : 507,
+                6 : 587,
+                7 : 667,
+                8 : 747,
+                9 : 827,
+                10 : 865,
+                11 : 950,
+                12 : 1050,
+            });
+            return X;
+        }
+        window.GetY = (R, UpsideDownCounted = false, C = 9) => {
+			let delta = C > 5 ? 0 : (6-C)*20;
+            let Y = [75+delta, 155+delta, 240+delta, 325+delta, 410+delta, 495+delta][R];
+            if (oS.UpsideDown && UpsideDownCounted) Y = oS.H - Y + oS.DeltaY;
+            return Y;
+        }
+        window.GetY1Y2 = (R, C=9) => {
+			let delta = C > 5 ? 0 : (6-C)*20;
+			return $SEql(R, {
+				0: [0+delta, 89+delta],
+				1: [90+delta, 171+delta],
+				2: [172+delta, 258+delta],
+				3: [259+delta, 339+delta],
+				4: [340+delta, 423+delta],
+				5: [424+delta, 520+delta],
+			});
+		};
+        window.GetMidY = (R, C=9) => {
+            let [y1, y2] = window.GetY1Y2(R, C);
+            return Math.round((y1 + y2) / 2);
+        }
         {
             let CList = $SSmlList([ - 50, 100, 140, 197, 277, 357, 437, 517, 597, 677, 757, 837, 935, 1031], [ - 2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
             window.GetMidC = X => $SEqlSml(Math.floor(X)-CList[1], CList[0], CList[2]);
         };
-        window.GetMidR = Y => $SSml(Y, [86, 162, 256, 362, 452, 560], [0, 1, 2, 3, 4, 5, 6]) - 1;
-        //生成小推车
+        window.GetMidR = (Y, C=9) => {
+			let delta = C > 5 ? 0 : (6-C)*20;
+			$SSml(Y, [86+delta, 162+delta, 256+delta, 362+delta, 452+delta, 560+delta], [0, 1, 2, 3, 4, 5, 6]) - 1;
+		};
+		window.GetRoofDelta = function (X) {
+			//get the difference between the roof's height at anywhere beyond 455, and X
+			return Math.max(0,Math.floor((455-X)/80*20));
+		};
         !oS.InitLawnMover && (oS.InitLawnMover = _ => {
-            for(let R = 1; R < 6; R++) oSym.addTask(R*10, CustomSpecial, [oLawnCleaner, R, -1]);
+            /*for(let R = 1; R < 6; R++) {
+                let WaterLane = false;
+                for (let C = 1; C <= oS.C; C++) {
+                    if (oGd.$GdType[R][C] === 2) {
+                        WaterLane = true;
+                        break;
+                    }
+                }
+                oSym.addTask(R*10, CustomSpecial, [($User.enabledPoolCleaner && WaterLane) ? oPoolCleaner : oLawnCleaner, R, -1]);
+            }*/
         });
-        //迷雾
-        oS.HaveFog && oFog.init().render();
+        oS.HaveFog && oFog.init().firstRender();
+        oZombieLayerManager.initContainer();
+        oP.ConfigureDeltaTop();
+        //make sure that all rows beyond row 5 in oS.LF and oS.ZF are invalid
+        oS.LF = oS.LF.slice(0,6);
+        oS.ZF = oS.ZF.slice(0,6);
     },
-    ['2'](){
-        oS.R = 6;
-        let Compare = (e, b, a, c, d) => (d = (e < b ? b: (e > a ? a: e)), c ? [c(d), d] : [d]);
-        
-        window.ChosePlantX = (X) => Compare(GetC(X), 1, oS.C, GetX);
-        window.ChosePlantY = (Y) => $SSml(Y, [86, 171, 264, 368, 440, 532], [[75, 0], [161, 1], [254, 2], [358, 3], [430, 4], [524, 5], [593, 6]]);
-        //window.GetC = (X) => $SSml(X, [-50, 100, 140, 220, 295, 379, 460, 540, 625, 695, 775, 855, 935, 1031], [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-        {
-            let CList = $SSmlList([ - 50, 100, 140, 220, 295, 379, 460, 540, 625, 695, 775, 855, 935, 1031], [ - 2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-            window.GetC = X => $SEqlSml(Math.floor(X)-CList[1], CList[0], CList[2]);
-        };
-        window.GetR = (Y) =>  $SSml(Y, [86, 171, 264, 368, 440, 532], [0, 1, 2, 3, 4, 5, 6]);
-        window.GetX = (C) => $SEql(C, {
-            "-2": -50,
-            "-1": 100,
-            0 : 140,
-            1 : 187,
-            2 : 267,
-            3 : 347,
-            4 : 427,
-            5 : 507,
-            6 : 587,
-            7 : 667,
-            8 : 747,
-            9 : 827,
-            10 : 865,
-            11 : 950,
-            12 : 1050,
-        });
-        window.GetY = (R) => [75, 165, 253, 355, 430, 522, 587][R];
-        window.GetY1Y2 = (R) => $SEql(R, {0 : [0, 85],1 : [86, 170],2 : [171, 263],3 : [264, 367],4 : [368, 439],5 : [440, 531],6 : [532, 600]});
-        !oS.InitLawnMover && (oS.InitLawnMover = () => {
-            for(let R = 1; R < 7; R++) oSym.addTask(R*10, CustomSpecial, [R>2&&R<5&&window.oPoolCleaner?oPoolCleaner:oLawnCleaner, R, -1]);
-        });
-        oS.HaveFog && oFog.init().render();
-    }
 },
 //oP为负责全局监控的一些东西
 oP = {
     MonitorZombiePosition(zombie) {
         if (zombie.ZX && zombie.R) {
             oP.LastDeathPosition = {
-                x: zombie.ZX + 115,
-                y: GetY(zombie.R)
+                x: zombie.ZX + oS.EDAllScrollLeft,
+                y: GetY(zombie.R, false, zombie.C)
             };
         }
     },
+    
+    //triggered by oCoord
+    ConfigureDeltaTop() {
+        //for use in bullets.js and certain plants that shoot bullets in multiple lanes
+        oP.deltaTopForChangingR = new Map();
+        oP.pixelToparr = [];
+        //Y pixels changed when switching from lane -> lane: [1->2, 2->3, 3->4, 4->5, 5->6] / [1->2, 2->3, 3->4, 4->5]
+        for (let ro = 1; ro < oS.R; ro++) {
+            oP.pixelToparr.push(GetY(ro+1) - GetY(ro));
+        }
+        oP.temR = oS.R || 5;
+        for (let i = 1; i < oP.temR; ++i) {
+            for (let j = i + 1; j <= oP.temR; ++j) {
+                let base = oP.deltaTopForChangingR.get(`${i}_${j - 1}`) ?? 0;
+                let delta = oP.pixelToparr[j - 2];
+                oP.deltaTopForChangingR.set(`${i}_${j}`, base + delta);
+            }
+        }
+    },
+    
     Init(json) {
         oP.LastDeathPosition = {
             x: 535,
             y: 200
         }; //上一个僵尸死亡的地点
+        oP.DefaultFlagTime = 1990;//默认的每波时间
         oP.SpecialJudgment = {};
         oP.currentWaveNumLevels = oP.NumLevels = oP.NumZombies = oP.FlagZombies = 0; //全局僵尸数目清零；当前波数重置
+		oP.MonitorCalled = false;
         oP.arrZombiesSummonedInOneFlag = [];//刷怪专用随机数生成的东西
         {
             let minArr = [];
@@ -747,6 +1204,8 @@ oP = {
                 if(Math.random()<0.15){//有一定概率不参与最小值挑选
                     return arR.random();
                 }
+				//if it does not fall within that 15% chance, make sure the zombie spawns on the lane with the least total Lvl
+				//make sure oP.arrZombiesSummonedInOneFlag only records one flag at a time. The flag number is recorded at oP.arrZombiesSummonedInOneFlag[oS.R+2]
                 if(oP.arrZombiesSummonedInOneFlag[oS.R+2]!=oP.FlagZombies){
                     oP.arrZombiesSummonedInOneFlag = [];
                     oP.arrZombiesSummonedInOneFlag[oS.R+2]=oP.FlagZombies;
@@ -754,9 +1213,14 @@ oP = {
                         oP.arrZombiesSummonedInOneFlag[i]=0;
                     }
                 }
+				//oP.arrZombiesSummonedInOneFlag: from 1 -> oS.R is the total amount of Lvl recorded on each row
+				//minNum: amount of Lvl on the lane with the least Lvl
+				//minArr: an array that contains rows that are confirmed to have the least Lvl (amount of Lvl equal to minNum). This array is not reset every time a new zombie is checked, so only values from index 0 to minIndex-1 are valid.
+				//minIndex: only select randomly from minArr from index 0 to minIndex-1
                 let minNum = Infinity;
                 for(let i = arR.length-1;i>=0;i--){
                     if(oP.arrZombiesSummonedInOneFlag[arR[i]]<minNum){
+						//if the row is detected to have less Lvl than minNum, reset the entire minArr, and add the new row to the new minArr
                         minIndex = 1;
                         minArr[0] = arR[i];
                         minNum = oP.arrZombiesSummonedInOneFlag[arR[i]];
@@ -764,11 +1228,14 @@ oP = {
                         minArr[minIndex++] = arR[i];
                     }
                 }
+				//all the rows in minArr (up to minIndex-1) are already confirmed to have the least Lvl, so just pick randomly
                 let rand = Math.floor(Math.random()*minIndex);
+				//add the zombie's Lvl to its row
                 oP.arrZombiesSummonedInOneFlag[minArr[rand]]+=Lvl/2+1;
                 return minArr[rand];
             };
         };
+        
         if (json) {
             Object.assign(oP, json);
             //特殊判定
@@ -848,15 +1315,20 @@ oP = {
     //警告：isCounted为false的“僵尸傀儡”请勿调用oP.MonPrgs！！！
     MonPrgs(zombie) {
         --oP.NumZombies;
-        oP.NumLevels-=(zombie?.Lvl)??0;
+        oP.NumLevels -= (zombie?.Lvl) ?? 0;
+		if (oP.FlagZombies <= 0) return;
         if (oP.NumZombies <= 0 || //僵尸数达到0
-           (oP.FlagZombies < oP.FlagNum && oP.NumLevels <= oS.SpawnLevelLimit*oP.currentWaveNumLevels) || //如果不是最后一波，且僵尸目前等级数达到触发下一波的要求
-           (oP.SpecialJudgment.checks[oP.FlagZombies] && (oP.NumZombies <= oP.SpecialJudgment.checks[oP.FlagZombies]))//特殊判断僵尸数达到要求
+            (oP.FlagZombies < oP.FlagNum && oP.NumLevels <= oS.SpawnLevelLimit * oP.currentWaveNumLevels) || //如果不是最后一波，且僵尸目前等级数达到触发下一波的要求
+            (oP.SpecialJudgment.checks[oP.FlagZombies] && (oP.NumZombies <= oP.SpecialJudgment.checks[oP.FlagZombies])) //特殊判断僵尸数达到要求
         ) {
-            if(oP.currentWaveNumLevels===-1){//-1是一个暂时的值，用来记录当前波是否已经触发FlagPrgs
-                return;
+            if (oP.NumZombies > 0) {
+                if (oP.currentWaveNumLevels === -1) { //-1是一个暂时的值，用来记录当前波是否已经触发FlagPrgs
+                    return;
+                }
+                oP.currentWaveNumLevels = -1;
+            } else {
+                if (oP.ReadyFlag > oP.FlagZombies) return;
             }
-            oP.currentWaveNumLevels=-1;
             let FlagZombies = oP.FlagZombies;
             /*
                 检查是否已抵达最后一波
@@ -865,10 +1337,10 @@ oP = {
             */
             if (FlagZombies < oP.FlagNum) {
                 oP.ReadyFlag = ++FlagZombies;
-                oSym.addTask(oP.NumZombies<=0?500:200, oP.FlagPrgs);
+                oSym.addTask(oP.NumZombies <= 0 ? 100 : 200, oP.FlagPrgs);
             } else {
-                // 先让场上没放完的动画再放一会儿
-                oSym.addTask(350, toWin);
+                // 到达最后一波且僵尸被清零，启动胜利校验
+                oP.CheckWin();
             }
         }
     },
@@ -882,15 +1354,42 @@ oP = {
     },
     //刷怪和波数监控
     FlagPrgs() {
-        let FlagZombies = oP.FlagZombies;     //更新全局僵尸已进攻次数
-        let FlagToSumNum = oP.FlagToSumNum;     //关卡文件提供的刷怪数据
+        let FlagZombies = oP.FlagZombies; //更新全局僵尸已进攻次数
+        let FlagToSumNum = oP.FlagToSumNum; //关卡文件提供的刷怪数据
         let ZSum = $SSml(FlagZombies, FlagToSumNum.a1, FlagToSumNum.a2); //从FlagToSumNum.a2中取出当前波要刷僵尸的数量
         //当还有剩余波数
         if (oP.FlagNum > (FlagZombies = ++oP.FlagZombies)) {
             //检查当前波是否存在对应的FlagToMonitor回调，若存在则执行回调
             let callback = $SEql(FlagZombies, oP.FlagToMonitor);
             if (callback) {
-                let delayT = callback[2] ?? 1690;
+                //NOTE: By default when a wave is called, it will take oP.DefaultFlagTime for zombies inside FlagToMonitor of that wave to spawn (Escalation zombies are not affected). To change this, put the delay number at parameter number 2 of the wave in FlagToMonitor
+                //NOTE #2: If no zombies die during a wave, oP.DefaultFlagTime will be the delay time to trigger the next wave
+                /*e.g.
+                    FlagToMonitor: {
+                        2: [() => {
+                            PlaceZombie(oSkatingZombie,5,12);
+                        }, null, 100],
+                    }
+                The Skating Zombie will spawn after 100 (*0.01s) after wave 2 is called
+                    FlagToMonitor: {
+                        3: [() => {
+                            PlaceZombie(oSculptorZombie,1,12);
+                        }],
+                    }
+                When wave 3 is called, Sculptor Zombie will spawn after oP.DefaultFlagTime. Which means, if wave 4 is not triggered earlier than default, oP.FlagToMonitor[3] should be called in sync with wave 4.
+				It is generally more ideal to put the contents of the wave on a timer instead of setting the second parameter to 0, because wave contents can also have delays using oSym.addTask, like this:
+					FlagToMonitor: {
+						8: [() => {
+							oSym.addTask(700,()=>{
+								PlaceZombie(oGargantuar, 1, 12);
+							});
+						}],
+						9: [() => { 
+							PlaceZombie(oNecromancerZombie,5,12);
+						}],
+					}
+				As the second parameter is oP.DefaultFlagTime by default, the Necromancer Zombie is always guaranteed to spawn after the Gargantuar, even if the player trigger the next waves early.*/
+                let delayT = callback[2] ?? Math.max(0, oP.DefaultFlagTime);
                 oSym.addTask(delayT, _ => {
                     if (callback.__jng_called__ !== true) {
                         const arg = callback[1];
@@ -911,27 +1410,80 @@ oP = {
             //在启动下一波僵尸的进攻以前，需要先校验oP.ReadyFlag
             //如果oP.ReadyFlag不再等于FlagZombies，则说明oP.FlagPrgs已经oP.MonPrgs被重新触发过
             //则此时不再主动调用oP.FlagPrgs刷下一波僵尸。反则就需要主动调用。
-            oSym.addTask(1990, _ => {
+            oSym.addTask(oP.DefaultFlagTime, _ => {
                 oP.ReadyFlag === FlagZombies && (oP.ReadyFlag++, oP.FlagPrgs());
             });
-        }else if(oS.ControlFlagmeter&&FlagZombies===oP.FlagNum){//如果波数到了最后一波，主动检查是否胜利，没有进度条的肯定是有什么神秘任务，所以不检查
-            let t = 1990;
-            if(ZSum<1){
-                t=1000;
-            }
-            oSym.addTask(t,function loop(){
-                oP.NumZombies++;//因为oP.MonPrgs会将僵尸数量减少1，所以预先加上模拟僵尸死亡
-                oP.MonPrgs();
-                oSym.addTask(500,loop);
-            });
+        } else {
+            if (oP.FlagNum === FlagZombies) FinalWave();
         }
-        if(oP.ZombieWeightNeededToChange[FlagZombies]){//更改僵尸的权重
-            for(let arr of oP.ZombieWeightNeededToChange[FlagZombies]){
-                oP.ZombieCurrentWeight[arr[0]]=arr[1];
+        //If the previous wave's oP.FlagToMonitor is not triggered, trigger it immediately. (For example if wave 4 arrives but oP.FlagToMonitor[3] is not triggered (because in MonPrgs the SpecialJudgment is satisfied or oP.NumZombies reaches 0 which triggers wave 4 early), trigger oP.FlagToMonitor[3] immediately and ignore the delay number)
+        if (FlagZombies > 1) {
+            let callback2 = $SEql(FlagZombies-1, oP.FlagToMonitor);
+            if (callback2 && callback2.__jng_called__ !== true) {
+                const arg = callback2[1];
+                if (!!arg && arg[Symbol.iterator]) {
+                    callback2[0](...callback2[1]);
+                } else {
+                    callback2[0]();
+                }
+                //对callback进行标记，防止二次调用
+                Object.defineProperty(callback2, "__jng_called__", {
+                    value: true,
+                    configurable: false,
+                    enumerable: false,
+                });
             }
         }
-        oS.ControlFlagmeter && oFlagContent.update({ curValue: FlagZombies - 1 });      //更新进度条
-        oP.SelectFlagZombie(ZSum, FlagZombies);     //刷怪
+        if (oP.ZombieWeightNeededToChange[FlagZombies]) { //更改僵尸的权重
+            for (let arr of oP.ZombieWeightNeededToChange[FlagZombies]) {
+                oP.ZombieCurrentWeight[arr[0]] = arr[1];
+            }
+        }
+        oS.ControlFlagmeter && /NormalHead/.test(oFlagContent.__HeadEle__.className) && oFlagContent.update({
+            curValue: FlagZombies - 1
+        }); //更新进度条
+        oP.SelectFlagZombie(ZSum, FlagZombies); //刷怪
+        (function AutoCheckWin(times=0) {
+            //This function is used as a LAST RESORT to check victory condition, this time based on $Z instead of oP.NumZombies
+            if (oP.FlagZombies >= oP.FlagNum && oP.FlagZombies > 0) {
+                let wait=0;
+                for (let i of $Z) {
+                    if (i.isCounted) wait++;
+                }
+                if (wait == 0) {
+                    if (times < 7) {
+                        oSym.addTask(200, () => {AutoCheckWin(++times)});
+                    } else {
+                        //If CheckWin takes too long to activate then this shows up
+                        console.warn(`[PVZTR] AutoCheckWin activated`);
+                        toWin();
+                        for (let i of $Z) {
+                            if (!i.isPuppet) i.ExplosionDie(1);
+                        }
+                    }
+                } else {
+                    oSym.addTask(500, () => {AutoCheckWin(0)});
+                }
+            }
+        })();
+    },
+    // 延迟校验胜利
+    CheckWin() {
+        let FlagToSumNum = oP.FlagToSumNum;
+        let zombieNumInLastFlag = $SSml(oP.FlagNum, FlagToSumNum.a1, FlagToSumNum.a2);
+        let delayTime = zombieNumInLastFlag < 1 ? Math.max(500, oP.DefaultFlagTime - 1490) : 500;
+        oSym.addTask(delayTime, () => {
+            if (oP.NumZombies <= 0) {
+                let wait = 0;
+                for (let i of $Z) {
+                    if (!i.isPuppet) {
+                        wait++;
+                        i.ExplosionDie(1);
+                    }
+                }
+                oSym.addTask(wait ? 300 : 0, () => {toWin();});
+            }
+        });
     },
     /*
         生成进攻僵尸
@@ -1013,79 +1565,212 @@ oP = {
         self.SetTimeoutZombie(constructors, delayT);
     },
     SetTimeoutZombie(constructors, delayT) {
-        let instanceArr = [],
-            htmlArr = [],
-            _delayT = 0;
-        constructors.forEach((constructor, index) => {
-            htmlArr[index] = (instanceArr[index] = new constructor()).prepareBirth(_delayT);
-            _delayT += delayT * (Math.random() * 0.2 + 0.9);  //僵尸出现实际的相对SelectFlagZombie调用延迟，会在预设的90%~110%之间波动
-        });
-        asyncInnerHTML(htmlArr.reverse().join(""), fragment => {
-            EDPZ.insertBefore(fragment, EDPZ.firstChild); //绘制僵尸dom
-            instanceArr.forEach(instance => instance.Birth()); //唤醒僵尸
+        let _delayT = 0;
+        constructors.forEach(constructor => {
+            const zombie = new constructor();
+            const htmlCode = zombie.prepareBirth(_delayT);
+            const fragment = $n('template');
+            fragment.innerHTML = htmlCode;
+            const func = () => {
+                oZombieLayerManager.$Containers[zombie.R]?.append(fragment.content);
+                zombie.Birth();
+            };
+            requestIdleCallback(() => {
+                if (oS.isStartGame === 1) { //if the player restarts the level while there are zombies still scheduled in requestidlecallback, those zombies won't spawn because oS.isStartGame is already 0
+                    oSym.Timer ? func() : oSym.addTask(0, func);
+                }
+            }, {timeout: Math.floor(1000 + Math.random() * 3000)/oSym.NowSpeed});
+            //NOTE: the timeout is a solution for 'zombie spawns being delayed until browser is idle' bug
+            //僵尸出现实际的相对SelectFlagZombie调用延迟，会在预设的90%~110%之间波动
+            _delayT += delayT * (Math.random() * 0.2 + 0.9);  
         });
     },
-    AppearUP(htmlArr, instanceArr, animation = true, sync = false) {
-        instanceArr.forEach(instance => {
-            if(instance.isCounted){
-                oP.NumZombies++;
-                oP.NumLevels+=instance.Lvl;
-                //这里不需要更新当前波僵尸总数
-            }
-        });
-        let birthFunc = zombie => {
-            zombie.Birth();
-            let height = zombie.height,
-                EleBody = zombie.EleBody;
-            if (animation) {
-                EleBody.style.top = height + 'px';
-                oEffects.Animate(EleBody, {
-                    top: '0px',
-                    clip: `rect(0,auto,${height}px,0)`
-                }, 'slow', 'ease-out', (ele) => {
-                    ele.style.clip = `rect(0,auto,auto,0)`;
+    AppearUP(zombie, R, C, animConfig, isSync, ignoreStartGameChk = false) {
+        let {
+            useEleBodyAnim,
+            useDirtAnim
+        } = animConfig;
+        const isInWater = oGd.$GdType[R][C] === 2 && !zombie.isVehicle;
+		const RoofDelta = oS.Coord != 3 ? 0 : GetRoofDelta(GetX(C)-80);
+        const htmlCode = zombie.CustomBirth(R, C, useEleBodyAnim ? 31 : 0, 0);
+        if (!htmlCode) return;
+        const dirtAnimation = () => {
+            const cnt = oZombieLayerManager.$Containers[R];
+            const zIndex = zombie.zIndex_cont + 2;
+            if (isInWater && !zombie.Ethereal) {
+                oAudioManager.playAudio(`Rifter_Summon${1 + Math.floor(Math.random())}`, false, 0.3);
+                oEffects.ImgSpriter({
+                    ele: NewEle(`Dirt_${Math.random()}`, "div", `position:absolute;overflow:hidden;z-index:${zIndex};width:150px;height:184px;left:${770 - (9 - C)*82}px;top:${oS.DeltaY*(R-1) + 11 + RoofDelta}px;transform:scale(1.4);background:url(images/Props/Rifter/Drop_Water.png) no-repeat`, 0, cnt),
+                    styleProperty: 'X',
+                    changeValue: -150,
+                    frameNum: 37,
+                    interval: 4,
+                    callback: ClearChild,
                 });
-            } else {
-                SetStyle(EleBody, {
-                    clip: `rect(0,auto,auto,0)`
+            } else if (!zombie.Ethereal) {
+                oAudioManager.playAudio('dirt_rise');
+                oEffects.ImgSpriter({
+                    ele: NewEle(`Dirt_${Math.random()}`, "div", `position:absolute;background:url(images/Zombies/dirt.png) no-repeat;z-index:${zIndex};left:${766 - (9 - C)*80}px;top:${oS.DeltaY*(R-1) + 25 + RoofDelta}px;height:162px;width:126px;`, 0, cnt),
+                    styleProperty: 'X',
+                    changeValue: -126,
+                    frameNum: 22,
+                    callback: ele => oEffects.fadeOut(ele, 'slow', ClearChild),
                 });
             }
         };
-        if (sync) {
-            syncInnerHTML(htmlArr.join(""), frag => {
-                EDPZ.appendChild(frag);
-                instanceArr.forEach(birthFunc);
-            });
-        } else {
-            asyncInnerHTML(htmlArr.join(""), frag => {
-                EDPZ.appendChild(frag);
-                instanceArr.forEach(birthFunc);
-            });
+        const fragment = $n('template');
+        fragment.innerHTML = htmlCode;
+        const func = () => {
+            // 插入僵尸dom
+            zombie.useTraditionalWrap ?
+                EDPZ.append(fragment.content) :
+                oZombieLayerManager.$Containers[zombie.R]?.append(fragment.content);
+            // 调用Birth函数唤醒僵尸
+            zombie.Birth(void 0, true);
+            if (!zombie.Ele) return;
+            SetBlock(zombie.Ele);
+            // 处理动画
+            let height = zombie.height;
+            let EleBody = zombie.EleBody;
+            let targetTop = (isInWater ? oGd.$WaterDepth[R][C] + zombie.extraDivingDepth : 0);
+            if (zombie.Ethereal) EleBody.style.opacity = "0.5";
+            // 如果僵尸在水中的话，给僵尸加上水波效果
+            if (isInWater) {
+                zombie.setWaterStyle_middleWare();
+            }
+            if (useEleBodyAnim) {
+                let temp_altitude = zombie.Altitude;
+                zombie.Altitude = 3;
+                if ($User.LowPerformanceMode && zombie.EName !== 'oSpiritGuardian') {
+                    EleBody.style.opacity = "0";
+                    oSym.addTask(1 / oSym.NowSpeed, () => {
+                        EleBody.style.opacity = "1";
+                        SetStyle(EleBody, {
+                            'top': targetTop + zombie.GetDTop + 'px',
+                            'clip-path': `inset(0 0 calc(100% - ${height - targetTop}px) 0)`
+                        });
+                        if (!isInWater) {
+                            SetStyle(EleBody, {
+                                'clip-path': `inset(0 0 0 0)`
+                            });
+                        }
+                    });
+                } else {
+                    EleBody.style.top = (height - zombie.GetBlankTop) + 'px';
+                    SetStyle(EleBody, {
+                        'clip-path': `inset(0 0 100% 0)`
+                    });
+                    oEffects.Animate(EleBody, {
+                        top: targetTop + zombie.GetDTop + 'px',
+                        // 计算clip的时候不能算上僵尸的GetDTop
+                        // 不然可能会把僵尸动图最底部的部分给截掉
+                        'clip-path': `inset(0 0 calc(100% - ${height - targetTop}px) 0)`,
+                    }, (Math.abs(height-targetTop)/140*0.3) / oSym.NowSpeed, 'ease-out', () => {
+                        if (!isInWater) {
+                            SetStyle(EleBody, {
+                                'clip-path': `inset(0 0 0 0)`
+                            });
+                        }
+                    }, 0, 1, 'transition');
+                }
+                oSym.addTask(Math.abs(height-targetTop)/140*30, () => {
+                    zombie.Altitude = temp_altitude;
+                    if (isInWater) {
+                        zombie.useSinkIntoWaterEffect(zombie, targetTop);
+                        zombie.SetWater(targetTop, R, C, null, false, false);
+                    }
+                });
+            } else if (isInWater) {
+                zombie.useSinkIntoWaterEffect(zombie, targetTop);
+                zombie.SetWater(targetTop, R, C, null, false, false);
+            } else {
+                SetStyle(EleBody, {
+                    top: targetTop + zombie.GetDTop + 'px',
+                    'clip-path': `inset(0 0 0 0)`
+                });
+            }
+            if (useDirtAnim) dirtAnimation();
+        };
+        // 把僵尸纳入计数器
+        // 这里改成同步，确保异步检测关卡结束的时候能把正准备要钻出来的僵尸给检测进去
+        if (zombie.isCounted) {
+            oP.NumZombies++;
+            oP.NumLevels += zombie.Lvl;
         }
+        if (isSync || zombie.isPuppet) {
+            //since Puppets have their oGd.$LockingGrid registered immediately, it should not go through requestIdleCallback
+            func();
+        } else {
+            requestIdleCallback(() => {
+                if (oS.isStartGame !== 1) {
+                    console.warn('[PvZTR] Can no longer spawn zombies before oS.isStartGame = 1, unless the ignoreStartGameChk parameter or isSync parameter is set to true');
+                }
+                if (oS.isStartGame === 1 && !ignoreStartGameChk) {  //if the player restarts the level while there are zombies still scheduled in requestidlecallback, those zombies won't spawn because oS.isStartGame is already 0
+                    oSym.Timer ? func() : oSym.addTask(0, func);
+                }
+            }, {timeout: Math.floor(1000 + Math.random() * 3000)/oSym.NowSpeed});
+            //NOTE: the timeout is a solution for 'zombie spawns being delayed until browser is idle' bug
+        }
+        return zombie;
     },
     Monitor(callback) {
+		if (oP.MonitorCalled) return;
         callback && callback.f(...callback.ar);
+		oP.MonitorCalled = true;
         const traversalOf = oZ.traversalOf;
+        const zombieLayerRefresh = oZombieLayerManager.refresh.bind(oZombieLayerManager);
         const bulletsTraversalOf = oBu.traversalOf.bind(oBu);
-        (function fun() {
-            traversalOf();
-            oSym.addTask(10, fun);
-        })();
-        if($User.LowPerformanceMode){
-            (function fun2() {
-                bulletsTraversalOf(3);
-                oSym.addTask(3, fun2);
-            })();
+
+        if($User.TaskForceTimeSync){
+            let lastTime = Date.now(),lastTimeB = lastTime;
+            let curTime = lastTime;
+            let saver = null;
+            let TimeBulletUpdate = $User.LowPerformanceMode?17:oSym.BuMonitorRefresh;
+            let _tmp;
+            requestAnimationFrame(function fun(){
+                curTime = Date.now();
+                if(saver){
+                    lastTime+=curTime-saver;
+                    lastTimeB+=curTime-saver;
+                    saver=null;
+                }
+                if((_tmp=oSym.CalcTimePassed(curTime-lastTimeB)*oSym.NowSpeed)>=TimeBulletUpdate){
+                    bulletsTraversalOf(_tmp/oSym.BuMonitorRefresh);
+                    lastTimeB=curTime;
+                }
+                if((_tmp=oSym.CalcTimePassed(curTime-lastTime)*oSym.NowSpeed)>=oSym.ZMonitorRefresh){
+                    traversalOf(_tmp/oSym.ZMonitorRefresh);
+                    lastTime=curTime;
+                    oS.observeZombieLayer && zombieLayerRefresh();
+                }
+                oSym.Timer?requestAnimationFrame(fun):(()=>{
+                    saver = curTime;
+                    oSym.addTask(1,fun);
+                })();
+            });
         }else{
-            (function fun2() {
-                bulletsTraversalOf();
-                oSym.addTask(1, fun2);
+            let t1 = oSym.ZMonitorRefresh/10,t2=oSym.BuMonitorRefresh/10;
+            (function fun() {
+                traversalOf();
+                oS.observeZombieLayer && zombieLayerRefresh();
+                oSym.addTask(t1, fun);
             })();
+            if($User.LowPerformanceMode){
+                (function fun2() {
+                    bulletsTraversalOf(3);
+                    oSym.addTask(3, fun2);
+                })();
+            }else{
+                (function fun2() {
+                    bulletsTraversalOf();
+                    oSym.addTask(t2, fun2);
+                })();
+            }
         }
         if($User.DrawBlood){
             let ratio = $User.LowPerformanceMode?4/5:1;
-            let canvas = NewEle("","canvas",`position:absolute;left:0;top:0;width:900px;height:600px;pointer-events:none;z-index:${3*(oS.R+1)}`,{
-                width:Math.floor(900*ratio),
+            let canvas = NewEle("HPbarcanvas","canvas",`position:absolute;left:0;top:0;width:${oS.W}px;height:600px;pointer-events:none;z-index:${3*(oS.R+1)}`,{
+                width:Math.floor(oS.W*ratio),
                 height:Math.floor(600*ratio)
             },EDPZ);
             let ctx = canvas.getContext("2d");
@@ -1096,75 +1781,117 @@ oP = {
                 ctx.fillRect(Math.round(x*ratio),Math.round(y*ratio),Math.round(width*ratio),Math.round(height*ratio));
             }
             const drawBlood = ()=>{
-                ctx.clearRect(0,0,Math.floor(900*ratio),Math.floor(600*ratio));
+                ctx.clearRect(0,0,Math.floor(oS.W*ratio),Math.floor(600*ratio));
+                let purpleDrawing = [];
+                let redDrawing = [];
                 let greenDrawing = [];
+                let green2Drawing = [];
                 let blueDrawing = [];
-                ctx.fillStyle="#555555";
                 let tmpOHP;
+                ctx.fillStyle="#555555";
                 for(let zombie of $Z){
                     if(zombie.CanDrawBlood){
                         let drawPosition = {
                             x:zombie.X+(zombie.beAttackedPointL+zombie.beAttackedPointR)/2,
                             y:zombie.pixelTop+(zombie.HeadTargetPosition[zombie.isAttacking]??zombie.HeadTargetPosition[0]).y-10-box.height,
-                            HPRatio:Math.max(1,((zombie.constructor.prototype.HP-zombie.BreakPoint)/500)**1/3)
+                            HPRatio:Math.max(1, Math.min(3, (((zombie.OHP || zombie.constructor.prototype.HP)-zombie.BreakPoint)/500)**1/3 ) )
                         };
                         drawPosition.x -= box.width*drawPosition.HPRatio/2;
                         let blueTriggered = false;
-                        if(zombie.OrnHP>0&&zombie.OrnHP<(tmpOHP=zombie.constructor.prototype.OrnHP)){
+                        if(zombie.ShieldHP>0&&zombie.ShieldHP<(tmpOHP=zombie.OShieldHP)){
+                            let obj = Object.assign({
+                                ratio:zombie.ShieldHP/tmpOHP,
+                            },drawPosition);
+                            obj.HPRatio = Math.max(1, Math.min(3, (((zombie.OHP || zombie.constructor.prototype.HP)-zombie.BreakPoint)/500)**1/3 ) );
+                            obj.y-=6;
+                            purpleDrawing.push(obj);
+                            fillRectRatio(obj.x-2,obj.y-2,box.width*obj.HPRatio+4,box.height+4);
+                        }
+                        if(zombie.OrnHP>0&&zombie.OrnHP<(tmpOHP=zombie.constructor.prototype.OrnHP)&&zombie.OrnHP<Infinity){
                             let obj = Object.assign({
                                 ratio:zombie.OrnHP/tmpOHP,
                             },drawPosition);
-                            obj.HPRatio = Math.max(1,(tmpOHP/500)**1/3);
+                            obj.HPRatio = Math.max(1, Math.min(3, (tmpOHP/500)**1/3 ) );
                             obj.y+=blueBoxRelatvieY;
                             blueDrawing.push(obj);
                             fillRectRatio(obj.x-2,obj.y-2,box.width*obj.HPRatio+4,box.height+4);
                             blueTriggered = true;
                         }
-                        if((zombie.HP<(tmpOHP=zombie.constructor.prototype.HP)||blueTriggered)&&zombie.HP>=zombie.BreakPoint){
-                            greenDrawing.push(Object.assign({
-                                ratio:(zombie.HP-zombie.BreakPoint)/(tmpOHP-zombie.BreakPoint),
+                        if(( (zombie.HP!=(tmpOHP=(zombie.OHP || zombie.constructor.prototype.HP))&&zombie.HP<Infinity) ||blueTriggered)&&zombie.HP>=zombie.BreakPoint){
+                            let targarr = zombie.constructor.prototype.HP > 4500 || zombie.EName == 'oMembraneZombieSP' ? redDrawing : greenDrawing;
+                            targarr.push(Object.assign({
+                                ratio:Math.min(1,(zombie.HP-zombie.BreakPoint)/(tmpOHP-zombie.BreakPoint)),
                             },drawPosition));
+                            if (zombie.HP > tmpOHP) {
+                                let tem = Math.min(1,(zombie.HP-tmpOHP)/300);
+                                for (let times=1; times<=(tem>=1?2:1); times++) {
+                                    green2Drawing.push(Object.assign({
+                                        ratio:tem,
+                                    },drawPosition));
+                                }
+                            }
                             fillRectRatio(drawPosition.x-2,drawPosition.y-2,box.width*drawPosition.HPRatio+4,box.height+4);
                         }
                     }
                 }
                 for(let plant of $P){
-                    let drawPosition = {
-                        x:plant.pixelLeft+plant.width/2,
-                        y:GetY(plant.R)-box.height-95+plant.BloodBarRelativeHeight,
-                        HPRatio: Math.max(1,(((tmpOHP=plant.constructor.prototype.HP) - plant.BlueBarHP) / 1000)**1/4)
-                    };
-                    drawPosition.x-=box.width*drawPosition.HPRatio/2;
-                    let BlueHP = plant.BlueBarHP-(tmpOHP-plant.HP);
-                    if(plant.HP<tmpOHP&&BlueHP>0){
-                        let obj = Object.assign({
-                            ratio:BlueHP/plant.BlueBarHP,
-                        },drawPosition);
-                        obj.HPRatio = Math.max(1,(plant.BlueBarHP/1500)**1/4);
-                        let deltaAddY = 0;
-                        if(tmpOHP>plant.BlueBarHP){//如果不是全部都是蓝血
-                            deltaAddY = blueBoxRelatvieY;
+                    if(plant.CanDrawBlood){
+                        let drawPosition = {
+                            x:plant.pixelLeft+plant.width/2,
+                            y:GetY(plant.R,false,plant.C)-box.height-95+plant.BloodBarRelativeHeight,
+                            HPRatio: Math.max(1,(((tmpOHP=plant.tempHP||plant.constructor.prototype.HP) - plant.BlueBarHP) / 1000)**1/4)
+                        };
+                        drawPosition.x-=box.width*drawPosition.HPRatio/2;
+                        let BlueHP = plant.BlueBarHP-(tmpOHP-plant.HP);
+                        if(plant.HP<tmpOHP&&BlueHP>0){
+                            let obj = Object.assign({
+                                ratio:BlueHP/plant.BlueBarHP,
+                            },drawPosition);
+                            obj.HPRatio = Math.max(1,(plant.BlueBarHP/1500)**1/4);
+                            let deltaAddY = 0;
+                            if(tmpOHP>plant.BlueBarHP){//如果不是全部都是蓝血
+                                deltaAddY = blueBoxRelatvieY;
+                            }
+                            obj.y+=deltaAddY;
+                            blueDrawing.push(obj);
+                            fillRectRatio(drawPosition.x-2,drawPosition.y-2+deltaAddY,box.width*obj.HPRatio+4,box.height+4);
                         }
-                        obj.y+=deltaAddY;
-                        blueDrawing.push(obj);
-                        fillRectRatio(drawPosition.x-2,drawPosition.y-2+deltaAddY,box.width*obj.HPRatio+4,box.height+4);
+                        if(tmpOHP>plant.BlueBarHP&&plant.HP!=tmpOHP&&plant.HP>0&&plant.HP<100000){
+                            drawPosition.ratio = Math.min(plant.HP/(tmpOHP-plant.BlueBarHP),1);
+                            drawPosition.HPRatio= Math.max(1,((tmpOHP-plant.BlueBarHP)/1000)**1/4);
+                            greenDrawing.push(drawPosition);
+                            if (plant.HP > tmpOHP) {
+                                let objg = Object.assign({},drawPosition);
+                                objg.ratio = Math.min(1,(plant.HP-tmpOHP)/1000);
+                                for (let times=1; times<=(objg.ratio>=1?2:1); times++) {
+                                    green2Drawing.push(objg);
+                                }
+                            }
+                            fillRectRatio(drawPosition.x-2,drawPosition.y-2,box.width*drawPosition.HPRatio+4,box.height+4);
+                        }
                     }
-                    if(tmpOHP>plant.BlueBarHP&&plant.HP<tmpOHP&&plant.HP>0){
-                        drawPosition.ratio = Math.min(plant.HP/(tmpOHP-plant.BlueBarHP),1);
-                        drawPosition.HPRatio= Math.max(1,((tmpOHP-plant.BlueBarHP)/1000)**1/4)
-                        greenDrawing.push(drawPosition);
-                        fillRectRatio(drawPosition.x-2,drawPosition.y-2,box.width*drawPosition.HPRatio+4,box.height+4);
-                    }
+                }
+                ctx.fillStyle="#D210EE";
+                for(let i = purpleDrawing.length-1;i>=0;i--){
+                    fillRectRatio(purpleDrawing[i].x,purpleDrawing[i].y,box.width*purpleDrawing[i].ratio*purpleDrawing[i].HPRatio,box.height);
+                }
+                ctx.fillStyle="#ff6b6b";
+                for(let i = redDrawing.length-1;i>=0;i--){
+                    fillRectRatio(redDrawing[i].x,redDrawing[i].y,box.width*redDrawing[i].ratio*redDrawing[i].HPRatio,box.height);
                 }
                 ctx.fillStyle="#55FF55";
                 for(let i = greenDrawing.length-1;i>=0;i--){
                     fillRectRatio(greenDrawing[i].x,greenDrawing[i].y,box.width*greenDrawing[i].ratio*greenDrawing[i].HPRatio,box.height);
                 }
+                ctx.fillStyle="#ffffff";
+                for(let i = green2Drawing.length-1;i>=0;i--){
+                    fillRectRatio(green2Drawing[i].x,green2Drawing[i].y,box.width*green2Drawing[i].ratio*green2Drawing[i].HPRatio,box.height);
+                }
                 ctx.fillStyle="#00CCFF";
                 for(let i = blueDrawing.length-1;i>=0;i--){
                     fillRectRatio(blueDrawing[i].x,blueDrawing[i].y,box.width*blueDrawing[i].ratio*blueDrawing[i].HPRatio,box.height);
                 }
-                return Math.floor(($User.LowPerformanceMode?1.2:1)*oSym.NowSpeed*Math.Clamp((greenDrawing.length+blueDrawing.length)*2/3,20,150));
+                return Math.floor(($User.LowPerformanceMode?1.2:1)*oSym.NowSpeed*Math.Clamp((greenDrawing.length+blueDrawing.length+purpleDrawing.length+green2Drawing.length)*2/3,20,150));
             };
             (function fun(){
                 oSym.addTask(drawBlood(),fun,void 0,true);
@@ -1180,7 +1907,7 @@ oP = {
         let num = Number.parseInt(localStorage["JNG_TR_DYNAMIC_DIFFICULTY_WINRATE"]) || 0;
         //如果val为空，则表明当前为读取数据，直接返回结果即可
         if (val === null) {
-            return Math.round(num / 2);
+            return Math.round(num);
         }
         if (absolute) {
             num = val;
@@ -1188,25 +1915,30 @@ oP = {
             if (noCorrect) {
                 num += val;
             } else {
-                if (val < 0 && num + val >= 7) {
-                    num = 6;
-                } else if (val > 0 && num + val <= -7) {
-                    num = -6;
+                if (val < 0 && num + val >= 14) {
+                    num = 13;
+                } else if (val > 0 && num + val <= -4) {
+                    num = -2;
                 } else {
                     num += val;
                 }
             }
         }
-        num = Math.Clamp(num,-10,10);
+        num = Math.Clamp(num,-5,20);
         localStorage["JNG_TR_DYNAMIC_DIFFICULTY_WINRATE"] = num;
-        return Math.round(num / 2);
+        return Math.round(num);
     },
     createDynamicDifficultyArr(a1, a2) {
         const _config_diff = oP.operateDynamicDifficulty();
         for (let i = 0; i < a2.length; i++) {
             if (a2[i] === 0) continue;
-            a2[i] = Math.round(a2[i]*Math.sqrt(_config_diff*0.05+1));
+            a2[i] = Math.round(a2[i]*Math.sqrt(_config_diff*0.06+1));
         }
+    },
+    Destroy() {
+        delete oP.AZ;
+        delete oP.FlagToSumNum;
+        delete oP.FlagToMonitor;
     },
 },
 oGd = {  //场地系统
@@ -1229,20 +1961,34 @@ oGd = {  //场地系统
             "$Crater",  // 坑位置映射表，在原版jspvz中供毁灭菇使用，现在主要用于标记被冰道覆盖的格子
         ];
         self.__LockGridType__.forEach((type) => {
-            self[type] = {};
+            if ( ["$Rifter", "$Crater"].includes(type) ) {
+                self[type] = new Set();
+            } else {
+                self[type] = {};
+            }
         });
         // 障碍物相关映射表 结束
         self.$Torch = {};  //火炬树桩映射表
         self.$TrafficLights = {};  //红绿灯映射表（红绿灯tmd也能照亮雾）
         self.$Plantern = {};  //路灯花映射表
         self.$Umbrella = {};  // 叶子保护伞映射表
+        self.$Lava = {};
+		self.$SpinningFans = {};
+        self.$PortalsMap = {};
+        self.$Link = new Set();
+        self.$DeadLink = new Set();
+        self.$RoofTiles = {};
+        self.$Coins = {};
         self.$LF = oS.LF;
         self.$ZF = oS.ZF;
-        self.$Ice = [];
         self.$GdType = [];
         self.$WaterDepth = [];
         self.$JackinTheBox = 0;
         self.$WaterFlowDirection = [];
+        self.$Portals = [];
+        // 虽然冰道的代码已经分离出来，
+        // 但考虑到冰道素材必须预加载才能画到canvas上，所以这里一并初始化
+        oIceRoad.init();
         //需要多预留行/列作为哨兵
         for(let i = 0; i <= oS.R + 1; i++){
             self.$GdType[i] = [];
@@ -1286,57 +2032,49 @@ oGd = {  //场地系统
     */
     unlockGrid(R, C) {
         const key = oGd.isValidCrood(R) ? R : (R + "_" + C);
-        if (this.isLocked(key) || !oGd.isValidCrood(key)) {
+        //Zomboni can create ice trail (Crater) beneath other lockinggrid objects, so it is necessary to check if there is still a crater before unlocking
+        if (this.isLocked(key) || !oGd.isValidCrood(key) || oGd.$Crystal[key] || oGd.$Sculpture[key] || oGd.$IceBlock[key] || oGd.$Crater.has(key)) {
             return false;
         }
         return (delete this.$LockingGrid[key]);
     },
-},
-oBu = {//子弹系统
-    Init(){
-        let self = this;
-        self.$Bullets = {};
-        self.deleteList = [];
-        self.BulletKeys= [];//所有子弹的id
-    },
-    del(obj){
-        let self = this;
-        self.deleteList.push(obj.id);
-    },
-    add(bullet,key){
-        let self = this;
-        self.$Bullets[key]=bullet;
-        self.BulletKeys = Object.keys(self.$Bullets);
-    },
-    traversalOf(times=1){
-        let self = this;
-        let bullets = self.$Bullets,
-        list = self.deleteList,
-        keys = self.BulletKeys,
-        len;
-        for(let i =keys.length-1;i>=0;--i){
-            bullets[keys[i]]?.Update(bullets[keys[i]],times);
-        }
-        //len必须在此才能赋值
-        for(let i = (len=list.length)-1;i>=0;i--){
-            delete bullets[list[i]];
-        }
-        if(len>0){
-            self.BulletKeys = Object.keys(self.$Bullets);
-            self.deleteList = [];
-        }
+};
+class __BulletPool__ {
+    constructor() {
+        this.pool = [];
     }
-},
-/*
-oBu = {//子弹系统
+    get() {
+        return this.pool.pop() ?? {};
+    }
+    recycle(bulletObject) {
+        Object.keys(bulletObject).forEach((property) => {
+            delete bulletObject[property];
+        });
+        this.pool.push(bulletObject);
+    }
+};
+const oBu = {//子弹系统
     Init(){
         let self = this;
         self.$Bullets = {};
-        self.deleteList = [];
+        self.__pool__ = self.__pool__ ?? new __BulletPool__();
     },
-    del(obj){
+    createBullet(constructor, ...ar) {
+        const bulletObject = this.__pool__.get();
+        bulletObject.__proto__ = constructor.prototype;
+        constructor.call(bulletObject);
+        return bulletObject.Birth(...ar);
+    },
+    del(obj) {
         let self = this;
-        self.deleteList.push(obj.id);
+        let id = obj.id;
+        let bullets = self.$Bullets;
+        if (!isNullish(bullets[id])) {
+            delete bullets[id];
+            self.__pool__.recycle(obj);            
+        } else {
+            console.warn(`[PVZTR] Can't destroy a missing bullet ${id}.`);
+        }
     },
     add(bullet,key){
         let self = this;
@@ -1344,30 +2082,35 @@ oBu = {//子弹系统
     },
     traversalOf(times=1){
         let self = this;
-        let bullets = self.$Bullets,
-        list = self.deleteList,
-        keys = self.BulletKeys;
-        for(let i of bullets){
-            i.Update(i,times);
-        }
-        if(list.length>0){
-            for(let i of list){
-                delete bullets[i];
-            }
-            self.deleteList = [];
+        let bullets = self.$Bullets;
+        // 更新子弹状态
+        for (let bullet of bullets) {
+            bullet.Update(bullet, times);
         }
     }
-},*/
-oZ = {
+};
+var oZ = {
 	Init:function(r){//按左攻击点从小到大排序，给往左飞行的子弹等的僵尸序列数组按右检测点从大到小排序
-		this.$=[];this.$R=[];var i;for(i=r;i;this.$[i]=[],this.$R[i--]=[]);
+		this.$=[];
+        this.$R=[[]];
+        for(let i=r;i;this.$[i]=[],this.$[i].__tmpLen__ = 0,this.$R[i--]=[]);
 	},
 	add(o) { //添加一个僵尸对象
         let rArr = oZ.$[o.R];
+        if (isNullish(rArr)) {
+            console.warn('[PVZTR] Attempt to spawn a zombie on an uninteractable lane');
+            return;
+        }
+        rArr.__tmpLen__++;
 		rArr.push(o);
 		rArr.sort((a,b) => a.AttackedLX - b.AttackedLX);
 		rArr.RefreshTime = oSym.Now;  //普通触发器数组的刷新时间属性
 	},
+    del(R, index) {
+        const rArr = typeof R === 'number' ? oZ.$[R] : R;
+        rArr.__tmpLen__--;
+        rArr.splice(index, 1);
+    },
 	getZ0(x,r,custom=Z=>true) {
         //往右飞的子弹，根据一个点X坐标和R行返回满足僵尸左攻击点<=X && 右攻击点>=X 的第一个僵尸对象 
         //custom为自定义条件
@@ -1377,27 +2120,89 @@ oZ = {
 		let i = 0;
         let aL = this.$[r];
         let Z;
-        let len = aL.length;
-		while(i < len && (Z=aL[i++]).AttackedLX <= x) {
-            if(Z.PZ && Z.HP && Z.AttackedRX>=x && custom(Z)) {
+        let len = aL.__tmpLen__;
+		while(i < len && (Z=aL[i++])?.AttackedLX <= x) {
+            if(Z.HP && Z.AttackedRX>=x && custom(Z)) {
                 return Z;
             }
         } 
 	},
-	getZ1:function(x,r,custom=Z=>true){ //往左飞的子弹，根据一个点X坐标和R行返回满足僵尸左攻击点<=X && 右攻击点>=X 的第一个僵尸对象
-		if(r<1||r>oS.R)return;
-		var i=0,aL=this.$[r],aR=this.$R[r],a,Z,t,len;
-		(t=aL.RefreshTime)==aR.RefreshTime?
-			a=aR:(a=(this.$R[r]=aL.slice(0)).sort(function(a,b){return b.AttackedRX-a.AttackedRX})).RefreshTime=t;
-		len=a.length;
-		while(i<len&&(Z=a[i++]).AttackedRX>=x)if(Z.PZ&&Z.HP&&Z.AttackedLX<=x&&custom(Z))return Z;
-	},
+    getZ0Spd(bul,r,custom=Z=>true,dt=0){//这里的deltaTime是子弹相对的，需要乘以子弹时间再除以僵尸时间
+        if( r<1 || r > oS.R) {
+            return;
+        }
+		let i = 0;
+        let aL = this.$[r];
+        let Z;
+        let len = aL.__tmpLen__;
+        let deltaTime = dt;
+		while(i < len && (Z=aL[i++])?.AttackedLX <= bul.pixelLeft+bul.Width+bul.Speed*deltaTime) {
+            if(Z.HP && One_Dimensional_Intersection(
+                Z.AttackedLX,
+                Z.AttackedRX,
+                bul.pixelLeft,
+                bul.pixelLeft+bul.Width+bul.Speed*deltaTime
+            ) && custom(Z)) {
+                return Z;
+            }
+        } 
+    },
+	getZ1: function(x, r, custom=Z=>true) {
+        //往左飞的子弹，根据一个点X坐标和R行返回满足僵尸左攻击点<=X && 右攻击点>=X 的第一个僵尸对象
+        if (r < 1 || r > oS.R){
+            return;
+        }
+        let i = 0, aL = this.$[r], aR = this.$R[r], a, Z, t, len;
+        if((t = aL.RefreshTime) === aR.RefreshTime){
+            a = aR;
+        }else{
+            a = (this.$R[r] = aL.slice(0));
+            a.sort(function(a, b) {
+                return b.AttackedRX - a.AttackedRX
+            });
+            a.RefreshTime = t;
+        }
+        len = aL.__tmpLen__;
+        while (i < len && (Z = a[i++])?.AttackedRX >= x){
+            if (Z.HP && Z.AttackedLX <= x && custom(Z)){
+                return Z;
+            }
+        }
+    },
+    getZ1Spd(bul, r, custom=Z=>true,dt=0){
+        //往左飞的子弹，根据一个点X坐标和R行返回满足僵尸左攻击点<=X && 右攻击点>=X 的第一个僵尸对象
+        if (r < 1 || r > oS.R){
+            return;
+        }
+        let i = 0, aL = this.$[r], aR = this.$R[r], a, Z, t, len;
+        let deltaTime = dt;
+        if((t = aL.RefreshTime) === aR.RefreshTime){
+            a = aR;
+        }else{
+            a = (this.$R[r] = aL.slice(0));
+            a.sort(function(a, b) {
+                return b.AttackedRX - a.AttackedRX
+            });
+            a.RefreshTime = t;
+        }
+        len = aL.__tmpLen__;
+        while (i < len && (Z = a[i++])?.AttackedRX >= bul.pixelLeft-bul.Speed*deltaTime){
+            if (Z.HP && One_Dimensional_Intersection(
+                Z.AttackedLX-Z.getRealSpeedJudge(Z,1)*deltaTime*oSym.BuMonitorRefresh/oSym.ZMonitorRefresh,
+                Z.AttackedRX,
+                bul.pixelLeft-bul.Speed*deltaTime,
+                bul.pixelLeft+bul.Width
+            ) && custom(Z)){
+                return Z;
+            }
+        }
+    },
 	getArZ(lx, rx, r,custom = Z=>true) { //根据一个攻击范围的左右点坐标返回所有满足在该范围的僵尸对象数组
         let arr = [];
         for(let zombie of this.$[r]) {
             const LX = zombie.AttackedLX;
             if(LX >= rx) break;
-            zombie.PZ && zombie.HP && (zombie.AttackedRX > lx || zombie.AttackedLX > lx) && custom(zombie) && arr.push(zombie);
+            zombie.HP && (zombie.AttackedRX > lx || zombie.AttackedLX > lx) && custom(zombie) && arr.push(zombie);
         }
 		return arr;
 	},
@@ -1411,9 +2216,9 @@ oZ = {
             //如果僵尸盒子的左边界超出了最大右侧范围，则说明搜索结束
             if(AttackedLX > rx) break;
             //如果没有超过最大右范围的僵尸的边界超出了最小左范围
-            if(zombie.PZ && zombie.HP && (lx < AttackedLX || lx < AttackedRX)) {
+            if(zombie.HP && (lx < AttackedLX || lx < AttackedRX)) {
                 // 子弹不会打中高空飞行的僵尸
-                if (zombie.Altitude >= 3) {
+                if (zombie.Altitude >= 3 || zombie.Ethereal) {
                     continue;
                 }
                 //投手优先绕开僵尸傀儡
@@ -1441,16 +2246,16 @@ oZ = {
         let zArr = this.$[r];
         let puppetZombie;
         //从右往左遍历僵尸数组
-        let length = zArr.length;
+        let length = zArr.__tmpLen__;
         for (let i = length - 1; i >= 0; i--) {
             const zombie = zArr[i];
             const {AttackedLX, AttackedRX} = zombie;
             //如果僵尸盒子的右边界超出了最大左侧范围，则说明搜索结束
             if(AttackedRX < lx) break;
             // 如果没有超过最大左侧范围的僵尸落在了区间内
-            if(zombie.PZ && zombie.HP && (AttackedLX < rx || AttackedRX < rx)) {
+            if(zombie.HP && (AttackedLX < rx || AttackedRX < rx)) {
                 // 子弹不会打中高空飞行的僵尸
-                if (zombie.Altitude >= 3) {
+                if (zombie.Altitude >= 3 || zombie.Ethereal) {
                     continue;
                 }
                 // 投手优先绕开僵尸傀儡
@@ -1466,20 +2271,22 @@ oZ = {
     moveTo(id,R1,R2) { //移动指定的僵尸对象到指定的序列行
 		var $R1=this.$[R1],
               $R2=this.$[R2],
-              i=$R1.length,
+              i=$R1.__tmpLen__,
               Ar;
 		while(i--) {
             let o=$R1[i];
 			o && o.id==id && $R2 && (
+                ($R1.__tmpLen__--),
 				$R1.splice(i,1),
 				o.R=R2,
+                ($R2.__tmpLen__++),
 				$R2.push(o),
 				($R2.sort(function(a,b){return a.AttackedLX-b.AttackedLX})).RefreshTime=$R1.RefreshTime=oSym.Now,
 				i=0
 			);            
         }
 	},
-	traversalOf() { //遍历僵尸对象并进行移动操作
+	traversalOf(stepRatio=1) { //遍历僵尸对象并进行移动操作
 		let ar = oZ.$;
 	    let Hooks = [
             zombieObject => {NeedRefresh = 1;},  //僵尸死亡hook
@@ -1494,7 +2301,7 @@ oZ = {
         nowLX,  //记录本次检测到的僵尸的AttackedLX
         arR,index,zombieObject;
 		for(let R = 1, len = ar.length; R < len; R++) {
-			arR=ar[R], index = arR.length, lastLX = Infinity;
+			arR=ar[R], index = arR.__tmpLen__, lastLX = Infinity;
 			while(index--) {  //从最右侧开始遍历当前行所有僵尸
 				zombieObject = arR[index];
                 if (
@@ -1504,11 +2311,21 @@ oZ = {
                     console.error(`[PVZTR] Find a zombie with abnormal crood:`, zombieObject);
                 }
                 if(zombieObject.HP) {  //若僵尸还处于存活状态
-                    zombieObject.PZ && zombieObject.ZX<901 && oT[`chkD${zombieObject.WalkDirection}`](zombieObject, R, oT.$[R], oT.$L[R]);  //检测该僵尸是否可以触发现有的任意植物触发器
-                    Hooks[zombieObject.ChkActs(zombieObject, R, arR, index)](zombieObject);  //触发僵尸移动，并调用hook
-                } else {  //若僵尸实际HP已经为0
-			    	arR.splice(index, 1);  //从队列中删除该僵尸
-					Hooks[0](zombieObject);  //刷新僵尸序列
+                    zombieObject.ZX<901 && oT[`chkD${zombieObject.WalkDirection}`](zombieObject, R, oT.$[R], oT.$L[R],stepRatio);  //检测该僵尸是否可以触发现有的任意植物触发器
+                    let HookKey = zombieObject.ChkActs(zombieObject, R, arR, index,stepRatio);
+					if (HookKey !== 0 && HookKey !== 1) { //unknown bug
+						if (IsDevEnvi) debugger;
+						HookKey = 0;
+						zombieObject.DisappearDie();
+					}
+					Hooks[HookKey](zombieObject);  //触发僵尸移动，并调用hook
+                } 
+                //若僵尸实际HP已经为0
+                else {  
+                    //从队列中删除该僵尸
+                    oZ.del(arR, index);
+                    //刷新僵尸序列
+                    Hooks[0](zombieObject);  
                 }
 			}
             if(NeedResort) {  //若有僵尸的相对位置发生变化，则当前行进行重排
@@ -1544,7 +2361,7 @@ oT = { //植物触发器管理器
         currentTriggers.tmpLength = currentTriggers.length;
         currentTriggers.RefreshTime = new Date; //普通触发器数组的刷新时间属性
     },
-    chkD0(zombie, R, oTR, oTL) { //往左走的僵尸进行检测是否可以触发植物触发器
+    chkD0(zombie, R, oTR, oTL, stepRatio) { //往左走的僵尸进行检测是否可以触发植物触发器
         let LX = zombie.AttackedLX; //僵尸的左攻击点
         let i = 0;
         let _tp;
@@ -1552,8 +2369,10 @@ oT = { //植物触发器管理器
         //有效触发器：触发器左监测点≤僵尸左攻击点≤触发器右监测点
         while (i < oTR.tmpLength && (_tp = oTR[i])[1] >= LX) {
             let plant = $P[_tp[3]];
+            //I made portals call all plants' InitTrigger whenever they spawn. After portals spawn, when you dig up a plant it might trigger this error where 'plant' does not exist. What's weirder is that it only occurs for certain plants on certain positions and I have no idea what causes this, so i put the 'plant &&' below as a temporary solution.
+            
             //若对应植物的触发器处于开启状态则触发
-            plant.canTrigger && _tp[0] <= LX && plant.TriggerCheck(zombie, _tp[2], i); 
+            plant && plant.canTrigger && _tp[0] <= LX+zombie.getRealSpeedJudge(zombie,stepRatio) && plant.TriggerCheck(zombie, _tp[2], i); 
             ++i;
         }
     },
@@ -1575,7 +2394,9 @@ oT = { //植物触发器管理器
         while (i < _r.tmpLength && (_tp = _r[i])[0] <= RX) {        
             //植物的触发器对象可用并且植物右监控点>=僵尸右攻击点>=植物左监控点
             let _p = $P[_tp[3]];
-            if( _p.canTrigger && _tp[1] >= RX ) {
+            //I made portals call all plants' InitTrigger whenever they spawn. After portals spawn, when you dig up a plant it might trigger this error where '_p' does not exist. What's weirder is that it only occurs for certain plants on certain positions and I have no idea what causes this, so i put the '_p &&' below as a temporary solution.
+            
+            if( _p && _p.canTrigger && _tp[1] >= RX ) {
                 _p.TriggerCheck(o, _tp[2], i); 
             }
             ++i;
@@ -1589,7 +2410,6 @@ oT = { //植物触发器管理器
             for (let i = $R.tmpLength-1; i>=0; --i) {
                 if($R[i][3] === id){
                     $R.splice(i, 1);
-                    break;
                 }
             }
             $R.RefreshTime = new Date;
@@ -1597,8 +2417,54 @@ oT = { //植物触发器管理器
         }
     },
 };
+const oZombieLayerManager = {
+    init() {
+        this.observedZombies = new Set();
+        this.preRowOfZombie = new Map();
+    },
+    initContainer() {
+        this.$Containers = [];
+        const totalRow = oS.R;
+        for (let i = 1; i <= totalRow; i++) {
+            this.$Containers[i] = NewEle(`dContainer_${i}`, 'div', `z-index:${3 * i };position:absolute;`, null, EDPZ);
+        }
+    },
+    addZombie(zombie) {
+        this.observedZombies.add(zombie);
+        this.preRowOfZombie.set(zombie, zombie.R);
+    },
+    delZombie(zombie) {
+		//NOTE: calling this can cause the zombie to be deleted from oZombieLayerManager.observedZombies before it is appended to the correct $Container if not timed correctly!
+        this.observedZombies.delete(zombie);
+        this.preRowOfZombie.delete(zombie);
+    },
+    refresh() {
+        const preRows = this.preRowOfZombie;
+        let curR,preR,ZI;
+        for (let zombie of this.observedZombies) {
+            if (!$Z[zombie.id]) {
+                if (zombie.HP <=0) this.delZombie(zombie);
+                //there can be a slight delay between the moment a zombie is summoned and the moment that zombie is added to $Z (requestidlecallback shenanigans), therefore it won't only rely on $Z, but also the zombie's HP to determine
+                continue;
+            }
+            curR = zombie.R;
+            preR = preRows.get(zombie);
+            if (preR !== curR) {
+                this.$Containers[curR].append(zombie.Ele);
+                preRows.set(zombie, curR);
+            }
+            if (zombie.FangXiang === 'GoUp' || zombie.FangXiang === 'GoDown') {
+                if((ZI=Math.round((zombie.pixelTop + zombie.height)/16)*16)!==zombie.zIndex_cont){
+                    zombie.Ele.style.zIndex = zombie.zIndex_cont = ZI;
+                }
+            } else {
+				this.delZombie(zombie);
+			}
+        }
+    },
+};
 const oLoadRes = {
-    loadImage({resourceArr, singleResolveCB, singleRejectCB, timeout = 30000 ,resolveImgObject = false}) {
+    loadImage({resourceArr, singleResolveCB, singleRejectCB, timeout = 1234567, resolveImgObject = false}) {
         let promiseArr = [];
         resourceArr.forEach((url) => {
             if (!url || /^data:image\/\w+;base64/.test(url)) return;
@@ -1629,38 +2495,56 @@ const oLoadRes = {
     },
     //事先需要把音频文件放在audio文件夹里，调用时只需传入不含后缀的文件名。
     //这么处理是为了便于与原先游戏中的其他代码兼容。
-    loadAudio({resourceArr, type = "audio", singleResolveCB, singleRejectCB, timeout = 30000, canUpdateMap = false}) {
+    loadAudio({resourceArr, type = "audio", singleResolveCB, singleRejectCB, timeout = 1234567, canUpdateMap = false}) {
+        if (oS.Silence || (type === "audio" && oS.AudioSilence)) return -1;
         let promiseArr = [];
         resourceArr.forEach((url) => {
             if (!url) return;
-            let media = new Audio();
-            media.src = `audio/${url}.mp3`;
+            let media;
+			let tempMedia = oAudioManager.resourceAudioMap.get(`audio/${url}.mp3`)?.dom;
+			if (tempMedia) {
+				media = tempMedia;
+			} else if (!IsHowling || type !== "audio") {
+                media = new Audio();
+                media.src = `audio/${url}.mp3`;
+            }else{
+                media = new Howl({
+                    src: [`audio/${url}.mp3`],
+                    html5: (!IsHttpEnvi&&IsFileEnvi)
+                });
+            }
             let myPromise = new Promise((resolve, reject) => {
                 //当readyState=4，或oncanplay被触发时，表示
+                //iOS can't fire oncanplay before the audio is played
                 //已加载数据足以开始播放 ，且预计如果网速得到保障，那么音视频可以一直播放到底。
                 if (media.readyState === 4) {
-                    resolve(url);
+                    if (IsHowling && type === 'audio' && media._state === 'loading') {
+                        media.on('load', function(){
+                            resolve([url, media]);
+                        });
+						media.on('loaderror', function(){
+                            reject([url, media._state === 'unloaded' ? undefined : `[PVZTR] Failing to load the file ${url}`]);
+                        });
+                    } else {
+                        resolve([url, media]);
+                    }
                 } else {
-                    let timerId = setTimeout(_ => reject([url, media, `[PVZTR] It's longer than the limit time to load the file ${url}`]), timeout);
-                    media.onerror = _ => reject([url, media, `[PVZTR] Failing to load the file ${url}`, timerId]);
+                    let timerId = setTimeout(_ => reject([url, `[PVZTR] It took longer than the limit time to load the file ${url}`]), timeout);
+                    media.onerror = _ => reject([url, `[PVZTR] Failing to load the file ${url}`, timerId]);
+                    if (IsMobile && IsIOS) media.onloadedmetadata = _ => resolve([url, media, timerId]);
                     media.oncanplay = _ => resolve([url, media, timerId]);
                 }
             })
             .then(([url, media, timerId]) => {
                 clearTimeout(timerId);
-                if (type === "audio") {
-                    (canUpdateMap||!oAudioManager.resourceAudioMap.get(url)) && oAudioManager.resourceAudioMap.set(url, {
-                        dom: media,
-                        num: 0,
-                    });
-                } else {
-                    (canUpdateMap||!oAudioManager.resourceMusicMap.get(url)) && oAudioManager.resourceMusicMap.set(url, media);
-                }
+                oAudioManager.newAudio(url,type,canUpdateMap,media);
+				media.onload = media.onloaderror = media.onerror = media.onloadedmetadata = media.oncanplay = null;
                 return singleResolveCB && singleResolveCB(url, media);
-            }, ([url, media, msg, timerId]) => {
+            }, ([url, msg, timerId]) => {
                 clearTimeout(timerId);
-                console.error(msg);
-                return singleRejectCB && singleRejectCB(url, media, msg);
+                if (msg) console.error(msg);
+				media.onload = media.onloaderror = media.onerror = media.onloadedmetadata = media.oncanplay = null;
+                return singleRejectCB && singleRejectCB(url, msg);
             });
             promiseArr.push(myPromise);
         });
@@ -1676,18 +2560,21 @@ const oLoadRes = {
                 if (media.readyState === 4) {
                     resolve(url);
                 } else {
-                    let timerId = setTimeout(_ => reject([url, media, `[PVZTR] It's longer than the limit time to load the file ${url}`]), timeout);
-                    media.onerror = _ => reject([url, media, `[PVZTR] Failing to load the file ${url}`, timerId]);
+                    let timerId = setTimeout(_ => reject([url, `[PVZTR] It took longer than the limit time to load the file ${url}`]), timeout);
+                    media.onerror = _ => reject([url, `[PVZTR] Failing to load the file ${url}`, timerId]);
+                    if (IsMobile && IsIOS) media.onloadedmetadata = _ => resolve([url, media, timerId]);
                     media.oncanplay = _ => resolve([url, media, timerId]);
                 }
             });
             myPromise.then(([url, media, timerId]) => {
                 clearTimeout(timerId);
+				media.onerror = media.onloadedmetadata = media.oncanplay = null;
                 singleResolveCB && singleResolveCB(url, media);
-            }, ([url, media, msg, timerId]) => {
+            }, ([url, msg, timerId]) => {
                 clearTimeout(timerId);
                 console.error(msg);
-                singleRejectCB && singleRejectCB(url, media, msg);
+				media.onerror = media.onloadedmetadata = media.oncanplay = null;
+                singleRejectCB && singleRejectCB(url, msg);
             });
             promiseArr.push(myPromise);
         });
@@ -1699,18 +2586,18 @@ const oLoadRes = {
         resourceArr.forEach((url) => {
             if (!url) return;
             let ele = null;
-            if (/.js$/.test(url)) {
+            if (/.js$/.test(url) || /^blob:/.test(url)) {
                 ele = NewEle(false, 'script', false, {src: url}, docHead);
             }
             else if (/.css$/.test(url)) {
                 ele = NewEle(false, "link", false, { href: url, rel: 'stylesheet'}, docHead);
-            } 
+            }
             else {
                 console.error(`[PVZTR] Can't load the unknown file ${url}`);
                 return;
             }
             let myPromise = new Promise((resolve, reject) => {
-                let timerId = setTimeout(_ => reject([url, `[PVZTR] It's longer than the limit time to load the file ${url}`]), timeout);
+                let timerId = setTimeout(_ => reject([url, `[PVZTR] It took longer than the limit time to load the file ${url}`]), timeout);
                 ele.onerror = _ => reject([url, `[PVZTR] Failing to load the file ${url}`, timerId]);
                 ele.onload = _ => resolve([url, timerId]);
             });
@@ -1730,7 +2617,7 @@ const oLoadRes = {
         let docHead = document.getElementsByTagName("head")[0];
         let ele = NewEle(false, 'script', false, {src: url}, docHead);
         let myPromise = new Promise((resolve, reject) => {
-            let timerId = setTimeout(_ => reject([url, `[PVZTR] It's longer than the limit time to load the file ${url}`]), timeout);
+            let timerId = setTimeout(_ => reject([url, `[PVZTR] It took longer than the limit time to load the file ${url}`]), timeout);
             ele.onerror = _ => reject([url, `[PVZTR] Failing to load the file ${url}`, timerId]);
             ele.onload = _ => resolve([url, timerId]);
         });
@@ -1754,15 +2641,17 @@ const oLoadRes = {
                 if (element.complete) {
                     resolve([null]);
                 } else {
-                    let timerId = setTimeout(_ => reject([element, `[PVZTR] It's longer than the limit time to load the element`]), timeout);
-                    element.onerror = _ => reject([element, `[PVZTR] Failing to load the file ${url}`, timerId]);
+                    let timerId = setTimeout(_ => reject([element, `[PVZTR] It took longer than the limit time to load the element`]), timeout);
+                    element.onerror = _ => reject([element, `[PVZTR] Failing to load the file ${element}`, timerId]);
                     element.onload = _ => resolve([timerId]);
                 }
             });
             myPromise.then(([timerId]) => {
                 clearTimeout(timerId);
+				element.onerror = element.onload = null;
             }, ([element, msg, timerId]) => {
                 clearTimeout(timerId);
+				element.onerror = element.onload = null;
                 console.error(msg);
                 console.error(element);
             });
@@ -1775,12 +2664,14 @@ const oDynamicPic = {
     __BlobImgStorage__: new Map(),
     __BlobUrlStorage__: new Map(),
     //在oS.LoadProgress时对图片资源进行批量请求和缓存
+    //在oS.LoadProgress时对图片资源进行批量请求和缓存
     async Init({resArr = oS.DynamicPicArr, singleResolveCB, singleRejectCB, timeout = 30000, keepParam = false}) {
         if (!IsHttpEnvi) {
             singleResolveCB && resArr.forEach(originalUrl => singleResolveCB());
             return;
         } 
         const BlobImgStorage = this.__BlobImgStorage__;
+        const testerFunc = this.testIfBlobIsImage;//使用测试函数来保证获取到的blob是image
         const PromArr = [];
         for (let originalUrl of resArr) {
             !keepParam && (originalUrl = oURL.removeParam(originalUrl));
@@ -1799,7 +2690,7 @@ const oDynamicPic = {
                     singleRejectCB && singleRejectCB();
                 });
                 let timerProm = new Promise(resolve => {
-                    timerId = setTimeout(resolve, timeout, `[PVZTR] This fetch is time-out: ${originalUrl}`);
+                    timerId = setTimeout(resolve, timeout, `[PVZTR] This fetch is timed-out: ${originalUrl}`);
                 });
                 let finalProm = Promise.race([fetchProm, timerProm])
                 .then((result) => {
@@ -1808,16 +2699,19 @@ const oDynamicPic = {
                         BlobImgStorage.set(originalUrl, "loading");//设置为加载状态
                         result.blob().then(
                             (blob) => {
+                                if(!testerFunc(blob)){
+                                    throw `${originalUrl} isnt a image or video, which can't save to database.`;
+                                    return;
+                                }
                                 BlobImgStorage.set(originalUrl, blob);
                                 putDataByKey(ResourcesDatabase, "images", originalUrl, blob);
                                 singleResolveCB && singleResolveCB();
-                            },
-                            (err) => {
-                                console.error(err);
-                                BlobImgStorage.delete(originalUrl, blob);
-                                singleRejectCB && singleRejectCB();      
                             }
-                        );
+                        ).catch((err)=>{
+                            console.error(err);
+                            BlobImgStorage.delete(originalUrl);
+                            singleRejectCB && singleRejectCB();     
+                        });
                     } else {
                         console.error(result);
                         singleRejectCB && singleRejectCB();             
@@ -1827,6 +2721,10 @@ const oDynamicPic = {
             }
         }
         await Promise.allSettled(PromArr);
+    },
+    //检测一个blob是否是图片类型
+    testIfBlobIsImage(blob){
+        return /^(image\/|video\/)/.test(blob?.type);
     },
     //require方法为同步方法，可放心调用！
     //调用require方法前原则上要求所有的图片blob已通过Init方法进行储存。
@@ -1841,10 +2739,11 @@ const oDynamicPic = {
         !keepParam && (originalUrl = oURL.removeParam(originalUrl));
         //本地打开直接采用打时间戳的方式处理
         if (!IsHttpEnvi) {
-            return oURL.setParam(originalUrl, "ts", oSym.Now);
+            return oURL.setParam(originalUrl, "ts", Math.random());
         }
         const BlobImgStorage = this.__BlobImgStorage__;
         const BlobUrlStorage = this.__BlobUrlStorage__;
+        const testerFunc = this.testIfBlobIsImage;
         //正常情况：BlobImgStorage中已有缓存的图片blob
         let blobObj = BlobImgStorage.get(originalUrl);
         if (blobObj&&blobObj!=="loading") {
@@ -1871,20 +2770,20 @@ const oDynamicPic = {
             if (containerDom) {
                 const revokeFunc = () => {
                     BlobUrlStorage.delete(originalUrl);
-                    oSym.addTask(IsTestingEnvi?0:6000,()=>{URL.revokeObjectURL(blobUrl);});             
+                    setTimeout(() => {
+                        URL.revokeObjectURL(blobUrl);
+                    }, IsTestingEnvi ? 0 : 60000);
                 };
-                containerDom.addEventListener("DOMNodeRemoved", function fun(event){
-                    if (event.target !== containerDom) {
-                        return;
-                    }
+                let oldRemoveMethod = containerDom.remove;
+                containerDom.remove = function() {
                     let deltaTime = oSym.Now - oldTimeStamp;
                     if (deltaTime >= 5) {
                         revokeFunc();
                     } else {
                         oSym.addTask(5, () => BlobUrlStorage.has(originalUrl) && revokeFunc());
                     }
-                    containerDom.removeEventListener("DOMNodeRemoved",fun);
-                });
+                    oldRemoveMethod.call(this);
+                }
             }
             // 先初始化一下链接，避免某些植物/僵尸切图时出现闪烁的问题
             new Image().src = blobUrl;
@@ -1895,13 +2794,18 @@ const oDynamicPic = {
         else if (!blobObj && BlobImgStorage.get(originalUrl) !== "loading") {
             BlobImgStorage.set(originalUrl, "loading");
             fetch(originalUrl)
-            .then((resp) => resp.blob(), (err) => {
-                console.error(err);
-                BlobImgStorage.delete(originalUrl);
-            })
+            .then((resp) => resp.blob())
             .then((blob) => {
+                if(!testerFunc(blob)){
+                    throw `${originalUrl} isnt a image or video, which can't save to database.`;
+                    return;
+                }
                 BlobImgStorage.set(originalUrl, blob);
                 putDataByKey(ResourcesDatabase, "images", originalUrl, blob);
+            })
+            .catch((err) => {
+                console.error(err);
+                BlobImgStorage.delete(originalUrl);
             });
             return originalUrl;
         } else {
@@ -1911,9 +2815,13 @@ const oDynamicPic = {
 	//移除单个blob链接
 	remove(blobURL, originalURL) {
 		const BlobUrlStorage = this.__BlobUrlStorage__;
-		//释放动态链接
-		oSym.addTask(IsTestingEnvi?0:6000,()=>{URL.revokeObjectURL(blobURL);});
-		//清除BlobUrlStorage记录
+		// 释放动态链接
+        // 为了避免可能存在的问题，非测试环境下延时销毁链接
+        // 预加载时候创建的Image对象可能还没被GC，所以在测试环境下也要异步一下
+        setTimeout(() => {
+            URL.revokeObjectURL(blobURL);
+        }, IsTestingEnvi ? 0 : 60000);
+        //清除BlobUrlStorage记录
 		if (!originalURL) {
 			for (let [o_url, json] of BlobUrlStorage) {
 				if (json.src === blobURL) {
@@ -1947,113 +2855,333 @@ const oDynamicPic = {
     },
 };
 const oAudioManager = {
-    resourceAudioMap: new Map(),  //储存音效的原始dom及被引用次数
-    resourceMusicMap: new Map(),  //储存bgm的实际dom
-    playingAudioDomSet: new Set(),  //储存音效的实际dom
-    curMusic: null,  //当前游戏内的bgm
+    __null_audio__:new Audio(),
+    resourceAudioMap: new Map(), //储存音效的原始dom及被引用次数
+    resourceMusicMap: new Map(), //储存bgm的实际dom
+    forcedPausedAudio: new Set(), //specific audio forced to be paused, won't be affected by AllResPause
+    pausedAudio: new Set(), //all paused audio will be saved here, so that when playAudio checks for playbacknum these audio will be ignored
+    curMusic: null, //当前游戏内的bgm
     isAllResPaused: false, //游戏内音频是否处于暂停状态
-    isAllResMuted: false,  //游戏当前是否处于静音状态
+    isAllResMuted: false, //游戏当前是否处于静音状态
     Init() {
         //生成音频播放校验ticket
         this.refreshTicket();
         //设置游戏音效重音阈值
         //低性能模式下不允许重音播放
-        this.maxSyncPlayBackNum = $User.LowPerformanceMode ? 1 : 3;
-        //防止因为加载失败等原因，导致同时播放音效数量没有清零
+        this.maxSyncPlayBackNum = ($User.LowPerformanceMode) ? 1 : 3;
+        //这里理论上应该不用清空实例吧…………？因为现在num代表实例数，只要有实例就可以播放，也不用重复加载
         for (let [key, json] of this.resourceAudioMap) {
-            json.num = 0;
+            // 设置所有的lastPlayingTime，保证第一次音频能够播放得出来
+            json.lastPlayingTime= -Infinity;
+        }
+    },
+    //clear the audio instances from memory so that they don't lag the game, the original DOM inside resourceAudioMap won't be affected
+    checkClearUnusedAudio(){
+        console.log("checkClear");
+        for (let [key, json] of this.resourceAudioMap) {
+            if(json.idleInstances.top!==0){
+                //使用更短的名字代替这个
+                let maxTime = json.the_maximum_times_this_audio_instances_can_exist_in_memory_and_not_be_used_by_a_single_game_level;
+                if(maxTime===void 0){//如果有实例，则添加计数器
+                    maxTime = 3;//在进入这么多次关卡中没有用到的音频将被清空
+                }else if(!isNaN(maxTime)&&(--maxTime)<=0&&json.busyInstances.size===0){
+                    //防止因为加载失败等原因，导致同时播放音效数量没有清零
+                    json.num = 0;
+                    console.log("clear",json.dom.src);
+                    json.idleInstances.clear();
+                    maxTime = void 0;
+                }
+                //重新赋值回去
+                json.the_maximum_times_this_audio_instances_can_exist_in_memory_and_not_be_used_by_a_single_game_level = maxTime;
+            }
         }
     },
     refreshTicket() {
         this.__ticket__ = '' + Math.random();
     },
+    getSourceSrc(url){
+        return /\.\mp3$/.test(url) ? url : `audio/${url}.mp3`;
+    },
+    //获取原始表的dom
     getDom(source, type) {
         const self = oAudioManager;
         const AudioMap = self.resourceAudioMap;
         const MusicMap = self.resourceMusicMap;
+        if (typeof source === 'string') {
+            source = self.getSourceSrc(source);
+        }
         if (type ?? false) {
             return type === "audio" ? AudioMap.get(source).dom : MusicMap.get(source);
         } else {
             if (AudioMap.has(source)) {
                 return AudioMap.get(source).dom;
-            }
-            else if (MusicMap.has(source)) {
+            } else if (MusicMap.has(source)) {
                 return MusicMap.get(source);
             }
         }
     },
-    newAudio(url,type = "audio",canUpdateMap=false){
-        let media = new Audio();
-        media.src = `audio/${url}.mp3`;
-        if (type === "audio") {
-            (canUpdateMap||!oAudioManager.resourceAudioMap.get(url)?.dom) && oAudioManager.resourceAudioMap.set(url, {
-                dom: media,
-                num: 0,
-                lastPlayingInstance:null,
-                lastPlayingTime:-Infinity,
-            });
-        } else {
-            (canUpdateMap||!oAudioManager.resourceMusicMap.get(url)) && oAudioManager.resourceMusicMap.set(url, media);
+    newAudio(url, type = "audio", canUpdateMap = false,media=void 0) {
+        url = oAudioManager.getSourceSrc(url);
+		let tempMedia = oAudioManager.resourceAudioMap.get(url)?.dom;
+        if(!media){
+			if (tempMedia) {
+				media = tempMedia;
+			} else {
+				if(!IsHowling || type !== "audio"){
+					media = new Audio();
+					media.src = url;
+				}else{
+					media = new Howl({
+						src: [url],
+						html5: (!IsHttpEnvi&&IsFileEnvi)
+					});
+				}
+			}
         }
+        if (type === "audio") {
+			if (IsHowling || IsMobile || (!IsHttpEnvi&&IsFileEnvi)) {
+				//only allow a limited number of audio files to exist in resourceMap
+				let Cleaned = 0;
+				let TotalSize = oAudioManager.resourceAudioMap.size;
+				if (TotalSize >= 50) {
+					oAudioManager.resourceAudioMap.forEach((aud, src) => {
+						if (++Cleaned < TotalSize - 50 || aud._state == "unloaded") {
+							let AudDom = aud.dom;
+							setTimeout(() => {
+								if ((IsHowling && !AudDom.playing() && !aud.busyInstances.size) || (!IsHowling && AudDom.paused && !aud.busyInstances.size) || (aud._state == "unloaded")) {
+									oAudioManager.deleteAudio(AudDom);
+									aud.idleInstances.clear();
+									oAudioManager.resourceAudioMap.delete(src);
+									if (AudDom.unload) AudDom.unload();
+								}
+							},0);
+						}
+					});
+				}
+			}
+			
+            if(canUpdateMap || !tempMedia){
+				let dura = IsHowling?media._duration:media.duration;
+                const _duration_ = isNaN(dura)?0:dura;
+				dura = null;
+                //the dom of each audio source (URL) will be assigned with the following properties in order to track all instances of audio of that source
+                //神奇的音频最长不能重放时间拟合函数，可以自己试试，指的是从正在播放的音频里面拿出来一个，并重新播放
+                const param = 1,maxShortTime=2;
+                const shortTime = Math.min(Math.sqrt(param*(_duration_+param/4))-param/2,maxShortTime);
+                oAudioManager.resourceAudioMap.set(url, {
+                    dom: media,
+                    num: 0,//num记录的是当前已经新建过多少个dom了
+                    idleInstances:new Stack(),//这个是表示存有多少个可用音频实例
+                    busyInstances:new Set(),//正在播放的音频实例
+                    lastPlayingTime: -Infinity,
+                    shortestTimeBusyMediaCanPlayback:shortTime,
+                    the_maximum_times_this_audio_instances_can_exist_in_memory_and_not_be_used_by_a_single_game_level:void 0,//添加占据了内存多少次，在每次Init的时候会有计数
+                });
+                //console.log(url);
+            }
+        } else {
+			if (IsMobile || (!IsHttpEnvi&&IsFileEnvi)) {
+				//only allow a limited number of audio files to exist in resourceMap
+				let Cleaned = 0;
+				let TotalSize = oAudioManager.resourceMusicMap.size;
+				if (TotalSize >= 5) {
+					oAudioManager.resourceMusicMap.forEach((aud, src) => {
+						if (++Cleaned < TotalSize - 4) {
+							if (oAudioManager.curMusic != src) {
+								setTimeout(() => {
+									oAudioManager.resourceMusicMap.delete(src);
+								},0);
+							}
+						}
+					});
+				}
+			}
+			
+            (canUpdateMap || !oAudioManager.resourceMusicMap.get(url)) && oAudioManager.resourceMusicMap.set(url, media);
+        }
+		if (IsHowling && Howler._howls.length > 70) {
+			setTimeout(() => {
+				//as Howler audio only gets deleted from memory when aud.unload() is manually called it can cause some memory leaks
+				for (let aud of Howler._howls) {
+					let MusicDom = oAudioManager.resourceMusicMap.get(aud._src);
+					let AudioDom = oAudioManager.resourceAudioMap.get(aud._src)?.dom;
+					if (MusicDom != aud && AudioDom != aud && oAudioManager.curMusic != aud._src) {
+						setTimeout(() => {
+							if (aud.unload) aud.unload();
+						},0);
+					}
+				}
+			},0);
+		}
         return media;
     },
+    //对所有正在播放的音频执行某一个函数
+    traverseAllAudios(func){
+        const self = oAudioManager;
+        const AudioMap = self.resourceAudioMap;
+        for(let [key,record] of AudioMap){
+            //console.log(record);
+            for(let audio of record.busyInstances){
+                func(audio);
+            }
+        }
+    },
     playAudio(source, loop = false, volume = 1, playbackRate = 1) {
+        if (oS.Silence || oS.AudioSilence || $User.AudioEffectVolumePercent == 0) return -1;
         const self = oAudioManager;
         const myMap = self.resourceAudioMap;
         const myTicket = self.__ticket__;
+        source = self.getSourceSrc(source);
         //查询记录
         let record = myMap.get(source);
         //音频播放回调
-        const func = (media) => {
+        const recordMedia = (media) => {
             //如果校验ticket失败则直接放弃播放
-            if (self.__ticket__ !== myTicket){
+            if (self.__ticket__ !== myTicket) {
                 return;
             }
             record.num++;
-            record.lastPlayingInstance = media;
-            record.lastPlayingTime = oSym.Now;
-            //参数设置
-            media.playbackRate = playbackRate;
-            media.currentTime = 0;
-            media.volume = volume; 
-            media.loop = loop; 
-            media.muted = self.isAllResMuted;
-            media.play();
-            //登记音频信息
-            self.playingAudioDomSet.add(media);
-            media.onended = () => {
-                !loop && (record.num--, self.playingAudioDomSet.delete(media));
-            };
+            playMedia(media);
         };
-        
-        //如果已有缓存记录，则直接克隆音频节点并播放
-        if (record && record.dom) {
-            if (record.num < self.maxSyncPlayBackNum&&(!record.lastPlayingInstance||Math.abs(record.lastPlayingTime-oSym.Now)>20)) {
-                let newAudio = record.dom.cloneNode();
-                func(newAudio);
-                return newAudio;
-            }else{
-                return record.lastPlayingInstance;
+        const playMedia = (media)=>{
+            //设置上次播放时间
+            record.lastPlayingTime = oSym.Now;
+            record.the_maximum_times_this_audio_instances_can_exist_in_memory_and_not_be_used_by_a_single_game_level=void 0;//只要播放，就置空计数器，因为代表常用资源，不会被清空
+            // 缓存一份代码设定音量，再乘以用户设置的百分比作为真实音量
+            // 调节音量的时候只要把media对象的volume设置为 代码设定音量 * 用户百分比即可
+            media.__originalVolume__ = volume;
+            if (!IsHowling) {
+                media.playbackRate = playbackRate;
+                media.currentTime = 0;
+                media.volume = volume * $User.AudioEffectVolumePercent;
+                media.loop = loop;
+                media.muted = self.isAllResMuted;
+            } else {
+                media.rate(playbackRate);
+                media.stop();
+                media.volume(volume * $User.AudioEffectVolumePercent);
+                media.loop(Boolean(loop));
+                media.mute(self.isAllResMuted);
             }
+            /*media.addEventListener("pause",()=>{
+                console.log(233);
+                media.play();
+                
+            },{once:true});
+            media.pause();*/
+            //登记音频信息
+            record.busyInstances.add(media);
+            let ended = false;
+            function endMedia(use_pause=true) {
+                if(ended){
+                    return;
+                }
+                ended=true;
+                record.idleInstances.push(media);
+                record.busyInstances.delete(media);
+                //console.log("pushback",media.src);
+                if(use_pause && media.pause){
+                    media.pause();
+                }
+                media.removeEventListener("canplay",_play_);
+                media.removeEventListener("ended",endMedia);
+            }
+            media.__manualTriggerEnd__ = endMedia;
+            if (!loop) {
+                media.addEventListener('ended', endMedia, { once: true });
+            }
+            //自定义的播放函数
+            media.$manualPlay = ()=>{
+                if(media.readyState>2 || (IsMobile && IsIOS)){
+                    _play_();
+                }else{
+                    //只保留一个这样的函数，避免重复调用
+                    media.removeEventListener("canplay",_play_);
+                    media.addEventListener("canplay",_play_,{once:true});
+                }
+            };
+            media.$manualPlay();
+            function _play_(){
+                //如果暂停音频里面没有则尝试播放，如果已暂停则不播放
+                if(!self.pausedAudio.has(media)){
+                    if (!IsHowling) {
+                        media.play().catch((err)=>{
+                            console.log("play err",media.src,media.readyState);
+                            console.error(err);
+                            endMedia(false);//播放错误记得回栈里面
+                        });
+                    } else {
+                        media.play();
+                    }
+                }
+            }
+        };
+
+        if (isNullish(source)) {
+            if (IsDevEnvi) debugger;
+            return;
         }
-        //否则则需先加载，再调用播放回调
-        else {
+        /*for (let audiosrc of self.pausedAudio) {
+            if (self.getDom(source)?.src == audiosrc) {
+                self.pausedAudio.delete(audiosrc);
+                record.num--;
+            }
+        }*/
+        if(!(record && record.dom)){
             let media = self.newAudio(source);
             record = myMap.get(source);
-            let isntNumFull = record.num < self.maxSyncPlayBackNum;
-            if(isntNumFull&&(!record.lastPlayingInstance||Math.abs(record.lastPlayingTime-oSym.Now)>20)){
-                let newAudio = record.dom.cloneNode(); 
-                func(newAudio);
-                return newAudio;
-            }else{
-                return record.lastPlayingInstance;
+        }
+        let audio = null;
+        //如果已有缓存记录，则直接克隆音频节点并播放
+        if (record && record.dom && (!oSym.Timer || Math.abs(record.lastPlayingTime - oSym.Now) > 20)) {//必须在一段时间后才能开始播放
+            let stackEmpty = record.idleInstances.isEmpty();
+            //console.log(record.dom.src,stackEmpty);
+            if (record.num < self.maxSyncPlayBackNum && stackEmpty) {
+                audio = record.dom.cloneNode();
+                recordMedia(audio);
+                //console.log("new",audio.src);
+            } else if(!stackEmpty){
+                audio = record.idleInstances.pop();
+                playMedia(audio);
+                //console.log("pop",audio.src);
+            }else if(record.busyInstances.size>0){//必须大于可重新播放的时间才能重新播放
+                //从正在播放的实例中拿出来第一个，重新播放，而因为相同record的音频实例一定是同一个，第一个播放的肯定是最老的（已播放时长最长的）
+                //如果第一个音频不满足，则之后的音频必定不满足播放时长达到要求，必须达到要求才能触发busy
+                //说明：自es6以来set实际的行为是会保留元素的插入顺序。这意味着当迭代一个Set时，元素会按照它们被添加到Set中的顺序出现。
+                const first_audio = record.busyInstances.keys().next().value;
+                if (first_audio) {
+                    if((IsHowling && (first_audio.seek() >= record.shortestTimeBusyMediaCanPlayback || first_audio.seek() == 0)) || (!IsHowling && first_audio.currentTime >=record.shortestTimeBusyMediaCanPlayback)){//如果已播放
+                        self.__stopAudio__(first_audio,false);//让音频回到栈中
+                        audio = record.idleInstances.pop();//从栈中弹出音频
+                        playMedia(audio);
+                        //console.log("busy",audio.src);
+                    }
+                }
             }
         }
+        if(!audio){
+            audio=self.__null_audio__;
+            //console.log(record.dom.src,"trigger null audio");
+        }
+        return audio;
+    },
+    //使用自定义方法【停止】音频，如果是特殊音频，则会回到目标的stack里面
+    __stopAudio__(audio,use_pause=true){
+        const self = oAudioManager;
+        audio.__manualTriggerEnd__ && audio.__manualTriggerEnd__(use_pause);
+        if(audio.pause && use_pause){
+            audio.pause();
+        }
+        //可能已经被暂停掉了，所以要尝试清空暂停状态
+        self.forcedPausedAudio.delete(audio);
+        self.pausedAudio.delete(audio);
     },
     playMusic(source = oAudioManager.curMusic, loop = true, volume = 1) {
         const self = oAudioManager;
         const myMap = self.resourceMusicMap;
+        source = self.getSourceSrc(source);
         const dom = myMap.get(source);
+        let oldcurmusic;
         // 采纳泠漪的建议，游戏内不会重复播放当前的music
         if (self.curMusic === source && !dom.paused) {
             return;
@@ -2062,52 +3190,160 @@ const oAudioManager = {
         self.curMusic = source;
         const func = (media) => {
             if (self.curMusic !== source) return;
+            media.__originalVolume__ = volume;
             media.playbackRate = 1;
-            media.currentTime = 0;
-            media.volume = volume; 
-            media.loop = loop; 
-            media.muted = self.isAllResMuted;
+			media.currentTime = 0;
+			media.volume = volume * $User.MusicVolumePercent;
+			media.loop = loop;
+			media.muted = self.isAllResMuted || (IsIOS && !(volume * $User.MusicVolumePercent));
             media.play();
         };
         if (dom) {
             func(dom);
             return dom;
         } else {
-            let media = self.newAudio(source,"music",true);
+            let media = self.newAudio(source, "music", true);
             func(media);
             return media;
         }
     },
-    pauseAudio(source) {
-        let ele;
-        if (source instanceof Audio) {
-            ele = source;
-            if (source.readyState === 4) {
-                source.pause();
-            } else {
-                source.addEventListener("canplaythrough", source.pause.bind(source), {once: true});  
+    //For pauseAudio, unpauseAudio and deleteAudio, the source can be a string with the name of the audio you want to pause, in this case it will pause every audio with that name.
+    //Or you can also assign the entire oAudioManager.playAudio('name of audio') to a variable (check oGargantuar's NormalAttack for example), and use that variable as the source. In that case it will only pause the specific audio assigned to that variable, and will not pause anything else even if there's other audio with the same name.
+    /*Example: 
+        oAudioManager.playAudio('rain',1);
+        oSym.addTask(100, () => {oAudioManager.pauseAudio('rain');});
+        
+        //and this will play 2 instances of 'rain', but only the one assigned to aud is paused (disable Low performance mode to test this)
+        let aud = oAudioManager.playAudio('rain',1);
+        oSym.addTask(100, () => {oAudioManager.playAudio('rain',1);});
+        oSym.addTask(200, () => {oAudioManager.pauseAudio(aud);});
+    */  
+    
+    //pauseAudio will pause the audio but its current time will still be saved in record.busyInstances, so you can unpause it later to make the audio continue from where it was paused.
+    //If forced is false then the paused audio will be played again when the player clicks 'Back to Game' in the pause menu (allResPauseCanceled). If forced is true then the audio won't be affected by Back to Game (allResPauseCanceled) - you have to manually unpause the audio to make it play.
+    pauseAudio(source, forced = true) {
+        let ele = void 0, self = oAudioManager;
+        let AudioMap = self.resourceAudioMap;
+        if (typeof source === 'string') {
+            let sourceURL = self.getSourceSrc(source);
+            let record = AudioMap.get(sourceURL);//获取记录表
+            let bePausedAudios = [];
+            if(record){
+                for (let audio of record.busyInstances) {//暂停音乐
+                    bePausedAudios.push(self.pauseAudio(audio,forced));//递归暂停音乐
+                }
             }
+            return bePausedAudios;
         }
-        else if (source instanceof Promise) {
+        if (source instanceof Audio || source instanceof Howl) {
+            ele = source;
+            //if (source.readyState === 4) {
+                if (!(source instanceof Howl && source.seek() == 0)) {source.pause();}
+            /*} else {
+                let lPlayTime = source.currentTime;
+                source.addEventListener("play", ()=>{
+                    if(lPlayTime!==source.currentTime||!self.pausedAudio.has(source)){
+                        return;
+                    }
+                    source.pause.bind(source);
+                }, {
+                    once: true
+                });
+            }*/
+            self.pausedAudio.add(source);
+            if (forced) {//如果强制则不可以重播放
+                self.forcedPausedAudio.add(source);
+            }
+        } else if (source instanceof Promise) {
+            console.log("oh shit promise",source);
             source.then((media) => {
-                if (media.readyState === 4) {
-                    media.pause(); 
-                } else {
-                    media.addEventListener("canplaythrough", media.pause.bind(media), {once: true});  
+                media.pause();
+                self.pausedAudio.add(media);
+                if (forced) {//如果强制则不可以重播放
+                    self.forcedPausedAudio.add(media);
                 }
                 ele = media;
             });
         }
         return ele;
     },
+    unpauseAudio(source) {
+        if (oS.Silence || oS.AudioSilence || $User.AudioEffectVolumePercent == 0) {
+            return -1;
+        }
+        let ele = void 0, self = oAudioManager, specific = 1;
+        let AudioMap = self.resourceAudioMap;
+        if (typeof source === 'string') {
+            let sourceURL = self.getSourceSrc(source);
+            let record = AudioMap.get(sourceURL);//获取记录表
+            let resumedAudios = [];
+            if(record){
+                for (let audio of record.busyInstances) {//获取记录的所有音乐
+                    if((IsHowling ? !audio.playing() : audio.paused)&&self.pausedAudio.has(audio)){//如果可继续播放，且被暂停
+                        resumedAudios.push(self.unpauseAudio(audio));//递归播放音乐
+                    }
+                }
+            }
+            return resumedAudios;
+        }
+        if (source instanceof Audio || source instanceof Howl) {
+            ele = source;
+            self.forcedPausedAudio.delete(source);
+            self.pausedAudio.delete(source);//先要删除，不然这个音频在表里面播放不出来
+            if (!(source instanceof Howl && source.seek() == 0) && (IsHowling ? !source.playing() : source.paused)) {
+                if(source.$manualPlay){
+                    source.$manualPlay();
+                }else{
+                    source.play();
+                }
+            }
+        } else if (source instanceof Promise) {
+            source.then((media) => {
+                self.forcedPausedAudio.delete(media);
+                self.pausedAudio.delete(media);
+                if (!(source instanceof Howl && source.seek() == 0) && (IsHowling ? !source.playing() : source.paused)) {
+                    media.play();
+                    ele = media;
+                }
+            });
+        }
+        return ele;
+    },
+    //Unlike pauseAudio, this function will pause and completely remove the audio from record.busyInstances. You can no longer unpause the deleted audio.
+    //Note: all audio will be deleted when switching to a new page
+    deleteAudio(source = 'all') {
+        const self = oAudioManager, AudioMap = self.resourceAudioMap;
+        if(source==='all'){
+            self.traverseAllAudios((audio)=>{
+                self.__stopAudio__(audio);
+            });
+            return;
+        }else if (typeof source === 'string') {
+            let sourceURL = self.getSourceSrc(source);
+            let record = AudioMap.get(sourceURL);//获取记录表
+            //console.log(sourceURL,record,AudioMap);
+            if(record){
+                for(let audio of record.busyInstances){
+                    self.__stopAudio__(audio);
+                }
+            }
+            return;
+        }else{
+            //剩下只能是音频
+            self.__stopAudio__(source);
+        }
+    },
     pauseMusic() {
         const self = oAudioManager;
         const ele = self.resourceMusicMap.get(self.curMusic);
         if (ele) {
-            if (ele.readyState === 4) {
+			//iOS can't fire oncanplay before the audio is played
+            if (ele.readyState === 4 || IsIOS) {
                 ele.pause();
             } else {
-                ele.addEventListener("canplaythrough", ele.pause.bind(ele), {once: true});  
+                ele.addEventListener("canplay", ele.pause.bind(ele), {
+                    once: true
+                });
             }
         }
         return ele;
@@ -2117,9 +3353,9 @@ const oAudioManager = {
         const self = oAudioManager;
         self.isAllResPaused = true;
         //暂停音效
-        for (let audio of self.playingAudioDomSet) {
-            self.pauseAudio(audio);
-        }
+        self.traverseAllAudios((audio)=>{
+            self.pauseAudio(audio, false);
+        });
         //暂停bgm
         self.pauseMusic();
     },
@@ -2127,9 +3363,11 @@ const oAudioManager = {
     allResPauseCanceled() {
         const self = oAudioManager;
         self.isAllResPaused = false;
-        for (let audio of self.playingAudioDomSet) {
-            audio.play();
-        }
+        self.traverseAllAudios((audio)=>{
+            if (!self.forcedPausedAudio.has(audio)){
+                self.unpauseAudio(audio);
+            }
+        });
         let musicDom = self.getDom(self.curMusic, "music");
         musicDom && musicDom.play();
     },
@@ -2137,60 +3375,118 @@ const oAudioManager = {
     allResMuted() {
         const self = oAudioManager;
         self.isAllResMuted = true;
-        for (let audio of self.playingAudioDomSet) {
+        self.traverseAllAudios((audio)=>{
             audio.muted = true;
+        });
+        if (self.curMusic) {
+            self.resourceMusicMap.get(self.curMusic).muted = true;
         }
-        self.curMusic && (self.resourceMusicMap.get(self.curMusic).muted = true);
     },
     //全局取消静音
     allResMutedCanceled() {
         const self = oAudioManager;
         self.isAllResMuted = false;
-        for (let audio of self.playingAudioDomSet) {
+        self.traverseAllAudios((audio)=>{
             audio.muted = false;
+        });
+        if (self.curMusic) {
+            self.resourceMusicMap.get(self.curMusic).muted = !IsIOS ? false : !($User.MusicVolumePercent);
         }
-        self.curMusic && (self.resourceMusicMap.get(self.curMusic).muted = false);
+    },
+    // 调节音量
+    // 如果不传参数v表示用户设定的音量百分比发生调整，这时候音频的代码设定音量保持不变
+    modifyAudioVolume(media, v) {
+        if (oS.Silence || oS.AudioSilence || media == -1) return media;
+        v = v ?? media.__originalVolume__;
+        media.__originalVolume__ = v;
+        if (!IsHowling) {
+            media.volume = v * $User.AudioEffectVolumePercent;
+        } else {
+            media.volume(v * $User.AudioEffectVolumePercent);
+        }
+        return media;
+    },
+    modifyMusicVolume(v, media) {
+        const self = oAudioManager;
+        if (!media) media = self.resourceMusicMap.get(self.curMusic);
+        v = v ?? media.__originalVolume__;
+        media.__originalVolume__ = v;
+		if (IsIOS) {
+			media.muted = !(v * $User.MusicVolumePercent);
+		}
+		media.volume = v * $User.MusicVolumePercent;
+        return media;
     },
 };
 const SelectModal = (lvl, path) => {
-    ClearEventListeners(window,'jng-event-startgame');
-    ClearEventListeners(window,'jng-event-endgame');
-    oAudioManager.playingAudioDomSet.clear();
-    oSelectionMap._lastMusic_ = oS.LoadMusic = oS.StartGameMusic = null;
-    let GlobalVariables = oS.GlobalVariables,
-         SelfVariables = oS.SelfVariables;
-    for(let key in GlobalVariables) {  //恢复挂载在window上被重写的函数
-        window[key] = GlobalVariables[key];
-    }
-    oS.GlobalVariables = {};
-    for(let i of SelfVariables) {  //清除挂载在oS被重写过的数据
-        oS[i] = void 0;
-    }
-    oDynamicPic.revokeGarbage();        //清除没被清除掉的垃圾blob图片
-    CancelShovel();
-    SetBlock($("loading"));
-    SetHidden($("dCardList"), $("tGround"), $("dSelectCard"), $("dTop"), $("dMenu"), $("dNewPlant"));
-    SetNone($("Menu"), $("shade"), $('SelectionMap'), $('labMap'), );
-    dSurface.style.display = lvl === 'Service/index.js' || (lvl === 'index' && path === 'Service') ? 'block' : 'none';
-    EDAll = EBody.replaceChild(EDNewAll, EDAll);  //重置大舞台
-    LoadModal(lvl, path);  //启动新关卡
+    if (oS.isStartGame === 1) oSym.Stop();
+    setTimeout(() => {
+        dispatchEvent(EVENT_EXITGAME);
+        // 销毁所有注册的游戏事件
+        ClearEventListeners(window,'jng-event-startgame');
+        ClearEventListeners(window,'jng-event-endgame');
+        ClearEventListeners(window,'jng-event-exitgame');
+        oAudioManager.deleteAudio();
+        oSelectionMap._lastMusic_ = oS.LoadMusic = oS.StartGameMusic = null;
+        let GlobalVariables = oS.GlobalVariables,
+             SelfVariables = oS.SelfVariables;
+        for(let key in GlobalVariables) {  //恢复挂载在window上被重写的函数
+            window[key] = GlobalVariables[key];
+        }
+        if (oS.UpsideDown) {
+            oMiniGames.UpsideDown();
+            delete oS.UpsideDown;
+        }
+        oS.GlobalVariables = {};
+        for(let i of SelfVariables) {  //清除挂载在oS被重写过的数据
+            oS[i] = void 0;
+        }
+        oDynamicPic.revokeGarbage();        //清除没被清除掉的垃圾blob图片
+        oP.Destroy();
+        oPropSelectGUI.rerender = 0;
+        CancelShovel();
+        SetBlock($("loading"));
+        SetHidden($("dCardList"), $("tGround"), $("dSelectCard"), $("dTop"), $("dMenu"), $("dNewPlant"));
+        SetNone($("Menu"), $("shade"), $('SelectionMap'), $('labMap'), );
+        dSurface.style.display = lvl === 'Service/index.js' || (lvl === 'index' && path === 'Service') ? 'block' : 'none';
+        if (jngAlert._dom.childNodes[1]) jngAlert._dom.childNodes[1].style.color = '';
+        //top 10 reasons why rendering game visuals purely on DOMs is the worst idea of all time
+        //DOM reference invalidating to allow garbage collection start
+        let discardedDOMs = [FightingScene, dTop, dFlagMeter, dCoinContent, dPropsContent, Ground, dSelectCard, dCardList, dSelectProp, dZombiePreview, dCardList, Zimu, ZimuRQ, EDPZ, dPCard, dSVGContainers, EDAll];
+        ClearThreeGens(discardedDOMs.concat(oZombieLayerManager.$Containers.concat(EDAll)));
+        //DOM reference invalidating to allow garbage collection end
+
+		//重置大舞台
+		ClearChild(EDAll);
+		EDAll = EDNewAll;
+		EBody.insertBefore(EDAll,dAlmanac);
+		LoadModal(lvl, path);  //启动新关卡
+
+    }, oS.isStartGame === 1 ? 50 : 0);
 };
-const LoadModal = function(lvl, path = 'Level') {
+const LoadModal = (lvl, path = 'Level') => {
+    oS.Slots = undefined;
+    if (oS.UpsideDown) {
+        oMiniGames.UpsideDown();
+        delete oS.UpsideDown;
+    }
     let src = 'modal/' + (/\w+?\/\w+?.js$/.test(lvl) ? lvl : `${path}/${lvl}.js`);
-    oS.Lvl = src.substring(src.lastIndexOf('/')+1, src.indexOf('.js'));
+    oS.Lvl = src.substring(src.lastIndexOf('/') + 1, src.indexOf('.js'));
     oS.LoadingStage = "LoadingScript";
-    if(/blob/.test(lvl)){
+    if (/blob/.test(lvl)) {
         src = lvl;
         oS.Lvl = "Fanmade";
         oS.OriginLvl = src;
     }
     oSym.Timer && oSym.Stop();
-    oSym.Init(_=>{
-        ClearChild($("JSPVZ"));
-        NewEle("JSPVZ", "script", null, {src}, document.querySelector("head"));
+    oSym.Init(async () => {
+        ClearChild($("JNG_PVZTR_Modal"));
+        let scriptElement = await firstScreenLoadingScript(src, document.head);
+        scriptElement.id = 'JNG_PVZTR_Modal';
     });
 };
 const ResetGame = function() {  //通用继续游戏
+    if (oS.isStartGame === 2) return;
     oAudioManager.allResPauseCanceled();
     oSym.Start();
 };
@@ -2211,6 +3507,35 @@ const RewriteGlobalVariables = function(funcs, isHard) {
             //软重写
             !oS.GlobalVariables[name] && (oS.GlobalVariables[name] = window[name], window[name] = funcs[name]);
     }
+};
+let CustomErrorBox = function(msg = "[PVZTR] <MISSING_ERROR_MESSAGE>") {
+    let nowY = 0;
+    let errorMsgs = {};
+    let s = NewEle("error_"+Math.random(),"div",`cursor:pointer;z-index:3000;box-shadow:0 0 5px black;position:absolute;height:80px;transform:scaleX(0);width:300px;opacity:0;right:-150px;bottom:${nowY}px;background:white;margin:6px;border-radius:4px;font-size:0.75em;padding:10px;`,{
+        ondblclick(){
+            if(/zh/.test(localStorage.JNG_TR_USER_LANGUAGE)){
+                window.open("http://jq.qq.com/?_wv=1027&k=2BznGEc","_blank");
+            }else{
+                window.open("https://discord.gg/5UZggBD3Uk","_blank");
+            }
+        }
+    },document.body);
+    let height = s.offsetHeight+Number.parseFloat(s.style.margin);
+    errorMsgs[s.id]=s;
+    s.innerText = msg + `\n\n它会对游戏正常运行有影响，请及时截图反馈至github或者粉丝群！双击就可以加群啦！`;
+    if(IsMobile){
+        s.style.cssText = `z-index:3000;box-shadow:0 0 5px black;position:absolute;height:30px;transform:translateX(-200px);line-height: 85%;width:400px;opacity:0;left:450px;bottom:-30px;background:white;margin:6px;border-radius:4px;font-size:0.7em;padding:3px;`
+        oEffects.Animate(s,{opacity:0.8,bottom:0},0.5,'ease-out');
+    }else{
+        oEffects.Animate(s,{opacity:0.8,transform:"scaleX(1)",right:"0"},0.5,'ease-out');
+    }
+    setTimeout(function(){
+        delete errorMsgs[s.id];
+        oEffects.Animate(s,{opacity:0},0.3,false,ClearChild);
+        if(Object.keys(errorMsgs).length==0){
+            nowY = 0;
+        }
+    },8000);
 };
 /*
 LoadModal支持两种传入文件路径的方法：
