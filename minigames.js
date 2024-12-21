@@ -178,7 +178,7 @@ var oMiniGames = {
                 GroundOnmousemove = GroundOnmousemove1;
             },
             CancelPlant(navigating = false) {
-                ClearChild($("MovePlant"), $("MovePlantAlpha"), $("HighlightLane"), $("HighlightColumn"), $("CardSelected"));
+                ClearChild($("MovePlant"), $("MovePlantAlpha"), $("HighlightLane"), $("HighlightLane2"), $("HighlightColumn"), $("CardSelected"));
                 if (navigating) ClearChild($("CardNavigated"));
                 oS.Chose = 0;
                 let AC = ArCard[oS.ChoseCard];
@@ -235,7 +235,7 @@ var oMiniGames = {
                     oS.ChoseCard = "";
                     oS.Chose = 0;
                     GroundOnmousemove = () => {}
-                    ClearChild($("MovePlant"), $("MovePlantAlpha"), $(cardID));
+                    ClearChild($("MovePlant"), $("MovePlantAlpha"), $(cardID), $(cardID + 'img'));
                     CancelPlant();
                 } else {
                     oAudioManager.playAudio("buzzer");
@@ -361,10 +361,10 @@ var oMiniGames = {
                 oSym.addTask(createTime, createNewCard);
             })();
             {
-                let tmp__;
                 (function moveCard() {
                     let len = ArCard.length;
                     while (len--) {
+                        let tmp__;
                         let card = ArCard[len];
                         // 卡牌没有到达顶端
                         // 卡牌没有超过最顶端
@@ -423,7 +423,7 @@ var oMiniGames = {
                 let evtY = event.clientY;
                 if (IsMobile && event.targetTouches) {
                     let finger = event.targetTouches[0];
-                    [evtX, evtY] = [finger.clientX - 60, finger.clientY];
+                    [evtX, evtY] = [finger.clientX - EDAlloffsetLeft, finger.clientY];
                 }
                 let [[X, C], [Y, R]] = [ChosePlantX(evtX), ChosePlantY(evtY)];
                 let [data] = GetAP(evtX, evtY, R, C);
@@ -442,8 +442,9 @@ var oMiniGames = {
                     PosHighlight(R,C);
                 } else {
                     SetHidden(imgAlpha);
-                    ClearChild($("HighlightLane"), $("HighlightColumn"));
+                    ClearChild($("HighlightLane"), $("HighlightLane2"), $("HighlightColumn"));
                 }
+				return [evtX, evtY];
             },
             ChosePlant(evt, obj) {
                 if(typeof obj !== 'object') {
@@ -531,7 +532,8 @@ var oMiniGames = {
                     delete oS.ChoseCardObj;
                     oS.Chose = 0;
                     GroundOnmousemove = () => {};
-                    ClearChild($("MovePlant"), $("MovePlantAlpha"), card.Ele);
+                    ClearChild($("MovePlant"), $("MovePlantAlpha"), card.Eleimg, card.Ele);
+                    card.Eleimg = card.Ele = null;
                     CancelPlant();
                 } else {
                     oAudioManager.playAudio("buzzer");
@@ -548,7 +550,7 @@ var oMiniGames = {
                 let card = oS.ChoseCardObj;
                 oS.Chose = 0;
                 delete oS.ChoseCardObj;
-                ClearChild($("MovePlant"), $("MovePlantAlpha"), $("HighlightLane"), $("HighlightColumn"), $("CardSelected"));
+                ClearChild($("MovePlant"), $("MovePlantAlpha"), $("HighlightLane"), $("HighlightLane2"), $("HighlightColumn"), $("CardSelected"));
                 if (card) SetAlpha(card.Eleimg, 100, 1);
                 GroundOnmousemove = () => {};
             },
@@ -632,12 +634,12 @@ var oMiniGames = {
                             const id = "dCard" + Math.random();
                             const pxleft = 215+Math.random()*600;
                             const styles = `top:-60px;left:${pxleft}px;width:100px;height:120px;cursor:pointer;clip-path:inset(0 0 60px 0);z-index:253;`;
-                            const Ele = NewEle(id, "div", styles + `position: absolute; background-size:100%;`, 0, EDAll);
-                            const Eleimg = NewEle(id + 'img', 'div', `width:100px;height:120px;background-image:url(${proto.PicArr[proto.CardGif]});background-size:100px 120px;`, {
+                            let Ele = NewEle(id, "div", styles + `position: absolute; background-size:100%;`, 0, EDAll);
+                            let Eleimg = NewEle(id + 'img', 'div', `width:100px;height:120px;background-image:url(${proto.PicArr[proto.CardGif]});background-size:100px 120px;`, {
                                 onmousedown: event => {ChosePlant(event, card);}
                             }, Ele);
                             SetEvent(Eleimg, 'touchstart', event => {ChosePlant(event, card);});
-                            const card = ArCard[len] = {
+                            let card = ArCard[len] = {
                                 DID: id,
                                 PName: obj,
                                 hasAnim: false,
@@ -678,8 +680,8 @@ var oMiniGames = {
                             card.countdown -= moveTime;
                             card.countdown <= 300 && !card.hasAnim && (oEffects.Animate(card.Eleimg, 'CardBlink', 'slow', null, null, null, 'infinite'), card.hasAnim = true);
                             if(card.countdown <= 0) {
-                                card.Ele.onmousedown = null;
-                                card.Ele.ontouchstart = null;
+                                card.Eleimg.onmousedown = null;
+                                card.Eleimg.ontouchstart = null;
                                 oEffects.Animate(card.Ele, {transform: 'scale(0)'}, 0.1, 'linear', ClearChild);
                                 ArCard.delete(card, true);   
                             }
@@ -1102,21 +1104,7 @@ var oMiniGames = {
     },
     HeatWave(duration = 3600) {
         PlaySubtitle("热浪！",700);
-        var _ele = NewEle("effect" + Math.random(), "div", "pointer-events:none;position:absolute;z-index:257;width:1900px;height:600px;background:rgb(0,0,0);opacity:0;", 0, EDAll);
-        (function AnimLoop() {
-            if (!_ele) return;
-            oEffects.Animate(_ele, {
-                background: "rgb(200,0,0)",
-                opacity: 0.08
-            }, 0.2, "ease-out", _ => {
-                oSym.addTask(100, _ => {
-                    if (!_ele) return;
-                    oEffects.Animate(_ele, {
-                        opacity: 0
-                    }, 0.4, "linear", AnimLoop);
-                });
-            });
-        })();
+        var _ele = NewEle("effect" + Math.random(), "div", "pointer-events:none;position:absolute;z-index:257;width:1900px;height:600px;background:rgb(200,0,0);opacity:0;animation:HeatWaveBlink infinite 1s;", 0, EDAll);
         for (let y = 1; y < 6; y++) {
             for (let x = 1; x < 10; x++) {
                 let floor = CustomSpecial(oHeatFloor, y, x).SetDuration(duration);
@@ -1511,10 +1499,11 @@ var oMiniGames = {
                 GiveScore(delta, "#ffff00", plantR, plantC, plantTopPosition, plantLeftPosition, ele.style.zIndex, !pt.isPlant);
             }
         }
+		let GameCancelled = false;
         /* 监听页面元素变化 */
         addEventListenerRecord('jng-event-startgame', () => {
             const callback = (mutations) => {
-                IsGaming(1) && mutations.forEach(MutationRecord => 
+                IsGaming(1) && !GameCancelled && mutations.forEach(MutationRecord => 
                     MutationRecord.removedNodes.forEach(markScore)
                 );
             };
@@ -1522,6 +1511,9 @@ var oMiniGames = {
             // 所以这里需要增开subtree开关用于监控DOM树的后代节点的变动情况
             new MutationObserver(callback).observe(EDPZ, {childList:true, subtree:true});    
         });
+		addEventListenerRecord('jng-event-exitgame', () => {
+			GameCancelled = true;
+		});
     },
     IZombie(callback = toWin) {
         /* 初始化进度条 */
@@ -1557,43 +1549,60 @@ var oMiniGames = {
         }
     },
     oMirrorGame(){
-        let canvas = NewEle("","canvas","position:absolute;left:"+oS.FightingSceneLeft+"px;top:0;width:"+oS.W+"px;height:600px;pointer-events:none;",{
+        /*let canvas = NewEle("","canvas","position:absolute;left:"+oS.FightingSceneLeft+"px;top:0;width:"+oS.W+"px;height:600px;pointer-events:none;",{
             width:oS.W,
             height:600,
-        },FightingScene);
-        let mirrorRad = 0;
-        let ctx = canvas.getContext("2d");
+        },FightingScene);*/
+		let BigMirrorImg = NewEle("big_mirror","img",`width:1067px;height:600px;position:absolute;left:85px;top:28px;z-index:255;pointer-events:none;-webkit-mask-image: linear-gradient(to left, transparent 0px, black 200px, black 867px, transparent 1067px);transform:rotate(13rad) scale(0);`,{src:"images/interface/big_mirror.webp"},FightingScene);
+        let BigMirrorReflectImg = NewEle("big_mirror_reflect","img",`width:1067px;height:600px;position:absolute;left:85px;top:28px;z-index:255;pointer-events:none;-webkit-mask-image: linear-gradient(to left, transparent 0px, black 200px, black 867px, transparent 1067px);transform:rotate(13rad) skew(13rad) scale(0);`,{src:"images/interface/big_mirror_reflect.webp"},FightingScene);
+		oEffects.Animate(BigMirrorImg,{
+			"transform": "rotate(0rad) scale(1)",
+		},"slow","cubic-bezier(0.25, 1, 0.5, 1)");
+		oEffects.Animate(BigMirrorReflectImg,{
+			"transform": "rotate(0rad) skew(0rad) scale(1)",
+		},"slow","cubic-bezier(0.25, 1, 0.5, 1)");
+		let mirrorRad = 0;
+        //let ctx = canvas.getContext("2d");
         let mirroredPlant = new Map();
         let centerPos = [GetX(5),GetMidY(3)];
         let cos_sin = [Math.cos(mirrorRad),Math.sin(mirrorRad)];
-        let locked = true;
-        draw();
-        let arrowLeft = NewEle("arrowLeft","div","display:block;width:58px;height:55px;top: 300px;position: absolute;cursor: pointer;z-index: 255;background: url(images/interface/Map_Turn.webp);left:150px;transform: scaleX(-1);",{
+        let locked = false;
+        //draw();
+        let arrowLeft = NewEle("arrowLeft","div","display:block;opacity:0;width:58px;height:55px;top: 300px;position: absolute;cursor: pointer;z-index: 255;background: url(images/interface/Map_Turn.webp);left:150px;transform: scaleX(-1);",{
             className: 'jngButton',
         },EDAll);
-        let arrowRight = NewEle("arrowRight","div","display:block;width:58px;height:55px;top: 300px;position: absolute;cursor: pointer;z-index: 255;background: url(images/interface/Map_Turn.webp);right:1px;",{
+        let arrowRight = NewEle("arrowRight","div","display:block;opacity:0;width:58px;height:55px;top: 300px;position: absolute;cursor: pointer;z-index: 255;background: url(images/interface/Map_Turn.webp);right:1px;",{
             className: 'jngButton',
         },EDAll);
-        let lockEle = NewEle("lockEle","div","display:block;width:61px;height:59px;top: 300px;position: absolute;cursor: pointer;z-index: 255;background: url(images/interface/lock.webp) no-repeat;left:590px;transform:scale(1.2)",{
+        /*let lockEle = NewEle("lockEle","div","display:block;opacity:0;width:61px;height:59px;top: 300px;position: absolute;cursor: pointer;z-index: 255;background: url(images/interface/lock.webp) no-repeat;left:600px;transform:scale(1.2)",{
             className: 'jngButton',
-        },FightingScene);
+        },FightingScene);*/
+		oEffects.fadeIn(arrowLeft,"slow");
+		oEffects.fadeIn(arrowRight,"slow");
+		//oEffects.fadeIn(lockEle,"slow");
         arrowLeft.onclick = function() {rotateMirror(-0.1);};
         arrowRight.onclick = function() {rotateMirror(0.1);};
-        lockEle.onclick = function() {changeLock();};
+        //lockEle.onclick = function() {changeLock();};
         function rotateMirror(ang){
             let bc = [mirrorRad,cos_sin];
             mirrorRad+=ang;
             cos_sin = [Math.cos(mirrorRad),Math.sin(mirrorRad)];
-            if(!intersect()&&!reMirror()){
+            if(/*!intersect()&&*/!reMirror()){
                 oAudioManager.playAudio('click3');
-                draw();
+				oEffects.Animate(BigMirrorImg,{
+					'transform':`rotate(${mirrorRad}rad)`,
+				},'fast','ease-in-out');
+				oEffects.Animate(BigMirrorReflectImg,{
+					'transform':`rotate(${mirrorRad}rad) scaleY(${Math.sin(mirrorRad+90*Math.PI/180)})`,
+				},'fast','ease-in-out');
+                //draw();
             }else{
                 oAudioManager.playAudio('buzzer');
                 mirrorRad = bc[0];
                 cos_sin = bc[1];
             }
         }
-        function draw(){
+        /*function draw(){
             ctx.clearRect(0,0,oS.W,600);
             ctx.beginPath();
 
@@ -1610,7 +1619,7 @@ var oMiniGames = {
             ctx.stroke();
 
             ctx.closePath();
-        }
+        }*/
         function getMirrorPos(R,C){
             let [oX,oY] = [GetX(C),GetMidY(R)];
             let [x,y] = [centerPos[0]-oX,centerPos[1]-oY];
@@ -1619,12 +1628,16 @@ var oMiniGames = {
             let [tX,tY] = [x*2+oX,y*2+oY];
             return GetR(tY)*100+GetC(tX);
         }
+        //检查某点离镜子距离是否小于40
+        //可能可以换成 ((centerPos[1]-Y)*cos_sin[0]-(centerPos[0]-X)*cos_sin[1])**2<=1600
         function check_kill(X,Y){
+            return false;
             if((centerPos[0]-X)**2+(centerPos[1]-Y)**2-Math.abs((centerPos[0]-X)*cos_sin[0]+(centerPos[1]-Y)*cos_sin[1])**2<=1600){
                 return true;
             }
             return false;
         }
+        /*
         function intersect(){
             let p;
             let killedRC = new Set();
@@ -1635,11 +1648,13 @@ var oMiniGames = {
                 }
                 p = $P[k];
                 if(killedRC.has(v.R*100+v.C)||!p){//被删掉了肯定就已经没有了
+					if (p) oGd.killAll(p.R,p.C,"JNG_TICKET_MembraneZombie");
+					console.log("DELETE PLANT AT ",p.R,p.C);
                     mirroredPlant.delete(k);
                     return;
                 }
                 if(check_kill(GetX(p.C),GetMidY(p.R))){
-                    if (locked) {
+                    if (locked || p.EName == "oPortal") {
                         console.log('INTERSECT_',p.R,p.C);
                         showTileWarning(p.R,p.C);
                         showTileWarning(v.R,v.C);
@@ -1649,6 +1664,7 @@ var oMiniGames = {
                         oGd.killAll(p.R,p.C,"JNG_TICKET_MembraneZombie");
                         killedRC.add(v.R*100+v.C);
                         mirroredPlant.delete(k);
+						console.log("DELETE PLANT AT ",p.R,p.C);
                     }
                 }
             });
@@ -1657,6 +1673,7 @@ var oMiniGames = {
             }
             return jump;
         }
+        */
         function reMirror(){
             let positions = new Set(),tmp;
             let jump = 0;
@@ -1673,14 +1690,14 @@ var oMiniGames = {
                 let canGrow = !oGd.$Sculpture[R + '_' + C] && !oGd.$Tombstones[R + '_' + C];
                 //let canGrow = $P[k].CanGrow(GetAP(X,Y,R,C)[0],R,C);
                 
-                if(($P[v.id]&&(R!==v.R||C!==v.C)&&!canGrow) && locked) {
+                /*if(($P[v.id]&&(R!==v.R||C!==v.C)&&!canGrow) && locked) {
                     console.log(`CAN'T GROW `,R,C);
                     showTileWarning(R,C);
                     showTileWarning(v.R,v.C);
                     showTileWarning($P[k].R,$P[k].C);
                     jump=2;
                     return;
-                }
+                }*/
             });
             if(jump>0){
                 if(jump===1){
@@ -1706,7 +1723,7 @@ var oMiniGames = {
                         console.log(v);
                     }else{
                         mirroredPlant.set(k,clone);
-                        console.log("set");
+                        //console.log("set");
                     }
                 }
             });
@@ -1715,12 +1732,20 @@ var oMiniGames = {
         function createMirrorPlant(oid,constructor,R,C){
             R = Math.Clamp(R,1,oS.R);
             C = Math.Clamp(C,1,oS.C);
-            let plant = CustomSpecial(constructor,R,C,"none");
-            plant.isPlant = 0;
-            plant.canEat = 0;
-            plant.Stature = -Infinity;
-            plant.canShovel=false;
-            plant.BlockAllPKind = false;
+            let plant;
+			if ($P[oid].EName !== "oPortal") {
+				plant = CustomSpecial(constructor,R,C,"none");
+				plant.isPlant = 0;
+				plant.canEat = 0;
+				plant.Stature = -Infinity;
+				plant.canShovel=false;
+				plant.BlockAllPKind = false;
+			} else {
+				plant = CustomSpecial(constructor,R,C,"none").SetColor($P[oid].Color);
+				plant.BlockAllPKind = false;
+				delete oGd.$[R + '_' + C + '_7'];
+				plant.PKind = "none";
+			}
             let filters = [["opacity","0.6"]];
             if (!$User.LowPerformanceMode) {
                 filters.push(["hue-rotate","90deg"]);
@@ -1747,14 +1772,14 @@ var oMiniGames = {
         function isANormalPlant(id,pt){
             return $P[id]&&!pt.Tools&&pt.isPlant;
         }
-        function changeLock() {
+        /*function changeLock() {
             oAudioManager.playAudio('pause');
             console.log(locked ? "unlocked" : "locked");
             locked = locked ? false : true;
             PlaySubtitle(("Plant Safety Lock: " + (locked ? "ON" : "OFF")), 500);
             SetStyle(lockEle, {
                 background: "url(images/interface/"+ (locked ? "lock" : "unlock") + ".webp) no-repeat",
-                left: (locked ? "590px" : "570px"),
+                left: (locked ? "600px" : "580px"),
             });
         }
         function showTileWarning(R=1, C=1) {
@@ -1764,7 +1789,7 @@ var oMiniGames = {
                 left: (80*C + 170) + "px",
             });
             oEffects.fadeOut(warningTile,'slow',ClearChild);
-        }
+        }*/
         function addPlant(ele) {
             let id = ele.id;
             let constructor = window[ele.dataset['jngConstructor']];
@@ -1772,7 +1797,7 @@ var oMiniGames = {
             let pt = constructor.prototype;
             let name = pt.EName;
             let clone,self = $P[id];
-            if(isANormalPlant(id,self)&&pt?.PKind!==undefined){
+            if((isANormalPlant(id,self)||(name==="oPortal" && self.PKind!=="none"))&&pt?.PKind!==undefined){
                 let pos = getMirrorPos(self.R,self.C);
                 clone = createMirrorPlant(id,constructor,Math.floor(pos/100),pos%100);
                 mirroredPlant.set(id,clone);//如果没有创建成功clone为false
@@ -1783,6 +1808,7 @@ var oMiniGames = {
                 let oldDIE = self.Die;
                 let oldMoveTo = self.moveTo;
                 self.Die=function(...arr){
+					if (!$P[self.id]) return;
                     oldDIE.bind(self)(...arr);
                     if(!$P[id]){
                         if(mirroredPlant.get(id)){
@@ -1805,7 +1831,46 @@ var oMiniGames = {
                     mirroredPlant.delete(id);
                     return oldMoveTo.bind(self)(...arr);
                 };
-                console.log("PLANT ADDED");
+				/*function Respawn(self, constructor, reR, reC) {
+					console.log("RESPAWN ", self.R, self.C, "-> ", reR, reC);
+					if (self.EName == "oPortal") {
+						self.Die();
+						CustomSpecial(constructor,reR,reC).SetColor(self.Color);
+					} else {
+						self.Die("JNG_TICKET_MembraneZombie");
+						CustomSpecial(constructor,reR,reC);
+					}
+				}*/
+				/*setTimeout(() => {
+					let [X,Y] = [GetX(self.C),GetMidY(self.R)];
+					let reR = clone.R, reC = clone.C;
+					//if its mirror image cannot exist, pick another position
+					if (check_kill(X,Y)) {
+						for (let RoDelta = 0; RoDelta < 5; RoDelta++){
+							for (let RoMulti = -1; RoMulti <= 1; RoMulti+=2){
+								for (let CoDelta = 1; CoDelta < 9; CoDelta++){
+									for (let CoMulti = -1; CoMulti <= 1; CoMulti+=2){
+										let temC = self.C+CoDelta*CoMulti, temR = self.R+RoDelta*RoMulti;
+										X = GetX(temC), Y = GetMidY(temR);
+										if (Math.inRange(temC, 1, 9) && Math.inRange(self.R+RoDelta*RoMulti, 1, 5) && !check_kill(X,Y)) {
+											reC = temC;
+											reR = temR;
+											Respawn(self, constructor, reR, reC);
+											CoDelta = CoMulti = RoDelta = RoMulti = 999;
+											break;
+										}
+									}
+								}
+							}
+						}
+					} else {
+						//If the plant is beyond the mirror's border, swap positions and spawn the plant again
+						if(-(X-centerPos[0])*cos_sin[1]+(Y-centerPos[1])*cos_sin[0]<0){
+							Respawn(self, constructor, reR, reC);
+						}
+					}
+				},0);*/
+                //console.log("PLANT ADDED");
             }
         }
         /* 监听页面元素变化 */
@@ -1825,9 +1890,9 @@ var oMiniGames = {
                         rotateMirror(-0.1);
                     }else if(e.key==="ArrowRight"||e.key==="d"){
                         rotateMirror(0.1);
-                    }else if(e.key==="ArrowUp"||e.key==="w") {
+                    }/*else if(e.key==="ArrowUp"||e.key==="w") {
                         changeLock();
-                    }
+                    }*/
                 }
             });
             let oldGP=GrowPlant;
@@ -1836,8 +1901,9 @@ var oMiniGames = {
                     console.log(-(X-centerPos[0])*cos_sin[1],(Y-centerPos[1])*cos_sin[0],X,Y);
                     let mirrorPoint = getMirrorPos(R,C);
                     let RC = [Math.Clamp(Math.floor(mirrorPoint/100),1,oS.R), Math.Clamp(mirrorPoint%100,1,oS.C)];
-                    if(-(X-centerPos[0])*cos_sin[1]+(Y-centerPos[1])*cos_sin[0]<0){
-                        console.log("MIRROR IMAGE BEYOND LAWN BORDERS ",R,C);
+                    //检查是否不能种在镜子侧，点积小于0
+                    /*if(-(X-centerPos[0])*cos_sin[1]+(Y-centerPos[1])*cos_sin[0]<0){
+                        console.log("MIRROR IMAGE BEYOND MIRROR BORDER ",R,C);
                         PlaySubtitle("镜像植物会超过边界！",200);
                         if(IsMobile){
                             CancelPlant();
@@ -1845,11 +1911,11 @@ var oMiniGames = {
                         showTileWarning(R,C);
                         oAudioManager.playAudio('buzzer');
                         return;
-                    }
+                    }*/
                     let [checkX,checkY] = [GetX(C),GetMidY(R)];
-                    if(check_kill(checkX,checkY) || check_kill(X,Y)){
+                    /*if(check_kill(checkX,checkY)){
                         console.log("MIRROR IMAGE AND REALITY OVERLAP ",RC[0],RC[1]);
-                        PlaySubtitle("Mirror plants and real plants cannot overlap!",200);
+                        PlaySubtitle("存在镜子与植物相交",200);
                         if(IsMobile){
                             CancelPlant();
                         }
@@ -1857,11 +1923,13 @@ var oMiniGames = {
                         showTileWarning(RC[0],RC[1]);
                         oAudioManager.playAudio('buzzer');
                         return;
-                    }
+                    }*/
                     let plant = ArCard[oS.ChoseCard]?.PName||oS.ChoseCardObj?.PName;
                     let pro = plant.prototype;
                     let [data2] = GetAP(GetX(RC[1]),GetY(RC[0]),RC[0],RC[1]);
                     let canGrow = (pro.EName === 'oPricklyRose' && oGd.$[R + '_' + C + '_1']?.isPlant) || /*pro.CanGrow(data2,RC[0],RC[1])*/ (!oGd.$Sculpture[RC[0] + '_' + RC[1]] && !oGd.$Tombstones[RC[0] + '_' + RC[1]]);
+                    //检测重叠
+                    /*
                     if((RC[0] === R && RC[1] === C) || !canGrow){
                         if (!pro.CanGrow(data2,RC[0],RC[1])) console.log("CAN'T GROW ",data2,RC[0],RC[1]);
                         PlaySubtitle("镜像植物不可被种植！",200);
@@ -1872,7 +1940,7 @@ var oMiniGames = {
                         showTileWarning(RC[0],RC[1]);
                         oAudioManager.playAudio('buzzer');
                         return;
-                    }
+                    }*/
                     if (pro.EName === 'oPricklyRose') {
                         let dupeSacrifice = mirroredPlant.get(oGd.$[R + '_' + C + '_1']?.id);
                         if (dupeSacrifice) {
@@ -1881,7 +1949,7 @@ var oMiniGames = {
                             oGd.$[RC[0] + '_' + RC[1] + '_1'] = dupeSacrifice;
                         }
                     }
-                    console.log("GROW");
+                    //console.log("GROW");
                     oldGP(data,X,Y,R,C);
                 },
             },true);
@@ -2020,7 +2088,6 @@ var oMiniGames = {
         let canvas;
         let ctx;
         let theSquash;
-        let jumping = false;
         function drawArrow(fromX, fromY, toX, toY,theta=30,headlen=30,width=10,color='#000') {
          
             // 计算各角度和对应的P2,P3坐标
@@ -2065,19 +2132,59 @@ var oMiniGames = {
             TurnGif:9,
             __Birthed:false,
             tempPlant:false,
+			jumping:false,
+			reviving:false,
+			commandID: null,
             BirthStyle: (self, id, ele, style) => {
                 EditEle(ele, {id, 'data-jng-constructor': self.EName}, style, !self.__Birthed?oZombieLayerManager.$Containers[self.R]:null);
                 SetStyle(ele,{
                     'pointer-events':'none'
                 });
                 self.__Birthed=true;
+				self.commandID="SquashCommand_" + Math.random();
             },
+			Die(ticket, toRemoveDOM = true) {
+				var self = this,
+				c = self.id;
+				if(self.Stat===1&&!['JNG_TICKET_SuperPower', 'JNG_TICKET_Squash'].includes(ticket)){
+					return;
+				}
+				let revived = false;
+				let temHP;
+				if (self.HP > 350) {
+					for (let ro = 1; ro <= oS.R; ro++) {
+						for (let co = 1; co <= oS.C; co++) {
+							revived = self.moveTo(ro,co);
+							if (revived) {
+								oAudioManager.playAudio('BulletDie');
+								self.EleBody.style.animation = "softBlink 0.5s infinite";
+								self.Stat = 1;
+								co = ro = 999;
+								temHP = self.HP-350;
+								self.HP = Infinity;
+								self.reviving = true;
+								self.jumping = false;
+								oSym.addTask(150, () => {
+									self.Stat = 0;
+									self.HP = temHP;
+									self.reviving = false;
+									self.jumping = false;
+									self.EleBody.style.animation = "";
+								});
+							}
+						}
+					}
+					if (!revived) oSquash.prototype.Die.bind(self)(ticket, toRemoveDOM);
+					return;
+				}
+				oSquash.prototype.Die.bind(self)(ticket, toRemoveDOM);
+			},
             PrivateDie: () => {
-                ClearChild(canvas, $("HighlightLane"), $("HighlightColumn"));
+                ClearChild(canvas, $("HighlightLane"), $("HighlightLane2"), $("HighlightColumn"));
             },
             NormalAttack: function(speed) {
-                jumping = true;
                 let self = this;
+				self.jumping = true;
                 let pid = self.id,
                     ele = $(pid),
                     body = ele.childNodes[1],
@@ -2095,10 +2202,13 @@ var oMiniGames = {
                 if(speed.x<0){
                     body.src = self.PicArr[self.TurnGif];
                     oSym.addTask(77,startJump);
-                }else{
-                    startJump();
+                }else if (speed.x == 0 && speed.y == 0) {
+					startJump();
+				} else {
+                    oSym.addTask(33,startJump);
                 }
                 function startJump(){
+					if (self.reviving) return;
                     let __tmpLastX__ = 0;
                     function setDirection(deltaX){
                         if(__tmpLastX__!==(deltaX=Math.sign(deltaX))&&deltaX!==0){
@@ -2119,6 +2229,7 @@ var oMiniGames = {
                     let trueTargetY = GetY(customR)+self.GetDY(customR, GetC(targetX), [], true)-self.height;
                     let FlyingT = 30;
                     oSym.addTask(33,function loop(t=0){
+						if (self.reviving) return;
                         if(self.Stat===2){
                             attack(customR);
                             return;
@@ -2156,6 +2267,7 @@ var oMiniGames = {
                     });
                 }
                 function attack(tarR){
+					if (self.reviving) return;
                     self.Stat=2;
                     let checkX= self.pixelLeft+curX+self.width/2;
                     let [R,C] = [tarR,Math.Clamp(speed.C,1,oS.C)];
@@ -2177,6 +2289,7 @@ var oMiniGames = {
                                 top:shadowRelativeY+"px",
                             });
                             oZ.getArZ(tarLeft-70, tarLeft+130, R).forEach(z=>{
+								//yes, his damage is not reduced by ResistInsta because he is just that strong
                                 z.getHit2(z,1800);
                             });
                             oSym.addTask(33,()=>{
@@ -2187,7 +2300,8 @@ var oMiniGames = {
                             if(oGd.$GdType[R][C]!=2){
                                 oEffects.ScreenShake();
                             }
-                            jumping = false;
+                            self.jumping = false;
+							self.commandID="SquashCommand_" + Math.random();
                             if (self.tempPlant) self.Die("JNG_TICKET_Squash");
                             return;
                         }
@@ -2222,6 +2336,7 @@ var oMiniGames = {
                 });
                 self.__Birthed=true;
             },
+			Die:oSquash.prototype.Die,
             PrivateDie:()=>{},
         });
         canvas = NewEle("","canvas","position:absolute;left:0;top:0;width:"+oS.W+"px;height:600px;z-index:30;",{
@@ -2230,14 +2345,20 @@ var oMiniGames = {
         },EDPZ);
         ctx = canvas.getContext("2d");
         theSquash = CustomSpecial(oSquash_SpFes2023,3,5);
+		theSquash.icon = NewImg("mobileicon", "images/Props/Terrains/mobileplant.webp",
+			`left:0px;top:15px;z-index:-1;`,
+		theSquash.Ele);
         
         let TouchOffsetX, TouchOffsetY;
+		let MouseHolding = false;
+		let registeredCommandID;
         addEventListenerRecord("jng-event-startgame",function (){
             (function checkMove(){
                 let state = 0;
                 let oriPos = {x:-114,y:-514};
                 let MouseDown = function(e){
-                    if(!$P[theSquash.id]){
+					MouseHolding = true;
+                    if(!$P[theSquash.id] || theSquash.reviving){
                         return;
                     }
                     if(theSquash.Stat===0){
@@ -2248,6 +2369,7 @@ var oMiniGames = {
                             oriPos.y = TouchOffsetY = e.touches[0].pageY - e.touches[0].target.offsetTop;
                         }
                         state=1;
+						registeredCommandID = theSquash.commandID;
                     }else if(earlyEnd && theSquash.Stat===1){
                         theSquash.Stat=2;
                     }
@@ -2255,22 +2377,26 @@ var oMiniGames = {
                 canvas.onmousedown = e => MouseDown(e);
                 SetEvent(canvas, 'touchstart', event => {MouseDown(event);});
                 let MouseMove = function (e){
-                    if(!$P[theSquash.id]){
-                        return;
-                    }
-                    if(state===1 && (multiInput || !jumping)){
+                    if(!$P[theSquash.id] || !MouseHolding || !(multiInput || !theSquash.jumping) || theSquash.reviving || theSquash.commandID !== registeredCommandID){
                         ctx.clearRect(0,0,oS.W,600);
-                        if (!IsMobile) drawArrow(oriPos.x,oriPos.y,e.offsetX,e.offsetY);
+                        ClearChild($("HighlightLane"), $("HighlightLane2"), $("HighlightColumn"));
+                        state=0;
+						return;
+                    }
+                    if(state===1){
+                        ctx.clearRect(0,0,oS.W,600);
+                        //if (!IsMobile) drawArrow(oriPos.x,oriPos.y,e.offsetX,e.offsetY);
                         
                         let [offsetX, offsetY] = [e.offsetX,e.offsetY];
                         if (IsMobile && e.targetTouches) {
                             let finger = e.targetTouches[0];
                             offsetX = TouchOffsetX = e.touches[0].pageX - e.touches[0].target.offsetLeft;
                             offsetY = TouchOffsetY = e.touches[0].pageY - e.touches[0].target.offsetTop;
-                            drawArrow(oriPos.x - 175,oriPos.y,TouchOffsetX-175,TouchOffsetY);
+                            //drawArrow(oriPos.x - 175,oriPos.y,TouchOffsetX-175,TouchOffsetY);
                         }
                         let [evtX, evtY] = [(offsetX-oriPos.x)+theSquash.pixelLeft+theSquash.width*1.2, (offsetY-oriPos.y)+theSquash.pixelTop+theSquash.height/1.2];
-                        let [[X, C], [Y, R]] = [ChosePlantX(evtX), ChosePlantY(evtY)];
+                        drawArrow(theSquash.pixelLeft+80,theSquash.pixelTop+100,evtX-120,evtY);
+						let [[X, C], [Y, R]] = [ChosePlantX(evtX), ChosePlantY(evtY)];
                         evtX = X, evtY = Y;
                         R = Math.Clamp(R,1,oS.R);
                         C = Math.Clamp(C,1,oS.C);
@@ -2279,19 +2405,23 @@ var oMiniGames = {
                         if(proto.CanGrow(data, R, C) || (theSquash.R == R && theSquash.C == C)) {
                             PosHighlight(R,C);
                         } else {
-                            ClearChild($("HighlightLane"), $("HighlightColumn"));
+                            ClearChild($("HighlightLane"), $("HighlightLane2"), $("HighlightColumn"));
                         }
                     }
                 };
                 canvas.onmousemove= e => MouseMove(e);
                 SetEvent(canvas, 'touchmove', event => {MouseMove(event);});
                 let MouseUp = function (e){
-                    if(!$P[theSquash.id]){
+					MouseHolding = false;
+                    if(!$P[theSquash.id] || !(multiInput || !theSquash.jumping) || theSquash.reviving || theSquash.commandID !== registeredCommandID){
+						ctx.clearRect(0,0,oS.W,600);
+                        ClearChild($("HighlightLane"), $("HighlightLane2"), $("HighlightColumn"));
+                        state=0;
                         return;
                     }
-                    if(state===1 && (multiInput || !jumping)){
+                    if(state===1){
                         ctx.clearRect(0,0,oS.W,600);
-                        ClearChild($("HighlightLane"), $("HighlightColumn"));
+                        ClearChild($("HighlightLane"), $("HighlightLane2"), $("HighlightColumn"));
                         state=0;
                         let offsetX = IsMobile ? TouchOffsetX : e.offsetX;
                         let offsetY = IsMobile?TouchOffsetY:e.offsetY;
@@ -2305,7 +2435,7 @@ var oMiniGames = {
                             oAudioManager.playAudio('buzzer');
                             return;
                         }
-                        if (jumping) {
+                        if (theSquash.jumping) {
                             if (!(theSquash.R == evtR && theSquash.C == evtC)) {
                                 let tempSquash = CustomSpecial(oSquash_Temp,theSquash.R,theSquash.C);
                                 tempSquash.NormalAttack({x:(offsetX-oriPos.x),y:(offsetY-oriPos.y),R:evtR,C:evtC});
@@ -2313,7 +2443,7 @@ var oMiniGames = {
                                 oAudioManager.playAudio('buzzer');
                             }
                         } else {
-                            theSquash.NormalAttack({x:(offsetX-oriPos.x),y:(offsetY-oriPos.y),R:evtR,C:evtC});
+							if (theSquash.Stat < 1) theSquash.NormalAttack({x:(offsetX-oriPos.x),y:(offsetY-oriPos.y),R:evtR,C:evtC});
                         }
                     }
                 }
@@ -2394,7 +2524,7 @@ var oMiniGames = {
             self.canvas = NewEle(id, 'canvas', "left:"+oS.FightingSceneLeft+"px;width:"+oS.W+"px;height:600px", {height: 600*self.screenRatio, width: oS.W*self.screenRatio, className: 'BgParticle'}, EDAll);
             self.tmpCanvas = NewEle(id+"_tmp", 'canvas', "", {height: 600*self.screenRatio, width: oS.W*self.screenRatio});
             self.tmpCtx = self.tmpCanvas.getContext("2d",{willReadFrequently:true});
-            if(self.canvas.transferControlToOffscreen){
+            if(typeof self.canvas.transferControlToOffscreen === "function"){
                 self.offscreen = self.canvas.transferControlToOffscreen();
                 self.ctx = self.offscreen.getContext("2d");
             }else{
@@ -2592,9 +2722,13 @@ var oMiniGames = {
                     let self = this;
                     bomb===true&&(bomb=75);
                     if (bomb) {
-                        let BombCard = NewEle(`BombCard`, 'img', `cursor:pointer;left:${50+oS.EDAllScrollLeft}px;top:539px;z-index:202;width:100px;height:60px;object-fit:cover;object-position:top;`, { src: "images/Card/DoomShroom.webp" }, EDAll);
-                        NewEle("", "span", `left:${47+oS.EDAllScrollLeft}px;top:568px;width:98px;z-index:203;pointer-events:none;`, { className: "cardSunNum2", innerText: bomb }, EDAll);
-                        BombCard.onclick = () => {self.ThrowBomb(self)};
+                        let BombCard = NewEle(`BombCard`, 'img', `cursor:pointer;left:${oS.W-77}px;top:539px;z-index:202;width:100px;height:60px;object-fit:cover;object-position:top;`, { src: "images/Card/DoomShroom.webp" }, EDAll);
+                        NewEle("", "span", `left:${oS.W-80}px;top:568px;width:98px;z-index:203;pointer-events:none;`, { className: "cardSunNum2", innerText: bomb }, EDAll);
+                        if (!IsMobile) {
+                            BombCard.onclick = () => {self.ThrowBomb(self)};
+                        } else {
+                            SetEvent(BombCard, "touchstart", () => {self.ThrowBomb(self)});
+                        }
                     }
                     [self.x,self.y,self.width,self.height,self.dom,self.bomb]=[x,y,width,height,dom,bomb];
                     self.Trigger = new oMiniGames.oStg.Obj.CTrigger;
