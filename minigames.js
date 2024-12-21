@@ -1554,12 +1554,8 @@ var oMiniGames = {
             height:600,
         },FightingScene);*/
 		let BigMirrorImg = NewEle("big_mirror","img",`width:1067px;height:600px;position:absolute;left:85px;top:28px;z-index:255;pointer-events:none;-webkit-mask-image: linear-gradient(to left, transparent 0px, black 200px, black 867px, transparent 1067px);transform:rotate(13rad) scale(0);`,{src:"images/interface/big_mirror.webp"},FightingScene);
-        let BigMirrorReflectImg = NewEle("big_mirror_reflect","img",`width:1067px;height:600px;position:absolute;left:85px;top:28px;z-index:255;pointer-events:none;-webkit-mask-image: linear-gradient(to left, transparent 0px, black 200px, black 867px, transparent 1067px);transform:rotate(13rad) skew(13rad) scale(0);`,{src:"images/interface/big_mirror_reflect.webp"},FightingScene);
-		oEffects.Animate(BigMirrorImg,{
+        oEffects.Animate(BigMirrorImg,{
 			"transform": "rotate(0rad) scale(1)",
-		},"slow","cubic-bezier(0.25, 1, 0.5, 1)");
-		oEffects.Animate(BigMirrorReflectImg,{
-			"transform": "rotate(0rad) skew(0rad) scale(1)",
 		},"slow","cubic-bezier(0.25, 1, 0.5, 1)");
 		let mirrorRad = 0;
         //let ctx = canvas.getContext("2d");
@@ -1591,9 +1587,6 @@ var oMiniGames = {
                 oAudioManager.playAudio('click3');
 				oEffects.Animate(BigMirrorImg,{
 					'transform':`rotate(${mirrorRad}rad)`,
-				},'fast','ease-in-out');
-				oEffects.Animate(BigMirrorReflectImg,{
-					'transform':`rotate(${mirrorRad}rad) scaleY(${Math.sin(mirrorRad+90*Math.PI/180)})`,
 				},'fast','ease-in-out');
                 //draw();
             }else{
