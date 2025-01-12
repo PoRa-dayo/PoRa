@@ -28,9 +28,9 @@
         ", the server might be lagging or the filename in the code is wrong QwQ, remember to refresh the game every once in a while. If you still encounter problems, please report the issues to our programmers~"
     ],
     "fee197f4a0bbdd23a3674d591e3961f9": [
-        " 现身了！ 名为 ",
-        " 的错误就躲在 ",
-        "！\n它会对游戏正常运行有影响，请及时截图反馈至粉丝群！\n双击就可以加群啦！"
+        " appeared! Named ",
+        " error at ",
+        "! \nIt will affect the normal operation of the game, please take a screenshot in time and send it to github or our Discord!"
     ],
     "645a43d971af6827cd33d8259c8b48c6": "Assertion failure",
     "9c48e8d1a39356efd727b573c1366063": "：",
@@ -294,7 +294,7 @@
     "509f3ea257bf40fd84820a9186c5c209": "In water, lobs buds at zombies and creates more Multi-plyacinths. On land, becomes a regenerative melee fighter that gets weaker as he targets more zombies.",
     "aa8819c1cfb80d5e4000d36b9d565644": "Multi-plyacinth has lots of experience in sewage treatment, and while other plants are grateful for it, they can't stand being near him. They all say Multi-plyacinth has this... swampy smell, and if they don't do something about him, the smell 'multi-plies' tenfold. But some zombies do try to approach him, just to pick some leaves and feed their pet zombie piggies.",
     "4e492651acf5ad7f3e6c7a2efb5e54a5": "Prickly Rose",
-    "9cbe6e4a7955e5dcaa11c623c146377a": "20（当种植在墓碑上时为50）",
+    "9cbe6e4a7955e5dcaa11c623c146377a": "20 (50 when planted on tombstones)",
     "231e6e0d42e6a8b23664c9713f5ffd88": "Fires piercing thorns above, below and behind her that can hit up to 3 targets. Plant on plants to inherit their Attack and HP. Plant on tombstones to erode targets but disappear after some time.",
     "b737830042d4d24f73292204d04a3c73": "As a rose who originally hails from a royal garden of a witch's castle, Prickly Rose possesses mysterious powers. She can wrap herself around a plant, which makes their souls become one, and as a side effect... makes her extra chubby. Lately she's been receiving education in the city to study more about souls... and to work out, too.",
     "e9c47b677a2760ba80f3358ed4c2a435": "Lawn Mower",
@@ -723,7 +723,7 @@
     "54510a322adf9c2ad3eb12b20371d825": "OK",
     "cc3e6ec02566c1ef272f17dfa4055aa4": "(ﾟ⊿ﾟ)ﾂ",
     "4e5118325856abc992963b2af1be4b4f": "：",
-    "5a51d781a7fbe7b87455c127ebff3bd1": "20（当种植在墓碑上时为50）",
+    "5a51d781a7fbe7b87455c127ebff3bd1": "20 (50 when planted on tombstones)",
     "38b4d3d64b9593cbe5be87b1ae0bf4b4": "</p>\n        <!--设置说明书按钮-->\n        <input class=\"jngButton OptionsInfoButton\" type=\"button\">\n        <div class=\"options\">\n            <div style=\"display:none;\">\n                <input type=\"checkbox\" id=\"cAutoSun2\" value=\"1\" class=\"chk\">\n                <label for=\"cAutoSun\" id=\"lAutoSun\">",
     "5565690771739b7584c0c6cf4db063d0": "存在镜子与植物相交",
     "203aa1b1c94b654e1c6441cf9271d16d": "存在植物镜像超出边界！",
@@ -8635,8 +8635,8 @@
         "levels!"
     ],
     "87a93f1dfa3fb66bc0907f05afb24293": [
-        "春节活动2025 - 第",
-        "天"
+        "Spring Festival 2025 - Day ",
+        ""
     ],
     "b8249bec6ea5da2ed2c8b578eafc17d6": "Day",
     "869e53f5ef68844b6e4adf233852d047": "Night",
