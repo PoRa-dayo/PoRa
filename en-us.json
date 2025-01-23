@@ -32,6 +32,8 @@
         "! \nIt will affect the normal operation of the game, please take a screenshot in time and send it to github or our Discord!"
     ],
     "e590edf50898eb2b38637251c97d0b57": "Heap is empty",
+    "3d380bfa048cb0cd3160da7ba6f8bc47": "[Stack Error] 尝试从空栈中弹出元素",
+    "dc22996e3109e19455fbf2323dc3bcd8": "[Stack Error] 尝试Peek空栈的元素",
     "839d43e0b3ca032dca0ff095eed30391": "Assertion failure",
     "5c4b3af2052b7684c8dcf351d501238e": "Save file parsing failed",
     "9c48e8d1a39356efd727b573c1366063": "：",
@@ -577,8 +579,6 @@
     "ee1a2f4b1a2903eb03d8efb049787034": "Zombot Rail-Road Terrorizer",
     "bfb18d6878260153bb695d9dd2689b1a": "The one true leader of Zombopolis.\n <br/><br/>Initially stays in an idle state and cannot be attacked. At first, only Skill 1 without plant teleportation can be used, and more skills will be available as the battle goes on. After a while, switches to active state, becoming immune to all negative effects and crushing everything on its way. Must be knocked out 5 times to defeat.\n <br/><br/>Skill 1: Targets plant(s) with the highest Attack on 1/2/2/2/3 random lane(s). Said plant(s) are then teleported to the nearest plantable column on the right. Horizontal missile(s) that fly over low-height plants are then shot on targeted lane(s), destroying plants in a 1x3 area on impact.\n <br/>Skill 2: Summons mini statues near the train head. These statues are immune to knockback, can move on their own, and spawn surprises when destroyed.\n <br/>Skill 3: Grants the zombie closest to the house a 25/25/30/30/35-hit shield, and makes all traffic lights on the lawn turn green for 15 seconds.\n <br/>Skill 4: Charges up then fires a laser cannon coming from the right side, continuously dealing damage to the rightmost plant on a lane.",
     "763e6923031a78bb9d89c87f8fbc80aa": "Discovering this train in the leftover files only made him more curious about the non-mirror world. He couldn't help but wonder why this train 'boss' appeared everywhere in that world but not Foggy City, and why it was so weak originally. Still, he then decided to upgrade this train by equipping it with a teleporter and a laser cannon he just bought from Walmart, because what else would you equip it with?",
-    "b81be4beea2068846f099afd17e8b839": "[Stack Error] Attempt to Pop an element from an empty Stack",
-    "b83911659c689b21b4fd4aecb9d06861": "[Stack Error] Attempt to Peek elements of an empty Stack",
     "28f665f26760650b0802bc3f31e79122": "Reset",
     "d2cbc86c8e41a802b8eef5883d40e6d0": "Start",
     "bd7215a24c7c7871ba67622836f1048e": "Speed",
@@ -1083,6 +1083,11 @@
     "c703176594a4c2a01c8ea982e5d5d078": "Always avoids plants",
     "a6eb5b5897a9f02335cf9e8a365e8ef4": "Always spawns on plants",
     "ba119524ee149cff74363719655ffae2": "Fully random positions",
+    "86d64d4c77855a45123ba78d944c91b0": "受影响的行：",
+    "2c2d0e88586634055c5cf5fe4e02a451": [
+        "第",
+        "行不存在！"
+    ],
     "de0d68ef4b97c48ff10339c09d8db0c7": "Edit Necromancy Settings",
     "4f141ccfaa43b5c9362d8dda748a09c3": "Select zombies to add to the zombie list.",
     "15d35da7ae14882bf888684a5c755f7e": "List of zombies that can be summoned when Necromancy occurs. (Format is \"Name\",\"Name\" ...)",
