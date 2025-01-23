@@ -32,8 +32,8 @@
         "! \nIt will affect the normal operation of the game, please take a screenshot in time and send it to github or our Discord!"
     ],
     "e590edf50898eb2b38637251c97d0b57": "Heap is empty",
-    "3d380bfa048cb0cd3160da7ba6f8bc47": "[Stack Error] 尝试从空栈中弹出元素",
-    "dc22996e3109e19455fbf2323dc3bcd8": "[Stack Error] 尝试Peek空栈的元素",
+    "3d380bfa048cb0cd3160da7ba6f8bc47": "[Stack Error] Attempt to Pop an element from an empty Stack",
+    "dc22996e3109e19455fbf2323dc3bcd8": "[Stack Error] Attempt to Peek elements of an empty Stack",
     "839d43e0b3ca032dca0ff095eed30391": "Assertion failure",
     "5c4b3af2052b7684c8dcf351d501238e": "Save file parsing failed",
     "9c48e8d1a39356efd727b573c1366063": "：",
@@ -1083,10 +1083,10 @@
     "c703176594a4c2a01c8ea982e5d5d078": "Always avoids plants",
     "a6eb5b5897a9f02335cf9e8a365e8ef4": "Always spawns on plants",
     "ba119524ee149cff74363719655ffae2": "Fully random positions",
-    "86d64d4c77855a45123ba78d944c91b0": "受影响的行：",
+    "86d64d4c77855a45123ba78d944c91b0": "Affected rows: ",
     "2c2d0e88586634055c5cf5fe4e02a451": [
-        "第",
-        "行不存在！"
+        "Row ",
+        " does not exist!"
     ],
     "de0d68ef4b97c48ff10339c09d8db0c7": "Edit Necromancy Settings",
     "4f141ccfaa43b5c9362d8dda748a09c3": "Select zombies to add to the zombie list.",
