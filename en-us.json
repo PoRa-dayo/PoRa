@@ -869,7 +869,7 @@
     "ef3195175226405569f7eccf46e4cea9": "Autumn Gust",
     "324bda48540b340d9b8214aceaaf9559": "Start Column",
     "f3d011be0bc141967523a329e9d0440a": "Distance (in columns)",
-    "fe04124e23f0e5106c4b9b8f57aa643e": "Moves zombies forward or backward for a distance.",
+    "47de412576aeb955763a3f1875d932af": "把僵尸往前或后移动。（会影响从开始列到第九列的所有僵尸）",
     "3382a1b50e0d2c6c7b44809e1adb1224": "Freezing Wind",
     "822aee98962b7c66f543b19bc135b05d": "Start Row",
     "9a4c67b41701781e2444a148507a0161": "End Row",
